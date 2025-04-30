@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/TUDO-FP-VulnSPA-25-3.iml" filepath="$PROJECT_DIR$/TUDO-FP-VulnSPA-25-3.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/ex2.iml" filepath="$PROJECT_DIR$/.idea/modules/ex2.iml" />
+      <module fileurl="file://$PROJECT_DIR$/ex2/.idea/modules/ex2/ex2.ex2-build.iml" filepath="$PROJECT_DIR$/ex2/.idea/modules/ex2/ex2.ex2-build.iml" />
+      <module fileurl="file://$PROJECT_DIR$/ex2/.idea/modules/ex2/ex2.main.iml" filepath="$PROJECT_DIR$/ex2/.idea/modules/ex2/ex2.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/ex2/.idea/modules/ex2/ex2.test.iml" filepath="$PROJECT_DIR$/ex2/.idea/modules/ex2/ex2.test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/ex3.iml" filepath="$PROJECT_DIR$/.idea/modules/ex3.iml" />
+      <module fileurl="file://$PROJECT_DIR$/ex3/.idea/modules/ex3/ex3.ex3-build.iml" filepath="$PROJECT_DIR$/ex3/.idea/modules/ex3/ex3.ex3-build.iml" />
+      <module fileurl="file://$PROJECT_DIR$/ex3/.idea/modules/ex3/ex3.main.iml" filepath="$PROJECT_DIR$/ex3/.idea/modules/ex3/ex3.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/ex3/.idea/modules/ex3/ex3.test.iml" filepath="$PROJECT_DIR$/ex3/.idea/modules/ex3/ex3.test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/ex4.iml" filepath="$PROJECT_DIR$/.idea/modules/ex4.iml" />
+      <module fileurl="file://$PROJECT_DIR$/ex4/.idea/modules/ex4/ex4.ex4-build.iml" filepath="$PROJECT_DIR$/ex4/.idea/modules/ex4/ex4.ex4-build.iml" />
+      <module fileurl="file://$PROJECT_DIR$/ex4/.idea/modules/ex4/ex4.main.iml" filepath="$PROJECT_DIR$/ex4/.idea/modules/ex4/ex4.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/ex4/.idea/modules/ex4/ex4.test.iml" filepath="$PROJECT_DIR$/ex4/.idea/modules/ex4/ex4.test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/ex5.iml" filepath="$PROJECT_DIR$/.idea/modules/ex5.iml" />
+      <module fileurl="file://$PROJECT_DIR$/ex5/.idea/modules/ex5/ex5.ex5-build.iml" filepath="$PROJECT_DIR$/ex5/.idea/modules/ex5/ex5.ex5-build.iml" />
+      <module fileurl="file://$PROJECT_DIR$/ex5/.idea/modules/ex5/ex5.main.iml" filepath="$PROJECT_DIR$/ex5/.idea/modules/ex5/ex5.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/ex5/.idea/modules/ex5/ex5.test.iml" filepath="$PROJECT_DIR$/ex5/.idea/modules/ex5/ex5.test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/ex6.iml" filepath="$PROJECT_DIR$/.idea/modules/ex6.iml" />
+      <module fileurl="file://$PROJECT_DIR$/ex6/.idea/modules/ex6/ex6.ex6-build.iml" filepath="$PROJECT_DIR$/ex6/.idea/modules/ex6/ex6.ex6-build.iml" />
+      <module fileurl="file://$PROJECT_DIR$/ex6/.idea/modules/ex6/ex6.main.iml" filepath="$PROJECT_DIR$/ex6/.idea/modules/ex6/ex6.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/ex6/.idea/modules/ex6/ex6.test.iml" filepath="$PROJECT_DIR$/ex6/.idea/modules/ex6/ex6.test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/ex7.iml" filepath="$PROJECT_DIR$/.idea/modules/ex7.iml" />
+      <module fileurl="file://$PROJECT_DIR$/ex7/.idea/modules/ex7/ex7.ex7-build.iml" filepath="$PROJECT_DIR$/ex7/.idea/modules/ex7/ex7.ex7-build.iml" />
+      <module fileurl="file://$PROJECT_DIR$/ex7/.idea/modules/ex7/ex7.main.iml" filepath="$PROJECT_DIR$/ex7/.idea/modules/ex7/ex7.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/ex7/.idea/modules/ex7/ex7.test.iml" filepath="$PROJECT_DIR$/ex7/.idea/modules/ex7/ex7.test.iml" />
+    </modules>
+  </component>
+</project>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module external.linked.project.id="root [file:/C:/Users/micro/Documents/Eigene%20Dokumente/Fachprojekt%20Statische%20Programmanalyse/TUDO-FP-VulnSPA-25-3/ex7/]" external.linked.project.path="$MODULE_DIR$/../../ex7" external.root.project.path="$MODULE_DIR$/../../ex7" external.system.id="SBT" type="JAVA_MODULE" version="4">
+  <component name="DisplayModuleName">
+    <option name="name" value="ex7" />
+  </component>
+  <component name="NewModuleRootManager" LANGUAGE_LEVEL="JDK_21" inherit-compiler-output="true">
+    <exclude-output />
+    <content url="file://$MODULE_DIR$/../../ex7">
+      <excludeFolder url="file://$MODULE_DIR$/../../ex7/target" />
+    </content>
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="module" module-name="ex7.main" />
+    <orderEntry type="module" module-name="ex7.test" production-on-test="" />
+  </component>
+</module>
