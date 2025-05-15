@@ -1,0 +1,11 @@
+# Just some random methods, not necessarily safety critical.
+
+java.lang.System:
+    setProperty
+    gc
+
+java.lang.Thread:
+    setPriority
+
+some.where.ExampleClass:
+    criticalMethod
