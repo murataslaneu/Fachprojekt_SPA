@@ -1,9 +1,12 @@
 import misc._
+import analysis.CriticalMethodsAnalysis
 import org.opalj.br.analyses.{Analysis, AnalysisApplication, BasicReport, ProgressManagement, Project, ReportableAnalysisResult}
-import org.opalj.issues.MethodLocation
+
 
 import java.net.URL
 import scala.collection.mutable.ListBuffer
+
+
 
 /**
  * Application that looks for possibly critical method calls in a software project regarding security.
@@ -34,7 +37,7 @@ object CriticalMethodsDetector extends Analysis[URL, BasicReport] with AnalysisA
       if (arg.startsWith("-include")) {
         val path = getValue(arg)
 
-        if (FileIO.fileReadable(path)) {
+        if (!FileIO.fileReadable(path)) {
           issues += "-include: Could not read from file, must be a txt file."
         }
         else {
@@ -58,12 +61,18 @@ object CriticalMethodsDetector extends Analysis[URL, BasicReport] with AnalysisA
        |[-ignoreSecurityManager] (Flag that removes the methods System.getSecurityManger and setSecurityManager that are added by default)]""".stripMargin
 
 
-  // TODO: Implement analysis
   override def analyze(project: Project[URL], parameters: Seq[String], initProgressManagement: Int => ProgressManagement): BasicReport = {
-    // TODO: Remove. This is here just to test and show that loading the text file works correctly.
-    criticalMethods.foreach {obj =>
-      analysisResults.append(s"${obj.className}: ${obj.criticalMethods.mkString("[", ", ", "]")}\n")
+    val results = CriticalMethodsAnalysis.analyze(project, criticalMethods.toList)
+    analysisResults.append("# ------------------- Analysis Results ------------------- #\n\n")
+
+    if (results.nonEmpty) {
+      results.foreach { result =>
+        analysisResults.append(result + "\n")
+      }
+    } else {
+      analysisResults.append("No warnings here :)\n")
     }
+
     BasicReport(analysisResults.toString)
   }
 

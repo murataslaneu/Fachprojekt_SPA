@@ -17,7 +17,7 @@ object FileIO {
    * */
   def fileReadable(path: String): Boolean = {
     val file = new File(path)
-    !(file.exists() || file.isFile || path.endsWith(".txt"))
+    file.exists() && file.isFile && path.endsWith(".txt")
   }
 
 

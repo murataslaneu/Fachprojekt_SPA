@@ -1,0 +1,6 @@
+java.lang.System:
+  getSecurityManager
+  setSecurityManager
+
+Main:
+  someCriticalMethod
