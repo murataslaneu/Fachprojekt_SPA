@@ -1,6 +1,6 @@
 package analysis
 
-import misc.CriticalClassMethods
+import misc.{CriticalClassMethods, SuppressedCall}
 import org.opalj.br.Method
 import org.opalj.br.analyses.Project
 import org.opalj.br.instructions._
@@ -21,7 +21,8 @@ object CriticalMethodsAnalysis {
    * @param criticalMethods A list of critical methods to detect.
    * @return A list of warnings as strings.
    */
-  def analyze(project: Project[URL], criticalMethods: List[CriticalClassMethods]): List[String] = {
+  def analyze(project: Project[URL], criticalMethods: List[CriticalClassMethods],
+              suppressedCalls: List[SuppressedCall] = List()): List[String] = {
     val warnings = ListBuffer[String]()
 
     // Iterate over all class files in the analyzed project
@@ -33,6 +34,7 @@ object CriticalMethodsAnalysis {
       for (method: Method <- classFile.methods if method.body.isDefined) {
         // Skip methods without a defined body (e.g., abstract or interface methods)
         val body = method.body.get
+        val methodName = method.name
 
         // Access the method's instruction list (i.e., bytecode instructions)
         for (instruction <- body.instructions if instruction != null) {
@@ -44,16 +46,25 @@ object CriticalMethodsAnalysis {
               val declaringClass = m.declaringClass.toJava
               val methodName = m.name
 
-              // Check if this call matches any of the user-defined critical methods
-              criticalMethods.foreach { cm =>
-                if (cm.className == declaringClass && cm.criticalMethods.contains(methodName)) {
-                  // If it matches, add a warning describing where the call was found
-                  val warning =
-                    s"[WARNING] Found call to $declaringClass.$methodName in $className.${method.name}"
-                  warnings += warning
-                }
+              // Check if this call should be suppressed
+              val isSuppressed = suppressedCalls.exists { sc =>
+                sc.callerClass == className &&
+                  sc.callerMethod == methodName &&
+                  sc.targetClass == declaringClass
               }
 
+              // Only check for warnings if the call is not suppressed
+              if (!isSuppressed) {
+                // Check if this call matches any of the user-defined critical methods
+                criticalMethods.foreach { cm =>
+                  if (cm.className == declaringClass && cm.criticalMethods.contains(methodName)) {
+                    // If it matches, add a warning describing where the call was found
+                    val warning =
+                      s"[WARNING] Found call to $declaringClass.$methodName in $className.${method.name}"
+                    warnings += warning
+                  }
+                }
+              }
             case _ => // do nothing for non-invocation instructions
           }
         }

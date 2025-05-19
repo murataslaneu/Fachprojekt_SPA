@@ -21,6 +21,8 @@ object CriticalMethodsDetector extends Analysis[URL, BasicReport] with AnalysisA
 
   override def title: String = "Critical methods detector"
 
+  private var suppressedCalls: ListBuffer[SuppressedCall] = ListBuffer()
+
   override def checkAnalysisSpecificParameters(parameters: Seq[String]): Iterable[String] = {
     /** Internal method to retrieve the value from the given parameter */
     def getValue(arg: String): String = arg.substring(arg.indexOf("=") + 1).strip()
@@ -45,6 +47,16 @@ object CriticalMethodsDetector extends Analysis[URL, BasicReport] with AnalysisA
         }
       }
       else if (arg.equals("-ignoreSecurityManager")) ignoreSecurityManager = true
+      else if (arg.startsWith("-suppress")) {
+        val path = getValue(arg)
+
+        if (!FileIO.fileReadable(path)) {
+          issues += "-suppress: Could not read from file, must be a txt file."
+        }
+        else {
+          suppressedCalls = FileIO.readSuppressCallsFile(path)
+        }
+      }
       else issues += s"unknown parameter: $arg"
     }
 
@@ -58,11 +70,13 @@ object CriticalMethodsDetector extends Analysis[URL, BasicReport] with AnalysisA
 
   override def analysisSpecificParametersDescription: String = super.analysisSpecificParametersDescription +
     s"""[-include=<FilePath> (Include a text file of methods that the detector should look out for as well. See the readme for more details)]
-       |[-ignoreSecurityManager] (Flag that removes the methods System.getSecurityManger and setSecurityManager that are added by default)]""".stripMargin
+       |[-ignoreSecurityManager] (Flag that removes the methods System.getSecurityManger and setSecurityManager that are added by default)]
+       |[-suppress=<FilePath> (Include a text file of specific method calls that should be suppressed from warnings)]
+       |""".stripMargin
 
 
   override def analyze(project: Project[URL], parameters: Seq[String], initProgressManagement: Int => ProgressManagement): BasicReport = {
-    val results = CriticalMethodsAnalysis.analyze(project, criticalMethods.toList)
+    val results = CriticalMethodsAnalysis.analyze(project, criticalMethods.toList, suppressedCalls.toList)
     analysisResults.append("# ------------------- Analysis Results ------------------- #\n\n")
 
     if (results.nonEmpty) {

@@ -1,0 +1,2 @@
+Main#main -> java.lang.System#setSecurityManager
+Main#main -> java.lang.System#getSecurityManager

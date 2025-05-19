@@ -115,5 +115,59 @@ Main:
 
     criticalMethods
   }
+
+  /**
+   * Reads a suppression configuration file and parses a list of suppressed method calls.
+   *
+   * Each line in the file should define a suppressed call in the following format:
+   *   callerClass#callerMethod -> targetClass#targetMethod
+   * Lines starting with '#' are treated as comments and ignored.
+   *
+   * Example:
+   *   com.example.MyClass#main -> java.lang.System#setSecurityManager
+   *
+   * @param filePath The path to the suppression configuration file.
+   * @return A list of SuppressedCall instances representing suppressed call pairs.
+   */
+  def readSuppressCallsFile(filePath: String): ListBuffer[SuppressedCall] = {
+    val suppressedCalls = ListBuffer[SuppressedCall]()
+
+    // Read the file line by line
+    val source = Source.fromFile(filePath)
+    try {
+      for (line <- source.getLines()) {
+        val trimmedLine = line.strip()
+
+        // Ignore empty lines and comment lines
+        if (!trimmedLine.startsWith("#") && trimmedLine.nonEmpty) {
+
+          // Expected format: callerClass#callerMethod -> targetClass#targetMethod
+          val parts = trimmedLine.split("->")
+          if (parts.length == 2) {
+            val callerParts = parts(0).split("#")
+            val targetParts = parts(1).split("#")
+
+            // Validate that both sides have class and method names
+            if (callerParts.length == 2 && targetParts.length == 2) {
+
+              // Add the parsed suppressed call to the list
+              suppressedCalls.addOne(
+                SuppressedCall(
+                  callerClass = callerParts(0).strip(),
+                  callerMethod = callerParts(1).strip(),
+                  targetClass = targetParts(0).strip(),
+                  targetMethod = targetParts(1).strip()
+                )
+              )
+            }
+          }
+        }
+      }
+    } finally {
+      source.close() // Always close the file to avoid resource leaks
+    }
+
+    suppressedCalls
+  }
 }
 
