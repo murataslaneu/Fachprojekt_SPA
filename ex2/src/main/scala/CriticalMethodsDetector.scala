@@ -1,11 +1,10 @@
 import misc._
 import analysis.CriticalMethodsAnalysis
 import org.opalj.br.analyses.{Analysis, AnalysisApplication, BasicReport, ProgressManagement, Project, ReportableAnalysisResult}
-
+import org.opalj.tac.cg.{CHACallGraphKey, CTACallGraphKey, CallGraphKey, RTACallGraphKey, XTACallGraphKey}
 
 import java.net.URL
 import scala.collection.mutable.ListBuffer
-
 
 
 /**
@@ -13,15 +12,22 @@ import scala.collection.mutable.ListBuffer
  */
 object CriticalMethodsDetector extends Analysis[URL, BasicReport] with AnalysisApplication {
 
-  /** Holds the critical methods to look out for, grouped by class */
-  private var criticalMethods: ListBuffer[CriticalClassMethods] = ListBuffer()
-
   /** Results string to print after analysis */
   private val analysisResults = new StringBuilder()
 
-  override def title: String = "Critical methods detector"
+  /** Selected algorithm to use. Default: RTA */
+  private var callGraphAlgorithm: CallGraphKey = RTACallGraphKey
 
+  /** Holds the critical methods to look out for, grouped by class */
+  private var criticalMethods: ListBuffer[CriticalClassMethods] = ListBuffer(CriticalClassMethods(
+    "java.lang.System",
+    List("getSecurityManager", "setSecurityManager")
+  ))
+
+  /** Used to suppress warnings during analysis */
   private var suppressedCalls: ListBuffer[SuppressedCall] = ListBuffer()
+
+  override def title: String = "Critical methods detector"
 
   override def checkAnalysisSpecificParameters(parameters: Seq[String]): Iterable[String] = {
     /** Internal method to retrieve the value from the given parameter */
@@ -31,12 +37,10 @@ object CriticalMethodsDetector extends Analysis[URL, BasicReport] with AnalysisA
       return Nil
     }
 
-    // Give the user the option to not look the SecurityManager methods if not wanted
-    var ignoreSecurityManager = false
     val issues: ListBuffer[String] = ListBuffer()
 
     parameters.foreach { arg: String =>
-      if (arg.startsWith("-include")) {
+      if (arg.startsWith("-include=")) {
         val path = getValue(arg)
 
         if (!FileIO.fileReadable(path)) {
@@ -46,8 +50,7 @@ object CriticalMethodsDetector extends Analysis[URL, BasicReport] with AnalysisA
           criticalMethods = FileIO.readIncludeMethodsFile(path)
         }
       }
-      else if (arg.equals("-ignoreSecurityManager")) ignoreSecurityManager = true
-      else if (arg.startsWith("-suppress")) {
+      else if (arg.startsWith("-suppress=")) {
         val path = getValue(arg)
 
         if (!FileIO.fileReadable(path)) {
@@ -57,26 +60,31 @@ object CriticalMethodsDetector extends Analysis[URL, BasicReport] with AnalysisA
           suppressedCalls = FileIO.readSuppressCallsFile(path)
         }
       }
+      else if (arg.startsWith("-alg=")) {
+        val alg = getValue(arg).toLowerCase()
+        callGraphAlgorithm = (alg match {
+          case "cha" => CHACallGraphKey
+          case "rta" => RTACallGraphKey
+          case "xta" => XTACallGraphKey
+          case "cta" => CTACallGraphKey
+          case _ =>
+            issues += s"-alg: Unknown algorithm $alg. Available are: CHA, RTA, XTA, CTA"
+            CHACallGraphKey
+        }): CallGraphKey
+      }
       else issues += s"unknown parameter: $arg"
-    }
-
-    if (!ignoreSecurityManager) {
-      criticalMethods.addOne(
-        CriticalClassMethods("java.lang.System", List("getSecurityManager", "setSecurityManager"))
-      )
     }
     issues
   }
 
   override def analysisSpecificParametersDescription: String = super.analysisSpecificParametersDescription +
     s"""[-include=<FilePath> (Include a text file of methods that the detector should look out for as well. See the readme for more details)]
-       |[-ignoreSecurityManager] (Flag that removes the methods System.getSecurityManger and setSecurityManager that are added by default)]
        |[-suppress=<FilePath> (Include a text file of specific method calls that should be suppressed from warnings)]
-       |""".stripMargin
-
+       |[-alg=<algorithm> (The algorithm to generate a call graph. Available are: CHA, RTA, XTA, CTA)]""".stripMargin
 
   override def analyze(project: Project[URL], parameters: Seq[String], initProgressManagement: Int => ProgressManagement): BasicReport = {
-    val results = CriticalMethodsAnalysis.analyze(project, criticalMethods.toList, suppressedCalls.toList)
+    val callGraph = project.get(callGraphAlgorithm)
+    val results = CriticalMethodsAnalysis.analyze(callGraph, criticalMethods.toList, suppressedCalls.toList)
     analysisResults.append("# ------------------- Analysis Results ------------------- #\n\n")
 
     if (results.nonEmpty) {

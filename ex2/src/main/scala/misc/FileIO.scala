@@ -42,8 +42,8 @@ Main:
    *
    * Syntax:
    *
-   * - A hash symbol "#" at the start of the line denotes a comment in the file. It will be ignored.
-   *     Example: `# This is a comment line.`
+   * - A "//" at the start of the line denotes a comment in the file. It will be ignored.
+   *     Example: `// This is a comment line.`
    *
    * - You first start with the fully qualified name of a class where you have a critical method the detector should
    *     look out for, followed by a colon. Example: `java.lang.System:`
@@ -77,7 +77,7 @@ Main:
           val currentLine = line.strip()
 
           // Comments are ignored
-          if (currentLine.startsWith("#")) break
+          if (currentLine.startsWith("//")) break
 
           // currentClass empty --> Next line may contain class name.
           else if (currentClass.isEmpty) {
@@ -121,7 +121,7 @@ Main:
    *
    * Each line in the file should define a suppressed call in the following format:
    *   callerClass#callerMethod -> targetClass#targetMethod
-   * Lines starting with '#' are treated as comments and ignored.
+   * Lines starting with '//' are treated as comments and ignored.
    *
    * Example:
    *   com.example.MyClass#main -> java.lang.System#setSecurityManager
@@ -139,7 +139,7 @@ Main:
         val trimmedLine = line.strip()
 
         // Ignore empty lines and comment lines
-        if (!trimmedLine.startsWith("#") && trimmedLine.nonEmpty) {
+        if (!trimmedLine.startsWith("//") && trimmedLine.nonEmpty) {
 
           // Expected format: callerClass#callerMethod -> targetClass#targetMethod
           val parts = trimmedLine.split("->")

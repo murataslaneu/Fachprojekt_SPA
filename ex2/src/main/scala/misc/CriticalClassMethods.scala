@@ -1,9 +1,5 @@
 package misc
 
-// On a MethodInvocationInstruction, you can retrieve the
-// fully qualified name of the declaring class via .declaringClass.toJava
-// and the method name via .name
-
 /**
  * Holds the critical methods of a class.
  *

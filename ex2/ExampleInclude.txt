@@ -1,11 +1,10 @@
-# Just some random methods, not necessarily safety critical.
-
 java.lang.System:
-    setProperty
-    gc
+  getSecurityManager
+  setSecurityManager
 
-java.lang.Thread:
-    setPriority
+// Some example methods to try functionality, not really safety critical
+org.joda.time.tz.ZoneInfoCompiler:
+  compile
 
-some.where.ExampleClass:
-    criticalMethod
+org.joda.time.tz.DateTimeZoneBuilder:
+  <init>
