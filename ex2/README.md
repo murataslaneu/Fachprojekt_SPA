@@ -4,7 +4,7 @@ die potenziell sicherheitsrelevant sind. Standardmäßig wird nach Aufrufen von 
 `System.setSecurityMananger` gesucht. Man kann aber auch eigene Methoden über eine Textdatei übergeben, nach denen
 ebenfalls gesucht werden soll.
 
-## Benutzung (über IntelliJ):
+## Benutzung (über IntelliJ)
 1. Öffne das Terminal und stelle sicher, im richtigen Verzeichnis (`TUDO-FP-VulnSPA-25-3/ex2`) zu sein.
 2. Starte im Terminal sbt (mit `sbt`)
 3. Starte das Programm dann über sbt mit `run -cp=<Dateiname> [Optionen]`, z.B.
@@ -37,22 +37,22 @@ Zum Ausprobieren sind einige Dateien mitgegeben:
   Quelle: https://github.com/apache/pdfbox
 - Beispiel: `run -cp=pdfbox-3.0.5.jar -include=ExampleInclude.txt -entryPoints=ExampleEntryPoints.txt`
 
-## Optionen:
-### Standard-Optionen:
+## Optionen
+### Standard-Optionen
 - `-help`: Zeigt verfügbare Optionen im Terminal und beendet anschließend das Programm.
 - `-cp=<Dateiname>`: Java-Bytecode-Datei, die analysiert werden soll (z.B. .jar).
 - `-libcp=<OrderOderDatei>`: Ordner mit zusätzlichen Libraries, um den Call Graphen bei Fehlern ggf.
       weiter zu vervollständigen. Optional, kann auch weggelassen werden.
 
-### Hinzufügen kritischer Methoden:
+### Hinzufügen kritischer Methoden
 - `-include=<Textdatei-Name>`: Textdatei, die weitere Methoden enthält, auf die geachtet werden soll. Syntax für 
       die Textdatei siehe im folgenden Abschnitt. Wird diese Option nicht übergeben, 
       wird standardmäßig von `java.lang.System` nach `getSecurityManager` und `setSecurityManager` geguckt.
 
-### Warnungen unterdrücken:
+### Warnungen unterdrücken
 - `-suppress=<Textdatei-Name>`: Textdatei, die hinzugefügt werden kann, um einzelne Warnungen zu unterdrücken.
 
-### Einstiegspunkte:
+### Einstiegspunkte
 - `-entryPoints=<Textdatei-Name>`: Textdatei, die Methoden enthält, die von der Analyse als Einstiegspunkte angesehen
       werden sollen. Syntax ist dieselbe wie bei der `-include`-Textdatei
 - `-includeApplicationEntries`: Flag, der angibt, ob die main-Methoden des Programms als Einstiegsmethoden angesehen
@@ -62,7 +62,7 @@ Zum Ausprobieren sind einige Dateien mitgegeben:
       Java Runtime Environment (JRE) als Einstiegspunkte angesehen werden, sofern vorhanden. **Achtung: Diese Option und
     `-includeApplicationEntries` schließen sich gegenseitig aus. Bitte nur einen der beiden Optionen übergeben!**
 
-### Algorithmus-Wahl:
+### Algorithmus-Wahl
 - `-alg=<Algorithmus>`: Auswählen des Algorithmus, der zur Generierung des Call-Graphen verwendet werden soll.
       Zur Verfügung stehen: `CHA`, `RTA`, `XTA`, und `CTA` (sortiert nach Geschwindigkeit). CHA ist am schnellsten, kann aber
       die meisten False Positives enthalten. CTA ist am langsamsten, ist dafür aber sehr präzise und enthält nur wenige
@@ -70,7 +70,7 @@ Zum Ausprobieren sind einige Dateien mitgegeben:
       alle verwendeten Bibliotheken dem Programm über -libcp, sofern welche verwendet wurden). Der verwendete
       Standard-Algorithmus ist `RTA`.
 
-## Syntax für die include-Textdatei:
+## Syntax für die include-Textdatei
 - Eine Raute `//` **am Anfang der Zeile** wird als Kommentar gewertet. Die Zeile wird dann ignoriert.
     Beispielzeile: `// This is a comment line.`.
 - Starte zuerst mit dem fully qualified name der Klasse, die kritische Methoden enthält, nach denen der Detector
@@ -84,15 +84,15 @@ Zum Ausprobieren sind einige Dateien mitgegeben:
 - Beachte, dass alle Zeilen beliebig mit Leerzeichen und Tabs eingerückt werden können, um die Lesbarkeit der Datei
     zu verbessern. Einen Effekt beim Einlesen hat dies aber nicht.
 
-## Syntax für die suppress-Textdatei:
+## Syntax für die suppress-Textdatei
 - Jede Zeile stellt eine Warnung dar, die unterdrückt werden soll.
-- Muster: <aufrufendeKlasse>#<aufrufendeMethode> -> <klasseKritischerMethode>#<kritischeMethode>
+- Muster: `<aufrufendeKlasse>#<aufrufendeMethode> -> <klasseKritischerMethode>#<kritischeMethode>`
 - Erste Hälfte: Fully qualified name der Klasse, dann `#`, Methodenname.
 - Anschließend folgt ein Pfeil `->`.
 - Zweite Hälfte: Fully qualified name der Klasse, die die kritische Methode enthält, dann `#`, dann Name der
     kritischen Methode.
 
-## Syntax für die entryPoints-Textdatei:
+## Syntax für die entryPoints-Textdatei
 - Dieselbe wie für die include-Textdatei
 
 > Anmerkung: Möchte man bei der include oder suppress-Textdatei als Methode den Konstruktor der Klasse verwenden, kann
