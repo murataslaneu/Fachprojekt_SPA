@@ -20,22 +20,6 @@ object FileIO {
     file.exists() && file.isFile && path.endsWith(".txt")
   }
 
-
-/* Example of a valid text file to read the critical methods from:
-
-java.lang.System:
-  getSecurityManager
-  setSecurityManager
-
-# Previous empty line is important. Multiple lines are also allowed.
-# Note that a comment does not count as an empty line!
-# Following empty line is not needed, but allowed.
-
-Main:
-  someCriticalMethod
-
-# End of file.
-*/
   /**
    * Reads a text file and creates from its content a list of CriticalClassMethods. Checking if the file exist should be
    * done outside the function.
@@ -43,7 +27,7 @@ Main:
    * Syntax:
    *
    * - A "//" at the start of the line denotes a comment in the file. It will be ignored.
-   *     Example: `// This is a comment line.`
+   *     Example: `// This is a comment line`.
    *
    * - You first start with the fully qualified name of a class where you have a critical method the detector should
    *     look out for, followed by a colon. Example: `java.lang.System:`
@@ -61,10 +45,10 @@ Main:
    * @param filePath Path to the file
    *
    */
-   def readIncludeMethodsFile(filePath: String): ListBuffer[CriticalClassMethods] = {
+   def readIncludeMethodsFile(filePath: String): ListBuffer[SelectedMethodsOfClass] = {
 
 
-    val criticalMethods = ListBuffer[CriticalClassMethods]()
+    val criticalMethods = ListBuffer[SelectedMethodsOfClass]()
 
     // Reading file
     val criticalMethodsOfClass: ListBuffer[String] = ListBuffer()
@@ -89,7 +73,7 @@ Main:
           else if (currentLine.isEmpty) {
             // If no methods have been added for the class for some reason, it does not need to be added
             if (criticalMethodsOfClass.nonEmpty) {
-              criticalMethods.addOne(CriticalClassMethods(currentClass, criticalMethodsOfClass.toList))
+              criticalMethods.addOne(SelectedMethodsOfClass(currentClass, criticalMethodsOfClass.toList))
             }
             criticalMethodsOfClass.clear()
             currentClass = ""
@@ -109,7 +93,7 @@ Main:
     // Loop finished, add current class if there was no empty line at the end of the file.
     if (currentClass.nonEmpty && criticalMethodsOfClass.nonEmpty) {
       criticalMethods.addOne(
-        CriticalClassMethods(currentClass, criticalMethodsOfClass.toList)
+        SelectedMethodsOfClass(currentClass, criticalMethodsOfClass.toList)
       )
     }
 
@@ -168,6 +152,37 @@ Main:
     }
 
     suppressedCalls
+  }
+
+  /**
+   * Reads an entry points configuration text file. The resulting List of selected methods should be used as
+   * entry points for the call graph.
+   * Syntax is the same as the include file, but the fully qualified names of the classes
+   * have to use the "slash format". See [[convertClassFqnWriteStyle]] for more information.
+   *
+   * @param filePath Path to the file.
+   */
+  def readEntryPointsFile(filePath: String): ListBuffer[SelectedMethodsOfClass] = {
+    val entryPoints = readIncludeMethodsFile(filePath)
+    entryPoints.foreach { sc =>
+      sc.className = convertClassFqnWriteStyle(sc.className, fromDotToSlash = true)
+    }
+    entryPoints
+  }
+
+  /**
+   * Small helper function to convert between the different writing styles used for fully qualified class names.
+   *
+   * Most of the time, the "dot format" is used, like e.g. `java.lang.System`, but for the configuration of the entry
+   * points, the "slash format" is used, like e.g. `java/lang/System`
+   *
+   * @param classFqn The fully qualified name of the class
+   * @param fromDotToSlash Flag whether to convert from the dot to the slash format. If false, then the slash format
+   *                       is converted to the dot format instead.
+   */
+  private def convertClassFqnWriteStyle(classFqn: String, fromDotToSlash: Boolean): String = {
+    if (fromDotToSlash) classFqn.replace(".", "/")
+    else classFqn.replace("/", ".")
   }
 }
 

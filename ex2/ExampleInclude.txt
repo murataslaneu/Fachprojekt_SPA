@@ -8,3 +8,9 @@ org.joda.time.tz.ZoneInfoCompiler:
 
 org.joda.time.tz.DateTimeZoneBuilder:
   <init>
+
+org.joda.time.tz.CachedDateTimeZone:
+  createInfo
+
+org.apache.pdfbox.pdfwriter.ContentStreamWriter:
+  writeObject

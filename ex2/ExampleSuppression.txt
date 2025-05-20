@@ -1,4 +1,4 @@
 Main#main -> java.lang.System#setSecurityManager
 Main#main -> java.lang.System#getSecurityManager
 
-org.joda.time.tz.ZoneInfoCompiler#compile -> org.joda.time.tz.DateTimeZoneBuilder#<init>
+org.joda.time.tz.CachedDateTimeZone#getInfo -> org.joda.time.tz.CachedDateTimeZone#createInfo

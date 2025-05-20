@@ -26,20 +26,43 @@ Zum Ausprobieren sind einige Dateien mitgegeben:
 
 **joda-time-2.14.0**: Relativ kleine, real benutzte Java-Bibliothek zum Darstellen von Daten und Zeit in Java, genutzt
   vor Java 8. Besitzt eine main-Funktion, die als Entry Point genutzt werden kann.
-  Quelle: https://github.com/JodaOrg/joda-time/
-- Beispiel 1 (ohne Unterdrückungen): `run -cp=joda-time-2.14.0.jar -include=ExampleInclude.txt`
-- Beispiel 2 (mit Unterdrückungen): `run -cp=joda-time-2.14.0.jar -include=ExampleInclude.txt -suppress=ExampleSuppression.txt`
+  Quelle: https://github.com/JodaOrg/joda-time
+- Beispiel 1: `run -cp=joda-time-2.14.0.jar -include=ExampleInclude.txt`
+- Beispiel 2 (mit entryPoints): `run -cp=joda-time-2.14.0.jar -include=ExampleInclude.txt -entryPoints=ExampleEntryPoints.txt`
+- Beispiel 3 (entryPoints + Unterdrückungen): `run -cp=joda-time-2.14.0.jar -include=ExampleInclude.txt -entryPoints=ExampleEntryPoints.txt  -suppress=ExampleSuppression.txt`
+- Beispiel 4 (entryPoints + ApplicationEntryPoints): `run -cp=joda-time-2.14.0.jar -include=ExampleInclude.txt -entryPoints=ExampleEntryPoints.txt -includeApplicationEntries`
+
+**pdfbox-3.0.5.jar**: Java-Bibliothek zum Arbeiten mit PDF-Dokumenten. Besitzt **keine** main-Funktion, von daher ist
+  hier die Verwendung von benutzerdefinierten Entry Points besonders interessant.
+  Quelle: https://github.com/apache/pdfbox
+- Beispiel: `run -cp=pdfbox-3.0.5.jar -include=ExampleInclude.txt -entryPoints=ExampleEntryPoints.txt`
 
 ## Optionen:
-
+### Standard-Optionen:
 - `-help`: Zeigt verfügbare Optionen im Terminal und beendet anschließend das Programm.
 - `-cp=<Dateiname>`: Java-Bytecode-Datei, die analysiert werden soll (z.B. .jar).
 - `-libcp=<OrderOderDatei>`: Ordner mit zusätzlichen Libraries, um den Call Graphen bei Fehlern ggf.
       weiter zu vervollständigen. Optional, kann auch weggelassen werden.
-- `-include=<Textdatei-Name>`: Textdatei, die weitere Methodennamen enthält, auf die geachtet werden soll. Syntax für 
+
+### Hinzufügen kritischer Methoden:
+- `-include=<Textdatei-Name>`: Textdatei, die weitere Methoden enthält, auf die geachtet werden soll. Syntax für 
       die Textdatei siehe im folgenden Abschnitt. Wird diese Option nicht übergeben, 
       wird standardmäßig von `java.lang.System` nach `getSecurityManager` und `setSecurityManager` geguckt.
+
+### Warnungen unterdrücken:
 - `-suppress=<Textdatei-Name>`: Textdatei, die hinzugefügt werden kann, um einzelne Warnungen zu unterdrücken.
+
+### Einstiegspunkte:
+- `-entryPoints=<Textdatei-Name>`: Textdatei, die Methoden enthält, die von der Analyse als Einstiegspunkte angesehen
+      werden sollen. Syntax ist dieselbe wie bei der `-include`-Textdatei
+- `-includeApplicationEntries`: Flag, der angibt, ob die main-Methoden des Programms als Einstiegsmethoden angesehen
+      werden sollen. Standardmäßig an, sofern Option `-entryPoints` nicht übergeben. Sollte `-entryPoints` übergeben
+      werden, ist diese Option standardmäßig aus.
+- `-includeApplicationWithJREEntries`: Erweitert `-includeApplicationEntries` damit, dass auch die main-Methoden der
+      Java Runtime Environment (JRE) als Einstiegspunkte angesehen werden, sofern vorhanden. **Achtung: Diese Option und
+    `-includeApplicationEntries` schließen sich gegenseitig aus. Bitte nur einen der beiden Optionen übergeben!**
+
+### Algorithmus-Wahl:
 - `-alg=<Algorithmus>`: Auswählen des Algorithmus, der zur Generierung des Call-Graphen verwendet werden soll.
       Zur Verfügung stehen: `CHA`, `RTA`, `XTA`, und `CTA` (sortiert nach Geschwindigkeit). CHA ist am schnellsten, kann aber
       die meisten False Positives enthalten. CTA ist am langsamsten, ist dafür aber sehr präzise und enthält nur wenige
@@ -68,6 +91,9 @@ Zum Ausprobieren sind einige Dateien mitgegeben:
 - Anschließend folgt ein Pfeil `->`.
 - Zweite Hälfte: Fully qualified name der Klasse, die die kritische Methode enthält, dann `#`, dann Name der
     kritischen Methode.
+
+## Syntax für die entryPoints-Textdatei:
+- Dieselbe wie für die include-Textdatei
 
 > Anmerkung: Möchte man bei der include oder suppress-Textdatei als Methode den Konstruktor der Klasse verwenden, kann
     man für den Methodennamen `<init>` eingeben.

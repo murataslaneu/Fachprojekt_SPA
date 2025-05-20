@@ -1,0 +1,6 @@
+// Some random example methods to demonstrate functionality
+org.apache.pdfbox.pdfwriter.ContentStreamWriter:
+  writeTokens
+
+org/joda/time/tz/CachedDateTimeZone:
+  getInfo
