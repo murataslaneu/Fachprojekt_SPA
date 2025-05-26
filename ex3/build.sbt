@@ -8,3 +8,16 @@ lazy val root = (project in file("."))
   )
 
 libraryDependencies += "de.opal-project" % "framework_2.13" % "5.0.0"
+libraryDependencies += "com.typesafe.play" %% "play-json" % "2.10.5"
+
+// https://mvnrepository.com/artifact/ch.qos.logback/logback-classic
+libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.5.18"
+
+// https://mvnrepository.com/artifact/com.google.code.gson/gson
+libraryDependencies += "com.google.code.gson" % "gson" % "2.13.1"
+
+// https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-databind
+libraryDependencies += "com.fasterxml.jackson.core" % "jackson-databind" % "2.19.0"
+
+// https://mvnrepository.com/artifact/com.google.guava/guava
+libraryDependencies += "com.google.guava" % "guava" % "33.4.8-jre"

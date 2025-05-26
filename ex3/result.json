@@ -1,0 +1,50 @@
+{
+  "analysis" : [ {
+    "library" : "gson-2.13.1.jar",
+    "totalMethods" : 869,
+    "usedMethods" : 0,
+    "usageRatio" : 0
+  }, {
+    "library" : "guava-33.4.8-jre.jar",
+    "totalMethods" : 11203,
+    "usedMethods" : 0,
+    "usageRatio" : 0
+  }, {
+    "library" : "jackson-databind-2.19.0.jar",
+    "totalMethods" : 7196,
+    "usedMethods" : 0,
+    "usageRatio" : 0
+  }, {
+    "library" : "logback-classic-1.5.18.jar",
+    "totalMethods" : 1313,
+    "usedMethods" : 0,
+    "usageRatio" : 0
+  }, {
+    "library" : "junit-4.13.2.jar",
+    "totalMethods" : 855,
+    "usedMethods" : 0,
+    "usageRatio" : 0
+  }, {
+    "library" : "logback-classic-1.5.18.jar",
+    "totalMethods" : 1313,
+    "usedMethods" : 0,
+    "usageRatio" : 0
+  }, {
+    "library" : "pdfbox-3.0.5.jar",
+    "totalMethods" : 6263,
+    "usedMethods" : 0,
+    "usageRatio" : 0
+  }, {
+    "library" : "scala-library-2.13.17-M1.jar",
+    "totalMethods" : 49021,
+    "usedMethods" : 0,
+    "usageRatio" : 0
+  }, {
+    "library" : "javax.servlet-api-4.0.1.jar",
+    "totalMethods" : 653,
+    "usedMethods" : 0,
+    "usageRatio" : 0
+  } ],
+  "callGraphAlgorithm" : "RTA",
+  "analysisTimeSeconds" : 2.32
+}
