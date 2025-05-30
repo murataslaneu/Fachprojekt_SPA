@@ -1,5 +1,5 @@
 {
-  "projectJar": "TestGuava.jar",
+  "projectJar": "TestGuava2.jar",
   "tplJars": [
     "lib/gson-2.13.1.jar",
     "lib/guava-33.4.8-jre.jar",

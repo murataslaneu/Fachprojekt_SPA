@@ -8,7 +8,7 @@ lazy val root = (project in file("."))
   )
 
 libraryDependencies += "de.opal-project" % "framework_2.13" % "5.0.0"
-libraryDependencies += "com.typesafe.play" %% "play-json" % "2.10.5"
+libraryDependencies += "com.typesafe.play" %% "play-json" % "2.10.6"
 
 // https://mvnrepository.com/artifact/ch.qos.logback/logback-classic
 libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.5.18"

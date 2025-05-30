@@ -1,11 +1,12 @@
 import org.opalj.br.analyses.{Analysis, AnalysisApplication, BasicReport, ProgressManagement, Project, ReportableAnalysisResult}
-import org.opalj.tac.cg.{CHACallGraphKey, CTACallGraphKey, CallGraphKey, RTACallGraphKey, XTACallGraphKey}
-import com.typesafe.config.Config
+import org.opalj.tac.cg.{CFA_1_1_CallGraphKey, CHACallGraphKey, CallGraphKey, RTACallGraphKey, XTACallGraphKey}
+import com.typesafe.config.{Config, ConfigFactory}
 import org.opalj.log.LogContext
-import analysis.{AnalysisConfig, TPLMethodUsageAnalysis, JsonIO}
+import analysis.{AnalysisConfig, JsonIO, TPLMethodUsageAnalysis}
 
 import java.io.File
 import java.net.URL
+import scala.jdk.CollectionConverters.MapHasAsJava
 
 /**
  * Main entry point for running the TPL method usage analyzer.
@@ -29,15 +30,18 @@ object TPLUsageAnalyzer extends Analysis[URL, BasicReport] with AnalysisApplicat
       case arg if arg.startsWith("-config=") =>
         val configPath = arg.substring(8)
         try {
-          val jsonStr = scala.io.Source.fromFile(configPath).mkString
-          config = Some(play.api.libs.json.Json.parse(jsonStr).as[AnalysisConfig])
+          config = Some(JsonIO.readConfig(configPath))
           config.foreach { c =>
             callGraphAlgorithmName = c.callGraphAlgorithm.toUpperCase
             callGraphAlgorithm = c.callGraphAlgorithm.toLowerCase match {
               case "cha" => CHACallGraphKey
               case "rta" => RTACallGraphKey
               case "xta" => XTACallGraphKey
-              case "cta" => CTACallGraphKey
+              case "cfa" => CFA_1_1_CallGraphKey
+              case "1-1-cfa" => CFA_1_1_CallGraphKey
+              case "1_1_cfa" => CFA_1_1_CallGraphKey
+              case "cfa_1_1" => CFA_1_1_CallGraphKey
+              case "cfa-1-1" => CFA_1_1_CallGraphKey
               case _ =>
                 issues += s"Unknown algorithm '${c.callGraphAlgorithm}'."
                 RTACallGraphKey
@@ -56,8 +60,14 @@ object TPLUsageAnalyzer extends Analysis[URL, BasicReport] with AnalysisApplicat
     issues
   }
 
-  override def analysisSpecificParametersDescription: String =
-    "[REQUIRED] -config=<config.json>   (see template for schema)"
+  override def analysisSpecificParametersDescription: String = {
+    """ ========================= REQUIRED PARAMETER =========================
+      | [-config=<config.json> (Configuration used for analysis. See template for schema.)]
+      |
+      | This analysis uses a custom config json to configure the project.
+      | OPTIONS -cp AND -libcp ARE IGNORED. PLEASE CONFIGURE PROJECT
+      | AND LIBRARY JARS VIA THE CONFIG JSON.""".stripMargin
+  }
 
   /**
    * Loads the target project and all TPLs (JARs) as class files for analysis.
@@ -73,7 +83,20 @@ object TPLUsageAnalyzer extends Analysis[URL, BasicReport] with AnalysisApplicat
     println(s"Library files: ${allLibs.map(_.getName)}")
 
     // Very important: load real library implementations, not just interfaces!
-    super.setupProject(projectFiles, allLibs, completelyLoadLibraries = true, configuredConfig)
+    if (config.get.isLibraryProject) {
+      val overrides = ConfigFactory.parseMap(Map(
+        "org.opalj.br.analyses.cg.InitialEntryPointsKey.analysis" ->
+          "org.opalj.br.analyses.cg.LibraryEntryPointsFinder",
+        "org.opalj.br.analyses.cg.InitialInstantiatedTypesKey.analysis" ->
+          "org.opalj.br.analyses.cg.LibraryInstantiatedTypesFinder"
+      ).asJava)
+      val newConfig = overrides.withFallback(configuredConfig).resolve()
+      super.setupProject(projectFiles, allLibs, completelyLoadLibraries = true, newConfig)
+    }
+    else {
+      super.setupProject(projectFiles, allLibs, completelyLoadLibraries = true, configuredConfig)
+    }
+
   }
 
   /**

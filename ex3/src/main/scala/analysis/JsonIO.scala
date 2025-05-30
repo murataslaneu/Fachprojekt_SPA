@@ -11,8 +11,40 @@ object JsonIO {
 
   /** Reads a JSON config file and returns the AnalysisConfig object */
   def readConfig(path: String): AnalysisConfig = {
-    val jsonStr = scala.io.Source.fromFile(path).mkString
-    Json.parse(jsonStr).as[AnalysisConfig]
+    val source = scala.io.Source.fromFile(path)
+    try {
+      val json = Json.parse(source.mkString)
+
+      val projectJar = {
+        val result = json \ "projectJar"
+        if (result.isDefined) result.get.as[String]
+        else throw new NoSuchElementException("Project jar missing in config json")
+      }
+      val tplJars = {
+        val result = json \ "tplJars"
+        if (result.isDefined) result.get.as[List[String]]
+        else List.empty[String]
+      }
+      val callGraphAlgorithm = {
+        val result = json \ "callGraphAlgorithm"
+        if (result.isDefined) result.get.as[String]
+        else "RTA"
+      }
+      val outputJson = {
+        val result = json \ "outputJson"
+        if (result.isDefined) Some(result.get.as[String])
+        else None
+      }
+      val isLibraryProject = {
+        val result = json \ "isLibraryProject"
+        if (result.isDefined) result.get.as[Boolean]
+        else false
+      }
+      AnalysisConfig(projectJar, tplJars, callGraphAlgorithm, outputJson, isLibraryProject)
+    }
+    finally {
+      source.close()
+    }
   }
 
   /** Writes the analysis result to a file in JSON format */

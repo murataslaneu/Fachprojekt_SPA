@@ -11,13 +11,14 @@ import play.api.libs.json._
  * @param callGraphAlgorithm Name of the call graph algorithm to use ("RTA", "CHA", etc).
  * @param outputJson Optional output file name for results.
  * @param isLibraryProject Optional flag for OPAL: treat the project as a library, not an application.
+ *                         Is false by default.
  */
 case class AnalysisConfig(
 projectJar: String,
 tplJars: List[String],
 callGraphAlgorithm: String = "RTA",
 outputJson: Option[String] = None,
-isLibraryProject: Option[Boolean] = None
+isLibraryProject: Boolean = false
 )
 
 object AnalysisConfig {
