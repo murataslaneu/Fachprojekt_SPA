@@ -100,11 +100,26 @@ object TPLUsageAnalyzer extends Analysis[URL, BasicReport] with AnalysisApplicat
   override def setupProject(cpFiles: Iterable[File], libcpFiles: Iterable[File], completelyLoadLibraries: Boolean, configuredConfig: Config)
                            (implicit initialLogContext: LogContext): Project[URL] = {
 
-    val projectFiles = config.map(c => List(new File(c.projectJar))).getOrElse(Nil)
-    val allLibs = config.map(_.tplJars.map(new File(_))).getOrElse(Nil)
+    val projectFiles = config.get.projectJars.map {libPath => new File(libPath)}
+    val libraryFiles = config.get.tplJars.map {libPath => new File(libPath)}
+
+    // Check if files exist
+    projectFiles.foreach { file =>
+      if (!file.exists) {
+        OPALLogger.error("fatal", s"Project jar ${file.getPath} does not exist")
+        sys.exit(1)
+      }
+    }
+    libraryFiles.foreach { file =>
+      if (!file.exists) {
+        OPALLogger.error("fatal", s"Library jar ${file.getPath} does not exist")
+        sys.exit(1)
+      }
+    }
+
 
     println(s"Project files: ${projectFiles.map(_.getName)}")
-    println(s"Library files: ${allLibs.map(_.getName)}")
+    println(s"Library files: ${libraryFiles.map(_.getName)}")
 
     // Very important: Load real library implementations, not just interfaces!
     if (config.get.isLibraryProject) {
@@ -115,10 +130,10 @@ object TPLUsageAnalyzer extends Analysis[URL, BasicReport] with AnalysisApplicat
           "org.opalj.br.analyses.cg.LibraryInstantiatedTypesFinder"
       ).asJava)
       val newConfig = overrides.withFallback(configuredConfig).resolve()
-      super.setupProject(projectFiles, allLibs, completelyLoadLibraries = true, newConfig)
+      super.setupProject(projectFiles, libraryFiles, completelyLoadLibraries = true, newConfig)
     }
     else {
-      super.setupProject(projectFiles, allLibs, completelyLoadLibraries = true, configuredConfig)
+      super.setupProject(projectFiles, libraryFiles, completelyLoadLibraries = true, configuredConfig)
     }
 
   }
@@ -152,7 +167,7 @@ object TPLUsageAnalyzer extends Analysis[URL, BasicReport] with AnalysisApplicat
     OPALLogger.info("Progress", s"Analysis finished in $analysisTime seconds, results computed")
     OPALLogger.info("Progress", s"Program finished in $programTime seconds, outputting results...")
 
-    val finalResult = TPLAnalysisResult(result, callGraphAlgorithmName, callGraphTime, analysisTime, programTime)
+    val finalResult = TPLAnalysisResult(config.get.projectJars, result, callGraphAlgorithmName, callGraphTime, analysisTime, programTime)
 
     // Output results to file if wanted
     outputJsonFile match {
@@ -181,14 +196,7 @@ object TPLUsageAnalyzer extends Analysis[URL, BasicReport] with AnalysisApplicat
 
     // If visual output is requested, launch the TPLUsageVisualizer after analysis is complete
     if (visual) {
-      val resultFile = outputJsonFile.getOrElse("result.json")
-      try {
-        // Directly call the visualizer's utility function in the same JVM process
-        visualization.TPLUsageVisualizer.showChart(resultFile)
-      } catch {
-        case e: Exception =>
-          println(s"[ERROR] Visualizer could not be shown: ${e.getMessage}")
-      }
+      visualization.TPLUsageVisualizer.showChart(finalResult)
     }
 
     BasicReport(analysisResults.toString)

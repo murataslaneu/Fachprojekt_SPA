@@ -39,12 +39,13 @@
     <orderEntry type="library" name="sbt: com.typesafe.play:play-functional_2.13:2.10.6:jar" level="project" />
     <orderEntry type="library" name="sbt: com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava:jar" level="project" />
     <orderEntry type="library" name="sbt: com.google.code.gson:gson:2.13.1:jar" level="project" />
+    <orderEntry type="library" name="sbt: com.lihaoyi:upickle-core_2.13:3.2.0:jar" level="project" />
     <orderEntry type="library" name="sbt: org.apache.commons:commons-text:1.9:jar" level="project" />
     <orderEntry type="library" name="sbt: com.fasterxml.jackson.core:jackson-core:2.19.0:jar" level="project" />
     <orderEntry type="library" name="sbt: org.scala-lang.modules:scala-parallel-collections_2.13:1.0.4:jar" level="project" />
     <orderEntry type="library" name="sbt: org.jspecify:jspecify:1.0.0:jar" level="project" />
-    <orderEntry type="library" name="sbt: de.opal-project:framework_2.13:5.0.0:jar" level="project" />
     <orderEntry type="library" name="sbt: de.opal-project:abstract-interpretation-framework_2.13:5.0.0:jar" level="project" />
+    <orderEntry type="library" name="sbt: de.opal-project:framework_2.13:5.0.0:jar" level="project" />
     <orderEntry type="library" name="sbt: it.unimi.dsi:fastutil-extra:8.5.4:jar" level="project" />
     <orderEntry type="library" name="sbt: org.slf4j:slf4j-api:2.0.17:jar" level="project" />
     <orderEntry type="library" name="sbt: com.fasterxml.jackson.core:jackson-databind:2.19.0:jar" level="project" />
@@ -55,12 +56,14 @@
     <orderEntry type="library" name="sbt: it.unimi.dsi:fastutil-core:8.5.4:jar" level="project" />
     <orderEntry type="library" name="sbt: com.google.guava:guava:33.4.8-jre:jar" level="project" />
     <orderEntry type="library" name="sbt: com.fasterxml.jackson.core:jackson-annotations:2.19.0:jar" level="project" />
+    <orderEntry type="library" name="sbt: com.lihaoyi:geny_2.13:1.0.0:jar" level="project" />
     <orderEntry type="library" name="sbt: com.typesafe.play:play-json_2.13:2.10.6:jar" level="project" />
     <orderEntry type="library" name="sbt: com.google.errorprone:error_prone_annotations:2.38.0:jar" level="project" />
     <orderEntry type="library" name="sbt: it.unimi.dsi:fastutil:8.5.4:jar" level="project" />
     <orderEntry type="library" name="sbt: de.opal-project:bytecode-infrastructure_2.13:5.0.0:jar" level="project" />
     <orderEntry type="library" name="sbt: de.opal-project:three-address-code_2.13:5.0.0:jar" level="project" />
     <orderEntry type="library" name="sbt: de.opal-project:architecture-validation_2.13:5.0.0:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.knowm.xchart:xchart:3.8.7:jar" level="project" />
     <orderEntry type="library" name="sbt: org.scala-lang.modules:scala-xml_2.13:1.3.0:jar" level="project" />
     <orderEntry type="library" name="sbt: de.opal-project:bytecode-disassembler_2.13:5.0.0:jar" level="project" />
     <orderEntry type="library" name="sbt: com.google.guava:failureaccess:1.0.3:jar" level="project" />
@@ -73,5 +76,6 @@
     <orderEntry type="library" name="sbt: com.typesafe:config:1.3.4:jar" level="project" />
     <orderEntry type="library" name="sbt: de.opal-project:bytecode-assembler_2.13:5.0.0:jar" level="project" />
     <orderEntry type="library" name="sbt: de.opal-project:dependencies-extraction-library_2.13:5.0.0:jar" level="project" />
+    <orderEntry type="library" name="sbt: com.lihaoyi:ujson_2.13:3.2.0:jar" level="project" />
   </component>
 </module>

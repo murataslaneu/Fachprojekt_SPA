@@ -15,16 +15,18 @@ object JsonIO {
     try {
       val json = Json.parse(source.mkString)
 
-      val projectJar = {
-        val result = json \ "projectJar"
-        if (result.isDefined) result.get.as[String]
-        else throw new NoSuchElementException("Project jar missing in config json")
+      val projectJars = {
+        val result = json \ "projectJars"
+        if (result.isDefined) result.get.as[List[String]]
+        else throw new NoSuchElementException(s"Project jar(s) missing in $path")
       }
+      projectJars.foreach {path => path.replace('\\', '/')}
       val tplJars = {
         val result = json \ "tplJars"
         if (result.isDefined) result.get.as[List[String]]
         else List.empty[String]
       }
+      tplJars.foreach {path => path.replace('\\', '/')}
       val callGraphAlgorithm = {
         val result = json \ "callGraphAlgorithm"
         if (result.isDefined) result.get.as[String]
@@ -45,7 +47,7 @@ object JsonIO {
         if (result.isDefined) result.get.as[Boolean]
         else false
       }
-      AnalysisConfig(projectJar, tplJars, callGraphAlgorithm, outputJson, isLibraryProject, countAllMethods)
+      AnalysisConfig(projectJars, tplJars, callGraphAlgorithm, outputJson, isLibraryProject, countAllMethods)
     }
     finally {
       source.close()
