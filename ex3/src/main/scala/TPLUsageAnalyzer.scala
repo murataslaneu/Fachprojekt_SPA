@@ -1,8 +1,8 @@
 import org.opalj.br.analyses.{Analysis, AnalysisApplication, BasicReport, ProgressManagement, Project, ReportableAnalysisResult}
 import org.opalj.tac.cg.{CFA_1_1_CallGraphKey, CHACallGraphKey, CallGraphKey, RTACallGraphKey, XTACallGraphKey}
 import com.typesafe.config.{Config, ConfigFactory}
-import org.opalj.log.LogContext
-import analysis.{AnalysisConfig, JsonIO, TPLMethodUsageAnalysis}
+import org.opalj.log.{GlobalLogContext, LogContext, OPALLogger}
+import analysis.{AnalysisConfig, JsonIO, TPLAnalysisResult, TPLMethodUsageAnalysis}
 
 import java.io.File
 import java.net.URL
@@ -19,6 +19,8 @@ object TPLUsageAnalyzer extends Analysis[URL, BasicReport] with AnalysisApplicat
   private var callGraphAlgorithm: CallGraphKey = RTACallGraphKey
   private var callGraphAlgorithmName: String = "RTA"
   private var outputJsonFile: Option[String] = None
+  private val program_begin = System.nanoTime()
+  private implicit val logContext: GlobalLogContext.type = org.opalj.log.GlobalLogContext
 
   override def title: String = "Third Party Library Method Usage Analyzer (JSON-based)"
 
@@ -32,16 +34,31 @@ object TPLUsageAnalyzer extends Analysis[URL, BasicReport] with AnalysisApplicat
         try {
           config = Some(JsonIO.readConfig(configPath))
           config.foreach { c =>
-            callGraphAlgorithmName = c.callGraphAlgorithm.toUpperCase
             callGraphAlgorithm = c.callGraphAlgorithm.toLowerCase match {
-              case "cha" => CHACallGraphKey
-              case "rta" => RTACallGraphKey
-              case "xta" => XTACallGraphKey
-              case "cfa" => CFA_1_1_CallGraphKey
-              case "1-1-cfa" => CFA_1_1_CallGraphKey
-              case "1_1_cfa" => CFA_1_1_CallGraphKey
-              case "cfa_1_1" => CFA_1_1_CallGraphKey
-              case "cfa-1-1" => CFA_1_1_CallGraphKey
+              case "cha" =>
+                callGraphAlgorithmName = "CHA"
+                CHACallGraphKey
+              case "rta" =>
+                callGraphAlgorithmName = "RTA"
+                RTACallGraphKey
+              case "xta" =>
+                callGraphAlgorithmName = "XTA"
+                XTACallGraphKey
+              case "cfa" =>
+                callGraphAlgorithmName = "1-1-CFA"
+                CFA_1_1_CallGraphKey
+              case "1-1-cfa" =>
+                callGraphAlgorithmName = "1-1-CFA"
+                CFA_1_1_CallGraphKey
+              case "1_1_cfa" =>
+                callGraphAlgorithmName = "1-1-CFA"
+                CFA_1_1_CallGraphKey
+              case "cfa_1_1" =>
+                callGraphAlgorithmName = "1-1-CFA"
+                CFA_1_1_CallGraphKey
+              case "cfa-1-1" =>
+                callGraphAlgorithmName = "1-1-CFA"
+                CFA_1_1_CallGraphKey
               case _ =>
                 issues += s"Unknown algorithm '${c.callGraphAlgorithm}'."
                 RTACallGraphKey
@@ -56,7 +73,7 @@ object TPLUsageAnalyzer extends Analysis[URL, BasicReport] with AnalysisApplicat
         issues += s"Unknown parameter: $unknown"
     }
 
-    if (config.isEmpty) issues += "You must provide a config file using -config=yourfile.json"
+    if (config.isEmpty) issues += "-config: Missing. Please provide a config file with -config=config.json"
     issues
   }
 
@@ -82,7 +99,7 @@ object TPLUsageAnalyzer extends Analysis[URL, BasicReport] with AnalysisApplicat
     println(s"Project files: ${projectFiles.map(_.getName)}")
     println(s"Library files: ${allLibs.map(_.getName)}")
 
-    // Very important: load real library implementations, not just interfaces!
+    // Very important: Load real library implementations, not just interfaces!
     if (config.get.isLibraryProject) {
       val overrides = ConfigFactory.parseMap(Map(
         "org.opalj.br.analyses.cg.InitialEntryPointsKey.analysis" ->
@@ -100,36 +117,62 @@ object TPLUsageAnalyzer extends Analysis[URL, BasicReport] with AnalysisApplicat
   }
 
   /**
-   * Main analysis logic: builds the call graph, runs TPL method analysis, and reports results.
+   * Main analysis logic: Build call graph, run TPL method analysis, report results.
    */
   override def analyze(project: Project[URL], parameters: Seq[String], initProgressManagement: Int => ProgressManagement): BasicReport = {
-    val t0 = System.nanoTime()
     val tplFiles = config.map(_.tplJars.map(new File(_))).getOrElse(Nil)
 
     // Get call graph (as returned by OPAL using selected algorithm)
+    OPALLogger.info("Progress", s"Start computing $callGraphAlgorithmName call graph...")
+    val callGraph_begin = System.nanoTime()
     val callGraph = project.get(callGraphAlgorithm)
+    val callGraph_end = System.nanoTime()
+    val callGraphTime = BigDecimal((callGraph_end - callGraph_begin) / 1e9).setScale(3, BigDecimal.RoundingMode.HALF_UP).toDouble
+    OPALLogger.info("Progress", s"Call graph computed in $callGraphTime seconds")
 
+    // Analyze call graph on which third party library methods have been used
+    OPALLogger.info("Progress", s"Beginning analysis on call graph...")
+    val analysis_begin = System.nanoTime()
     val result = TPLMethodUsageAnalysis.analyze(
       project,
       callGraph,
       tplFiles,
-      callGraphAlgorithmName,
-      0.0 // analysis time will be set after measuring runtime below
-    )
-    val t1 = System.nanoTime()
-    val elapsed = (t1 - t0) / 1e9
+      config.get
+    ).sortBy {tplInfo => tplInfo.library}
+    val analysis_end = System.nanoTime()
+    val analysisTime = BigDecimal((analysis_end - analysis_begin) / 1e9).setScale(3, BigDecimal.RoundingMode.HALF_UP).toDouble
+    val programTime = BigDecimal((analysis_end - program_begin) / 1e9).setScale(3, BigDecimal.RoundingMode.HALF_UP).toDouble
+    OPALLogger.info("Progress", s"Analysis finished in $analysisTime seconds, results computed")
+    OPALLogger.info("Progress", s"Program finished in $programTime seconds, outputting results...")
 
-    // Update runtime in result
-    val finalResult = result.copy(analysisTimeSeconds = BigDecimal(elapsed).setScale(2, BigDecimal.RoundingMode.HALF_UP).toDouble)
+    val finalResult = TPLAnalysisResult(result, callGraphAlgorithmName, callGraphTime, analysisTime, programTime)
 
-    // Output results: to file (if set), or to console
+    // Output results to file if wanted
     outputJsonFile match {
       case Some(path) =>
         JsonIO.writeResult(finalResult, path)
-        BasicReport(s"Result written to $path\n")
-      case None =>
-        BasicReport(JsonIO.toJsonString(finalResult))
+        OPALLogger.info("Progress", s"Result written to $path\n")
+      case None => // Do nothing
     }
+
+    // Build output string for console
+    val analysisResults = new StringBuilder()
+    analysisResults.append("==================== RESULTS ====================\n")
+    analysisResults.append("Note: The number of used methods also contains indirectly called methods from the library.\n")
+    if (!config.get.countAllMethods) analysisResults.append("Total number and number of used methods only contain public methods. (default)\n")
+    else analysisResults.append("NOTE: Flag countAllMethods active. Counted every method, even those with non-public visibility.\n")
+    result.foreach { libraryResults =>
+      analysisResults.append(s"${libraryResults.library}:\n")
+      analysisResults.append(s"    - Total: ${libraryResults.totalMethods} methods\n")
+      analysisResults.append(s"    - Used:  ${libraryResults.usedMethods} methods\n")
+      analysisResults.append(s"    - Usage ratio: ${libraryResults.usageRatio}\n")
+    }
+    analysisResults.append("==================== RUN TIMES ====================\n")
+    analysisResults.append(s"Computing $callGraphAlgorithmName call graph: $callGraphTime seconds\n")
+    analysisResults.append(s"Analysis on call graph: $analysisTime seconds\n")
+    analysisResults.append(s"Run time of entire program: $programTime seconds\n")
+
+    BasicReport(analysisResults.toString)
   }
 
   override val analysis: Analysis[URL, ReportableAnalysisResult] = this

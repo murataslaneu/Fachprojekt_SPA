@@ -40,7 +40,12 @@ object JsonIO {
         if (result.isDefined) result.get.as[Boolean]
         else false
       }
-      AnalysisConfig(projectJar, tplJars, callGraphAlgorithm, outputJson, isLibraryProject)
+      val countAllMethods = {
+        val result = json \ "countAllMethods"
+        if (result.isDefined) result.get.as[Boolean]
+        else false
+      }
+      AnalysisConfig(projectJar, tplJars, callGraphAlgorithm, outputJson, isLibraryProject, countAllMethods)
     }
     finally {
       source.close()
@@ -53,8 +58,4 @@ object JsonIO {
     writer.write(Json.prettyPrint(Json.toJson(result)))
     writer.close()
   }
-
-  /** Converts the analysis result to a pretty-printed JSON string (for console output) */
-  def toJsonString(result: TPLAnalysisResult): String =
-    Json.prettyPrint(Json.toJson(result))
 }

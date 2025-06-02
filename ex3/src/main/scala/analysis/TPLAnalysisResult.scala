@@ -12,7 +12,9 @@ import play.api.libs.json._
 case class TPLAnalysisResult(
 analysis: List[TPLInfo],
 callGraphAlgorithm: String,
-analysisTimeSeconds: Double
+var callGraphTimeSeconds: Double,
+var analysisTimeSeconds: Double,
+var programTimeSeconds: Double,
 )
 
 object TPLAnalysisResult {

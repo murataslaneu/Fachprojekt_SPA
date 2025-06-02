@@ -1,16 +1,14 @@
 {
-  "projectJar": "TestGuava2.jar",
+  "projectJar": "TestGuava.jar",
   "tplJars": [
     "lib/gson-2.13.1.jar",
     "lib/guava-33.4.8-jre.jar",
-    "lib/jackson-databind-2.19.0.jar",
-    "lib/logback-classic-1.5.18.jar",
     "lib/junit-4.13.2.jar",
     "lib/logback-classic-1.5.18.jar",
     "lib/pdfbox-3.0.5.jar",
-    "lib/scala-library-2.13.17-M1.jar",
-    "lib/javax.servlet-api-4.0.1.jar"
+    "lib/scala-library-2.13.17-M1.jar"
   ],
   "callGraphAlgorithm": "rta",
+  "countAllMethods": false,
   "outputJson": "result.json"
 }
