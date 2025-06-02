@@ -22,6 +22,9 @@ object TPLUsageAnalyzer extends Analysis[URL, BasicReport] with AnalysisApplicat
   private val program_begin = System.nanoTime()
   private implicit val logContext: GlobalLogContext.type = org.opalj.log.GlobalLogContext
 
+  // Add a flag to check whether the user wants visual output or not
+  private var visual: Boolean = false
+
   override def title: String = "Third Party Library Method Usage Analyzer (JSON-based)"
 
   /** Handles reading and validating command-line parameters, especially config file. */
@@ -68,6 +71,10 @@ object TPLUsageAnalyzer extends Analysis[URL, BasicReport] with AnalysisApplicat
         } catch {
           case ex: Exception => issues += s"Error reading config file: ${ex.getMessage}"
         }
+
+      // Set the visual flag if -visual parameter is present
+      case "-visual" =>
+        visual = true
 
       case unknown =>
         issues += s"Unknown parameter: $unknown"
@@ -171,6 +178,18 @@ object TPLUsageAnalyzer extends Analysis[URL, BasicReport] with AnalysisApplicat
     analysisResults.append(s"Computing $callGraphAlgorithmName call graph: $callGraphTime seconds\n")
     analysisResults.append(s"Analysis on call graph: $analysisTime seconds\n")
     analysisResults.append(s"Run time of entire program: $programTime seconds\n")
+
+    // If visual output is requested, launch the TPLUsageVisualizer after analysis is complete
+    if (visual) {
+      val resultFile = outputJsonFile.getOrElse("result.json")
+      try {
+        // Directly call the visualizer's utility function in the same JVM process
+        visualization.TPLUsageVisualizer.showChart(resultFile)
+      } catch {
+        case e: Exception =>
+          println(s"[ERROR] Visualizer could not be shown: ${e.getMessage}")
+      }
+    }
 
     BasicReport(analysisResults.toString)
   }
