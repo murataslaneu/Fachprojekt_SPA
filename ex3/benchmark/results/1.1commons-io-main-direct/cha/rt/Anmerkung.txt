@@ -1,1 +1,0 @@
-RAM bei 2. Ausführung nicht mehr ausreichend

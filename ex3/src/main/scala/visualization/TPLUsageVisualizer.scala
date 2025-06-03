@@ -31,7 +31,7 @@ object TPLUsageVisualizer {
     val chart: CategoryChart = new CategoryChartBuilder()
       .width(1350)
       .height(750)
-      .title(s"TPL API Coverage")
+      .title(s"TPL API Coverage (${results.callGraphAlgorithm}, in ${results.programTimeSeconds} Sekunden)")
       .xAxisTitle("Library")
       .yAxisTitle("Coverage (%)")
       .build()

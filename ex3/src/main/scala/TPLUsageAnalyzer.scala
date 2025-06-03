@@ -85,12 +85,14 @@ object TPLUsageAnalyzer extends Analysis[URL, BasicReport] with AnalysisApplicat
   }
 
   override def analysisSpecificParametersDescription: String = {
-    """ ========================= REQUIRED PARAMETER =========================
-      | [-config=<config.json> (Configuration used for analysis. See template for schema.)]
+    """ ========================= CUSTOM PARAMETERS =========================
+      | [-config=<config.json> (REQUIRED. Configuration used for analysis. See template for schema.)]
       |
       | This analysis uses a custom config json to configure the project.
       | OPTIONS -cp AND -libcp ARE IGNORED. PLEASE CONFIGURE PROJECT
-      | AND LIBRARY JARS VIA THE CONFIG JSON.""".stripMargin
+      | AND LIBRARY JARS VIA THE CONFIG JSON.
+      |
+      | [-visual (Optional. Shows a graph showing the coverage/usage ratios of the TPLs.)]""".stripMargin
   }
 
   /**
