@@ -10,9 +10,12 @@ import play.api.libs.json._
  * @param analysisTimeSeconds The total analysis runtime in seconds
  */
 case class TPLAnalysisResult(
+project: List[String],
 analysis: List[TPLInfo],
 callGraphAlgorithm: String,
-analysisTimeSeconds: Double
+var callGraphTimeSeconds: Double,
+var analysisTimeSeconds: Double,
+var programTimeSeconds: Double,
 )
 
 object TPLAnalysisResult {

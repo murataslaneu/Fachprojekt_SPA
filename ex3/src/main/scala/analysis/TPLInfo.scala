@@ -12,9 +12,9 @@ import play.api.libs.json._
  */
 case class TPLInfo(
 library: String,
-totalMethods: Int,
-usedMethods: Int,
-usageRatio: Double
+var totalMethods: Int,
+var usedMethods: Int,
+var usageRatio: Double
 )
 
 object TPLInfo {
