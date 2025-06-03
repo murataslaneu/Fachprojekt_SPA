@@ -80,7 +80,7 @@ object TPLUsageAnalyzer extends Analysis[URL, BasicReport] with AnalysisApplicat
         issues += s"Unknown parameter: $unknown"
     }
 
-    if (config.isEmpty) issues += "-config: Missing. Please provide a config file with -config=config.json"
+    if (config.isEmpty) issues += "-config: Missing. Please provide a (correctly formatted) config file with -config=config.json"
     issues
   }
 

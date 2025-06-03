@@ -1,0 +1,21 @@
+{
+  "projectJars": [
+    "benchmark/commons-io-2.19.0.jar"
+  ],
+  "tplJars": [
+    "benchmark/lib/byte-buddy-1.17.5.jar",
+    "benchmark/lib/byte-buddy-agent-1.17.5.jar",
+    "benchmark/lib/commons-codec-1.18.0.jar",
+    "benchmark/lib/commons-lang3-3.17.0.jar",
+    "benchmark/lib/jimfs-1.3.0.jar",
+    "benchmark/lib/jmh-core-1.37.jar",
+    "benchmark/lib/junit-jupiter-5.11.4.jar",
+    "benchmark/lib/junit-pioneer-1.9.1.jar",
+    "benchmark/lib/mockito-inline-4.11.0.jar",
+    "benchmark/lib/rt.jar"
+  ],
+  "callGraphAlgorithm": "rta",
+  "countAllMethods": false,
+  "isLibraryProject": true,
+  "outputJson": "result.json"
+}

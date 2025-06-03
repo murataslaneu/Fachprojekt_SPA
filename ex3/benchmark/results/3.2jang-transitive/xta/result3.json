@@ -13,18 +13,18 @@
   }, {
     "library" : "benchmark/lib/commons-codec-1.17.1.jar",
     "totalMethods" : 815,
-    "usedMethods" : 13,
-    "usageRatio" : 0.015950920245398775
+    "usedMethods" : 14,
+    "usageRatio" : 0.01717791411042945
   }, {
     "library" : "benchmark/lib/commons-compress-1.27.1.jar",
     "totalMethods" : 3602,
-    "usedMethods" : 452,
-    "usageRatio" : 0.1254858411993337
+    "usedMethods" : 693,
+    "usageRatio" : 0.19239311493614658
   }, {
     "library" : "benchmark/lib/commons-io-2.16.1.jar",
     "totalMethods" : 3769,
-    "usedMethods" : 163,
-    "usageRatio" : 0.04324754576810825
+    "usedMethods" : 156,
+    "usageRatio" : 0.041390289201379674
   }, {
     "library" : "benchmark/lib/commons-lang3-3.16.0.jar",
     "totalMethods" : 4908,
@@ -38,8 +38,8 @@
   }, {
     "library" : "benchmark/lib/commons-text-1.11.0.jar",
     "totalMethods" : 1115,
-    "usedMethods" : 23,
-    "usageRatio" : 0.02062780269058296
+    "usedMethods" : 24,
+    "usageRatio" : 0.021524663677130046
   }, {
     "library" : "benchmark/lib/context-2.4.20.jar",
     "totalMethods" : 186,
@@ -78,13 +78,13 @@
   }, {
     "library" : "benchmark/lib/jandex-2.2.3.Final.jar",
     "totalMethods" : 556,
-    "usedMethods" : 307,
-    "usageRatio" : 0.552158273381295
+    "usedMethods" : 315,
+    "usageRatio" : 0.5665467625899281
   }, {
     "library" : "benchmark/lib/java-properties-0.0.7.jar",
     "totalMethods" : 228,
-    "usedMethods" : 93,
-    "usageRatio" : 0.40789473684210525
+    "usedMethods" : 62,
+    "usageRatio" : 0.2719298245614035
   }, {
     "library" : "benchmark/lib/javax.inject-1.jar",
     "totalMethods" : 2,
@@ -103,8 +103,8 @@
   }, {
     "library" : "benchmark/lib/jsoup-1.17.1.jar",
     "totalMethods" : 1270,
-    "usedMethods" : 472,
-    "usageRatio" : 0.3716535433070866
+    "usedMethods" : 495,
+    "usageRatio" : 0.38976377952755903
   }, {
     "library" : "benchmark/lib/jspecify-1.0.0.jar",
     "totalMethods" : 0,
@@ -123,8 +123,8 @@
   }, {
     "library" : "benchmark/lib/maven-artifact-3.9.9.jar",
     "totalMethods" : 324,
-    "usedMethods" : 35,
-    "usageRatio" : 0.10802469135802469
+    "usedMethods" : 38,
+    "usageRatio" : 0.11728395061728394
   }, {
     "library" : "benchmark/lib/maven-builder-support-3.9.9.jar",
     "totalMethods" : 43,
@@ -198,8 +198,8 @@
   }, {
     "library" : "benchmark/lib/maven-resolver-util-1.9.22.jar",
     "totalMethods" : 586,
-    "usedMethods" : 12,
-    "usageRatio" : 0.020477815699658702
+    "usedMethods" : 16,
+    "usageRatio" : 0.027303754266211604
   }, {
     "library" : "benchmark/lib/maven-settings-3.9.9.jar",
     "totalMethods" : 216,
@@ -218,8 +218,8 @@
   }, {
     "library" : "benchmark/lib/org.eclipse.sisu.inject-0.3.3.jar",
     "totalMethods" : 992,
-    "usedMethods" : 95,
-    "usageRatio" : 0.09576612903225806
+    "usedMethods" : 111,
+    "usageRatio" : 0.11189516129032258
   }, {
     "library" : "benchmark/lib/org.eclipse.sisu.plexus-0.3.3.jar",
     "totalMethods" : 753,
@@ -233,8 +233,8 @@
   }, {
     "library" : "benchmark/lib/picocli-4.7.5.jar",
     "totalMethods" : 1491,
-    "usedMethods" : 773,
-    "usageRatio" : 0.5184439973172368
+    "usedMethods" : 775,
+    "usageRatio" : 0.5197853789403085
   }, {
     "library" : "benchmark/lib/plexus-cipher-2.0.jar",
     "totalMethods" : 36,
@@ -243,8 +243,8 @@
   }, {
     "library" : "benchmark/lib/plexus-classworlds-2.5.2.jar",
     "totalMethods" : 230,
-    "usedMethods" : 73,
-    "usageRatio" : 0.3173913043478261
+    "usedMethods" : 60,
+    "usageRatio" : 0.2608695652173913
   }, {
     "library" : "benchmark/lib/plexus-component-annotations-1.5.5.jar",
     "totalMethods" : 19,
@@ -258,8 +258,8 @@
   }, {
     "library" : "benchmark/lib/plexus-java-1.2.0.jar",
     "totalMethods" : 128,
-    "usedMethods" : 1,
-    "usageRatio" : 0.0078125
+    "usedMethods" : 2,
+    "usageRatio" : 0.015625
   }, {
     "library" : "benchmark/lib/plexus-sec-dispatcher-2.0.jar",
     "totalMethods" : 51,
@@ -268,33 +268,28 @@
   }, {
     "library" : "benchmark/lib/plexus-utils-3.5.1.jar",
     "totalMethods" : 1024,
-    "usedMethods" : 38,
-    "usageRatio" : 0.037109375
+    "usedMethods" : 39,
+    "usageRatio" : 0.0380859375
   }, {
     "library" : "benchmark/lib/qdox-2.0.3.jar",
     "totalMethods" : 1651,
-    "usedMethods" : 789,
-    "usageRatio" : 0.4778921865536039
+    "usedMethods" : 791,
+    "usageRatio" : 0.4791035735917626
   }, {
     "library" : "benchmark/lib/qute-core-1.12.2.Final.jar",
     "totalMethods" : 838,
-    "usedMethods" : 534,
-    "usageRatio" : 0.6372315035799523
+    "usedMethods" : 494,
+    "usageRatio" : 0.5894988066825776
   }, {
     "library" : "benchmark/lib/reactive-streams-1.0.3.jar",
     "totalMethods" : 45,
     "usedMethods" : 0,
     "usageRatio" : 0
   }, {
-    "library" : "benchmark/lib/rt.jar",
-    "totalMethods" : 213558,
-    "usedMethods" : 11401,
-    "usageRatio" : 0.053385965405182666
-  }, {
     "library" : "benchmark/lib/slf4j-api-1.7.36.jar",
     "totalMethods" : 387,
-    "usedMethods" : 66,
-    "usageRatio" : 0.17054263565891473
+    "usedMethods" : 69,
+    "usageRatio" : 0.17829457364341086
   }, {
     "library" : "benchmark/lib/slf4j-nop-1.7.30.jar",
     "totalMethods" : 9,
@@ -316,8 +311,8 @@
     "usedMethods" : 0,
     "usageRatio" : 0
   } ],
-  "callGraphAlgorithm" : "1-1-CFA",
-  "callGraphTimeSeconds" : 96.33,
-  "analysisTimeSeconds" : 0.371,
-  "programTimeSeconds" : 106.183
+  "callGraphAlgorithm" : "XTA",
+  "callGraphTimeSeconds" : 26.874,
+  "analysisTimeSeconds" : 0.064,
+  "programTimeSeconds" : 29.246
 }

@@ -1,0 +1,13 @@
+{
+  "projectJars": [
+    "benchmark/joda-time-2.14.0.jar"
+  ],
+  "tplJars": [
+    "benchmark/lib/joda-convert-1.9.2.jar",
+    "benchmark/lib/junit-3.8.2.jar"
+  ],
+  "callGraphAlgorithm": "rta",
+  "countAllMethods": false,
+  "isLibraryProject": true,
+  "outputJson": "result.json"
+}

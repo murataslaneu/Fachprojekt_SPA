@@ -1,0 +1,18 @@
+{
+  "project" : [ "benchmark/joda-time-2.14.0.jar" ],
+  "analysis" : [ {
+    "library" : "benchmark/lib/joda-convert-1.9.2.jar",
+    "totalMethods" : 229,
+    "usedMethods" : 176,
+    "usageRatio" : 0.7685589519650655
+  }, {
+    "library" : "benchmark/lib/junit-3.8.2.jar",
+    "totalMethods" : 372,
+    "usedMethods" : 341,
+    "usageRatio" : 0.9166666666666666
+  } ],
+  "callGraphAlgorithm" : "XTA",
+  "callGraphTimeSeconds" : 3.089,
+  "analysisTimeSeconds" : 0.037,
+  "programTimeSeconds" : 4.393
+}

@@ -1,0 +1,53 @@
+{
+  "project" : [ "benchmark/commons-io-2.19.0.jar" ],
+  "analysis" : [ {
+    "library" : "benchmark/lib/byte-buddy-1.17.5.jar",
+    "totalMethods" : 14978,
+    "usedMethods" : 13391,
+    "usageRatio" : 0.8940445987448258
+  }, {
+    "library" : "benchmark/lib/byte-buddy-agent-1.17.5.jar",
+    "totalMethods" : 223,
+    "usedMethods" : 159,
+    "usageRatio" : 0.7130044843049327
+  }, {
+    "library" : "benchmark/lib/commons-codec-1.18.0.jar",
+    "totalMethods" : 812,
+    "usedMethods" : 795,
+    "usageRatio" : 0.979064039408867
+  }, {
+    "library" : "benchmark/lib/commons-lang3-3.17.0.jar",
+    "totalMethods" : 4925,
+    "usedMethods" : 4766,
+    "usageRatio" : 0.9677157360406091
+  }, {
+    "library" : "benchmark/lib/jimfs-1.3.0.jar",
+    "totalMethods" : 653,
+    "usedMethods" : 361,
+    "usageRatio" : 0.552833078101072
+  }, {
+    "library" : "benchmark/lib/jmh-core-1.37.jar",
+    "totalMethods" : 1463,
+    "usedMethods" : 1223,
+    "usageRatio" : 0.8359535201640464
+  }, {
+    "library" : "benchmark/lib/junit-jupiter-5.11.4.jar",
+    "totalMethods" : 0,
+    "usedMethods" : 0,
+    "usageRatio" : 1
+  }, {
+    "library" : "benchmark/lib/junit-pioneer-1.9.1.jar",
+    "totalMethods" : 1035,
+    "usedMethods" : 805,
+    "usageRatio" : 0.7777777777777778
+  }, {
+    "library" : "benchmark/lib/mockito-inline-4.11.0.jar",
+    "totalMethods" : 0,
+    "usedMethods" : 0,
+    "usageRatio" : 1
+  } ],
+  "callGraphAlgorithm" : "CHA",
+  "callGraphTimeSeconds" : 27.073,
+  "analysisTimeSeconds" : 0.132,
+  "programTimeSeconds" : 30.104
+}

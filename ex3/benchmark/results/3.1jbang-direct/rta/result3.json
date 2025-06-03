@@ -1,0 +1,78 @@
+{
+  "project" : [ "benchmark/jbang-0.0.1.1.jar" ],
+  "analysis" : [ {
+    "library" : "benchmark/lib/commons-compress-1.27.1.jar",
+    "totalMethods" : 3602,
+    "usedMethods" : 670,
+    "usageRatio" : 0.18600777345918934
+  }, {
+    "library" : "benchmark/lib/commons-text-1.11.0.jar",
+    "totalMethods" : 1115,
+    "usedMethods" : 24,
+    "usageRatio" : 0.021524663677130046
+  }, {
+    "library" : "benchmark/lib/context-2.4.20.jar",
+    "totalMethods" : 186,
+    "usedMethods" : 0,
+    "usageRatio" : 0
+  }, {
+    "library" : "benchmark/lib/devkitman-0.1.2.jar",
+    "totalMethods" : 431,
+    "usedMethods" : 0,
+    "usageRatio" : 0
+  }, {
+    "library" : "benchmark/lib/gson-2.12.1.jar",
+    "totalMethods" : 855,
+    "usedMethods" : 555,
+    "usageRatio" : 0.6491228070175439
+  }, {
+    "library" : "benchmark/lib/jandex-2.2.3.Final.jar",
+    "totalMethods" : 556,
+    "usedMethods" : 315,
+    "usageRatio" : 0.5665467625899281
+  }, {
+    "library" : "benchmark/lib/java-properties-0.0.7.jar",
+    "totalMethods" : 228,
+    "usedMethods" : 61,
+    "usageRatio" : 0.2675438596491228
+  }, {
+    "library" : "benchmark/lib/jcl-over-slf4j-1.7.36.jar",
+    "totalMethods" : 123,
+    "usedMethods" : 0,
+    "usageRatio" : 0
+  }, {
+    "library" : "benchmark/lib/jsoup-1.17.1.jar",
+    "totalMethods" : 1270,
+    "usedMethods" : 495,
+    "usageRatio" : 0.38976377952755903
+  }, {
+    "library" : "benchmark/lib/os-maven-plugin-1.7.1.jar",
+    "totalMethods" : 21,
+    "usedMethods" : 0,
+    "usageRatio" : 0
+  }, {
+    "library" : "benchmark/lib/picocli-4.7.5.jar",
+    "totalMethods" : 1491,
+    "usedMethods" : 777,
+    "usageRatio" : 0.5211267605633803
+  }, {
+    "library" : "benchmark/lib/plexus-java-1.2.0.jar",
+    "totalMethods" : 128,
+    "usedMethods" : 2,
+    "usageRatio" : 0.015625
+  }, {
+    "library" : "benchmark/lib/qute-core-1.12.2.Final.jar",
+    "totalMethods" : 838,
+    "usedMethods" : 494,
+    "usageRatio" : 0.5894988066825776
+  }, {
+    "library" : "benchmark/lib/slf4j-nop-1.7.30.jar",
+    "totalMethods" : 9,
+    "usedMethods" : 0,
+    "usageRatio" : 0
+  } ],
+  "callGraphAlgorithm" : "RTA",
+  "callGraphTimeSeconds" : 3.1,
+  "analysisTimeSeconds" : 0.059,
+  "programTimeSeconds" : 4.823
+}
