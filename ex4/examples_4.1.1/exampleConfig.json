@@ -1,0 +1,52 @@
+{
+  "projectJars": [
+    "examples_4.1.1/ExampleWithSecurityManager.jar"
+  ],
+
+  "libraryJars": [
+    "examples_4.1.1/pdfbox-3.0.5.jar"
+  ],
+
+  "completelyLoadLibraries": true,
+
+  "criticalMethods": [
+    {
+      "className": "java.lang.System",
+      "methods": [
+        "getSecurityManager",
+        "setSecurityManager",
+        "someOtherMethod"
+      ]
+    }
+  ],
+
+  "ignoreCalls": [
+    {
+      "callerClass": "Main",
+      "callerMethod": "main",
+      "targetClass": "java.lang.System",
+      "targetMethod": "someOtherMethod"
+    }
+  ],
+
+  "entryPointsFinder": "applicationWithJre",
+
+  "customEntryPoints": [
+    {
+      "className": "com.something.SomeClass",
+      "methods": [
+        "someMethod"
+      ]
+    },
+    {
+      "className": "com.something.OtherClass",
+      "methods": [
+        "someMethod"
+      ]
+    }
+  ],
+
+  "callGraphAlgorithm": "XTA",
+
+  "outputJson": "test.json"
+}
