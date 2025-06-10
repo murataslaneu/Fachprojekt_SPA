@@ -1,6 +1,6 @@
 import com.typesafe.config.{Config, ConfigFactory}
-import modify.JsonIO
-import modify.data.AnalysisConfig
+import create.JsonIO
+import create.data.AnalysisConfig
 import org.opalj.br.analyses.{Analysis, AnalysisApplication, BasicReport, ProgressManagement, Project, ReportableAnalysisResult}
 import org.opalj.log.LogContext
 
@@ -11,13 +11,13 @@ import scala.collection.mutable.ListBuffer
 import scala.jdk.CollectionConverters.{IterableHasAsJava, MapHasAsJava}
 
 
-// Application that implements exercise 4.1.1
+// Application that implements exercise 4.1.2
 
 /**
- * Application that searches for critical method calls (like in ex2) AND edits the bytecode to replaces these with
- * methods that return null. The program outputs new .class files where the edits are visible.
+ * Application that looks for all used third party library methods (TPLs, like in ex3). After doing that, it creates
+ * new class files, only containing the used TPL methods, however without the method body.
  */
-object CriticalMethodsRemover extends Analysis[URL, BasicReport] with AnalysisApplication {
+object TPLMethodsRemover extends Analysis[URL, BasicReport] with AnalysisApplication {
 
   /** Results string to print after analysis */
   private val analysisResults = new StringBuilder()
@@ -25,10 +25,7 @@ object CriticalMethodsRemover extends Analysis[URL, BasicReport] with AnalysisAp
   /** Object holding the configuration for the analysis */
   private var config: Option[AnalysisConfig] = None
 
-  /** Flag set during analysis to indicate if at least one found method call has been ignored. */
-  private var ignoredAtLeastOneCall: Boolean = false
-
-  override def title: String = "Critical methods remover"
+  override def title: String = "Unused TPL methods remover"
 
   override def checkAnalysisSpecificParameters(parameters: Seq[String]): Iterable[String] = {
     /** Internal method to retrieve the value from the given parameter */
@@ -83,7 +80,7 @@ object CriticalMethodsRemover extends Analysis[URL, BasicReport] with AnalysisAp
 
     val newConfig = ConfigFactory.parseMap(overridesMap.asJava).withFallback(configuredConfig).resolve()
 
-    super.setupProject(config.get.projectJars, config.get.libraryJars, config.get.completelyLoadLibraries, newConfig)
+    super.setupProject(config.get.projectJars, config.get.libraryJars, completelyLoadLibraries = true, configuredConfig = newConfig)
   }
 
   // TODO
@@ -94,9 +91,7 @@ object CriticalMethodsRemover extends Analysis[URL, BasicReport] with AnalysisAp
     println("Loaded the following config:")
     println(s"  - projectJars: ${config.get.projectJars}")
     println(s"  - libraryJars: ${config.get.libraryJars}")
-    println(s"  - completelyLoadLibraries: ${config.get.completelyLoadLibraries}")
-    println(s"  - criticalMethods: ${config.get.criticalMethods}")
-    println(s"  - ignoreCalls: ${config.get.ignoreCalls}")
+    println(s"  - includeNonPublicMethods: ${config.get.includeNonPublicMethods}")
     println(s"  - entryPointsFinder: ${config.get.entryPointsFinder}")
     println(s"  - customEntryPoints: ${config.get.customEntryPoints}")
     println(s"  - callGraphAlgorithm: ${config.get.callGraphAlgorithm}")

@@ -1,6 +1,6 @@
-package modify
+package create
 
-import modify.data.{AnalysisConfig, IgnoredCall, SelectedMethodsOfClass}
+import create.data.{AnalysisConfig, SelectedMethodsOfClass}
 import org.opalj.tac.cg.{CFA_1_1_CallGraphKey, CHACallGraphKey, RTACallGraphKey, XTACallGraphKey}
 import play.api.libs.json._
 
@@ -16,9 +16,7 @@ object JsonIO {
    * The json file may contain the following options:
    *   "projectJars",
    *   "libraryJars",
-   *   "completelyLoadLibraries",
-   *   "criticalMethods",
-   *   "ignoreCalls",
+   *   "includeNonPublicMethods",
    *   "entryPointsFinder",
    *   "customEntryPoints",
    *   "callGraphAlgorithm",
@@ -45,12 +43,13 @@ object JsonIO {
     }
 
     // libraryJars: List[String]
-    // - Optional, but when given must contain valid paths.
-    // - Defaults to an empty list.
+    // - Required, must contain valid paths!
     val libraryJarPaths = {
       val result = json \ "libraryJars"
       if (result.isDefined) result.get.as[List[String]]
-      else List.empty[String]
+      else throw new NoSuchElementException(
+        "Error in libraryJars: Library jar(s) missing. Analysis can't do anything, thus cancelling execution."
+      )
     }
     val libraryJarFiles = libraryJarPaths.map { path =>
       val libraryFile = new File(path)
@@ -60,47 +59,13 @@ object JsonIO {
       libraryFile
     }
 
-    // completelyLoadLibraries: Boolean
+    // includeNonPublicMethods: Boolean
     // - Optional, must be true or false.
-    // - Defaults to false.
-    val completelyLoadLibraries = {
-      val result = json \ "completelyLoadLibraries"
+    // - Defaults to true.
+    val includeNonPublicMethods = {
+      val result = json \ "includeNonPublicMethods"
       if (result.isDefined) result.get.as[Boolean]
-      else false
-    }
-
-    // criticalMethods: List[{"className": String, "methods": List[String]}]
-    // - Optional, no checks on whether class/method names are valid.
-    // - Defaults to methods getSecurityManager and setSecurityManager of java.lang.System
-    val criticalMethods = {
-      val result = json \ "criticalMethods"
-      if (result.isDefined) {
-        val validation: JsResult[List[SelectedMethodsOfClass]] = result.validate[List[SelectedMethodsOfClass]]
-        validation match {
-          case JsSuccess(criticalMethods, _) => criticalMethods
-          case JsError(err) => throw new IllegalArgumentException(
-            s"Error in criticalMethods: $err"
-          )
-        }
-      }
-      else List(SelectedMethodsOfClass("java.lang.System", List("getSecurityManager", "setSecurityManager")))
-    }
-
-    // ignoreCalls: List[{"callerClass": String, "callerMethod": String, "targetClass": String, "targetMethod": String}]
-    // - Optional, no checks on whether class/method names are valid.
-    // - Defaults to an empty list.
-    val ignoreCalls = {
-      val result = json \ "ignoreCalls"
-      if (result.isDefined) {
-        val validation: JsResult[List[IgnoredCall]] = result.validate[List[IgnoredCall]]
-        validation match {
-          case JsSuccess(ignoreCalls, _) => ignoreCalls
-          case JsError(err) => throw new IllegalArgumentException(
-            s"Error in ignoreCalls: $err"
-          )
-        }
-      }
-      else List.empty[IgnoredCall]
+      else true
     }
 
     // entryPointsFinder: String
@@ -197,9 +162,7 @@ object JsonIO {
 
     AnalysisConfig(projectJarFiles,
       libraryJarFiles,
-      completelyLoadLibraries,
-      criticalMethods,
-      ignoreCalls,
+      includeNonPublicMethods,
       entryPointsFinder,
       customEntryPoints,
       callGraphAlgorithm,
