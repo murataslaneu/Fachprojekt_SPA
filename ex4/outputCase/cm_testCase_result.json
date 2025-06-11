@@ -1,0 +1,5 @@
+[ {
+  "className" : "Main",
+  "methodName" : "main",
+  "removedCalls" : [ "setSecurityManager" ]
+} ]

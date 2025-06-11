@@ -50,5 +50,5 @@
 
   "outputClassFiles": "results_4.1.1",
 
-  "outputJson": "test.json"
+  "outputJson": "results_4.1.1/test.json"
 }

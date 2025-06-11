@@ -1,10 +1,10 @@
 package modify
 
-import modify.data.{AnalysisConfig, IgnoredCall, SelectedMethodsOfClass}
+import modify.data.{AnalysisConfig, AnalysisResult, IgnoredCall, SelectedMethodsOfClass}
 import org.opalj.tac.cg.{CFA_1_1_CallGraphKey, CHACallGraphKey, RTACallGraphKey, XTACallGraphKey}
 import play.api.libs.json._
 
-import java.io.File
+import java.io.{File, PrintWriter}
 
 /**
  * Helper object for JSON input/output operations.
@@ -208,11 +208,11 @@ object JsonIO {
     )
   }
 
-  // TODO
-  /** Writes the analysis result to a file in JSON format */
-//  def writeResult(result: TPLAnalysisResult, path: String): Unit = {
-//    val writer = new PrintWriter(new File(path))
-//    writer.write(Json.prettyPrint(Json.toJson(result)))
-//    writer.close()
-//  }
+  // Writes a list of analysis results to a JSON file
+  def writeResult(result: List[AnalysisResult], path: String): Unit = {
+    val json = Json.prettyPrint(Json.toJson(result))
+    val writer = new PrintWriter(new File(path))
+    writer.write(json)
+    writer.close()
+  }
 }
