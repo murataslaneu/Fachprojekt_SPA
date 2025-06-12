@@ -4,26 +4,31 @@ import create.data.{AnalysisConfig, SelectedMethodsOfClass}
 import org.opalj.tac.cg.{CFA_1_1_CallGraphKey, CHACallGraphKey, RTACallGraphKey, XTACallGraphKey}
 import play.api.libs.json._
 
-import java.io.File
+import java.io.{File, FileNotFoundException, IOException}
+import java.nio.file.attribute.BasicFileAttributes
+import java.nio.file.{FileVisitResult, Files, Path, SimpleFileVisitor}
 
 /**
  * Helper object for JSON input/output operations.
  * Handles config and result file read/write as JSON.
  */
-object JsonIO {
+object FileIO {
   /** Reads a json config file and returns the AnalysisConfig object.
    *
    * The json file may contain the following options:
-   *   "projectJars",
-   *   "libraryJars",
-   *   "includeNonPublicMethods",
-   *   "entryPointsFinder",
-   *   "customEntryPoints",
-   *   "callGraphAlgorithm",
-   *   "outputClassFiles",
-   *   "outputJson".
+   *  - "projectJars"
+   *  - "libraryJars"
+   *  - "tplJar"
+   *  - "includeNonPublicMethods"
+   *  - "entryPointsFinder"
+   *  - "customEntryPoints"
+   *  - "callGraphAlgorithm"
+   *  - "outputClassFiles"
+   *  - "outputJson"
+   *
+   * @param path Path to the config json
    */
-  def readConfig(path: String): AnalysisConfig = {
+  def readJsonConfig(path: String): AnalysisConfig = {
     val source = scala.io.Source.fromFile(path)
     val json = try Json.parse(source.mkString) finally source.close()
 
@@ -35,7 +40,7 @@ object JsonIO {
       else throw new NoSuchElementException("Error in projectJars: Project jar(s) missing.")
     }
     val projectJarFiles = projectJarPaths.map { path =>
-      val projectFile = new File(path)
+      val projectFile = new File(path.replace('\\', '/'))
       if (!projectFile.exists) throw new java.io.IOException(
         s"Error in projectJars: Path $path could not be read from or does not exist."
       )
@@ -52,12 +57,33 @@ object JsonIO {
       )
     }
     val libraryJarFiles = libraryJarPaths.map { path =>
-      val libraryFile = new File(path)
+      val libraryFile = new File(path.replace('\\', '/'))
       if (!libraryFile.exists) throw new java.io.IOException(
         s"Error in libraryJars: Path $path could not be read from or does not exist."
       )
       libraryFile
     }
+
+    // tplJar: String
+    // Required! Checks with libraryJars whether the given path is valid. tplPath must be a copy from a path in
+    // libraryJars, otherwise an exception will be thrown!
+    val tplJar = {
+      val result = json \ "tplJar"
+      if (result.isDefined) result.get.as[String].replace('\\', '/')
+      else throw new NoSuchElementException(
+        "Error in tplName: Path of third party library jar missing of which the class files should be generated from."
+      )
+    }
+    val tplFile = new File(tplJar)
+    if (!tplFile.exists) throw new FileNotFoundException(
+      "Error in tplName: Given path is invalid. The path must lead to a library given via libraryJars!"
+    )
+    val libraryTplFile = libraryJarFiles.collectFirst { case libFile if libFile.getPath == tplFile.getPath ||
+      libFile.getAbsolutePath == tplFile.getAbsolutePath => libFile
+    }
+    if (libraryTplFile.isEmpty) throw new IllegalArgumentException(
+      "Error in tplName: Given path does not lead to a path given via libraryJars!"
+    )
 
     // includeNonPublicMethods: Boolean
     // - Optional, must be true or false.
@@ -140,42 +166,91 @@ object JsonIO {
     }
 
     // outputClassFiles
-    // - Optional, no further checks on path (path may already exist, containing files may be overriden!)
+    // - Optional
+    // - Checks if parent directory exists and if given folder for given path is empty
     // - Defaults to folder "result" inside the current directory
     val outputClassFiles = {
       val result = json \ "outputClassFiles"
-      if (result.isDefined) result.get.as[String]
+      if (result.isDefined) result.get.as[String].replace('\\', '/')
       else "result"
     }
-
-    // outputJson: String
-    // - Optional, no further checks on path (path may already exist and gets overridden!).
-    // - Defaults to no output.
-    val outputJson: Option[String] = {
-      val result = json \ "outputJson"
-      if (result.isDefined) {
-        val path = result.get.as[String]
-        if (path.endsWith(".json")) Some(path) else Some(path + ".json")
-      }
-      else None
-    }
+    checkOutputClassFiles(outputClassFiles)
 
     AnalysisConfig(projectJarFiles,
       libraryJarFiles,
+      libraryTplFile.get,
       includeNonPublicMethods,
       entryPointsFinder,
       customEntryPoints,
       callGraphAlgorithm,
-      outputClassFiles,
-      outputJson
+      outputClassFiles
     )
   }
 
-  // TODO
-  /** Writes the analysis result to a file in JSON format */
-//  def writeResult(result: TPLAnalysisResult, path: String): Unit = {
-//    val writer = new PrintWriter(new File(path))
-//    writer.write(Json.prettyPrint(Json.toJson(result)))
-//    writer.close()
-//  }
+  /**
+   * Function that checks for the given path if:
+   *  - Parent folder exists   --> If not, throw exception
+   *  - Result folder exists   --> If not, create the folder
+   *  - Result folder is empty --> If not, delete contents after user's permission, otherwise continue analysis
+   *
+   * @param resultFolderPath The path where the class files should be saved in
+   */
+  def checkOutputClassFiles(resultFolderPath: String): Unit = {
+    val pathObject = Path.of(resultFolderPath).toAbsolutePath
+    // Check if parent directory of given folder path exists
+    if (!Files.exists(pathObject.getParent)) throw new IllegalArgumentException(
+      s"Error in outputClassFiles: Parent directory of path $resultFolderPath does not exist."
+    )
+
+    // Parent folder exists
+    // Create folder in parent directory if it not already exists
+    if(!Files.exists(pathObject)) {
+      Files.createDirectory(pathObject)
+      println(s"${Console.BLUE}Created folder ${pathObject.getFileName} in ${pathObject.getParent}${Console.RESET}")
+    }
+    else {
+      // Result folder already exists
+      // If data is inside the result folder, the data has to be deleted for the analysis
+      // Reason: If you e.g. run the analysis for one project, and then for another project, then the files stay, which
+      //         would get messy quite quickly
+      // To prevent accidental data loss, it is checked whether the result folder path already contains files
+      if (Files.list(pathObject).findFirst().isPresent) {
+        // Folder contains files or folders!
+        println(s"${Console.RED}\n#################### CAUTION ######################${Console.RESET}")
+        println(s"${Console.RED}Folder for outputClassFiles is not empty! ${Console.RESET}")
+        println(s"${Console.RED}Path: $pathObject ${Console.RESET}")
+        println(s"${Console.RED_B}(!) For the readability of the results, this analysis will IRRECOVERABLY DELETE the contents of that folder (!)${Console.RESET}")
+        println(s"${Console.RED}If you don't want to continue, you can stop the analysis.")
+        println(s"${Console.RED}##################################################${Console.RESET}\n")
+        println(s"${Console.RED}Continue? (y/n) ${Console.RESET}")
+        val userInput = scala.io.StdIn.readLine(">>> ").toLowerCase.trim
+
+        if (userInput == "y" || userInput == "yes") {
+          println(s"${Console.BLUE}Deleting contents of the results folder $pathObject ... ${Console.RESET}")
+          Files.walkFileTree(pathObject, new SimpleFileVisitor[Path]() {
+            override def visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult = {
+              Files.delete(file)
+              FileVisitResult.CONTINUE
+            }
+
+            override def postVisitDirectory(dir: Path, exc: IOException): FileVisitResult = {
+              // Result folder itself should not be deleted!
+              if (dir != pathObject) {
+                Files.delete(dir)
+              }
+              FileVisitResult.CONTINUE
+            }
+          })
+          println(s"${Console.BLUE}Deletion finished successfully. ${Console.RESET}")
+        }
+        else {
+          println(s"${Console.YELLOW}Cancelled deletion, terminating analysis.${Console.RESET}")
+          System.exit(0)
+        }
+      }
+      else {
+        println(s"Folder $pathObject for outputClassFiles empty, continuing analysis...")
+      }
+    }
+  }
 }

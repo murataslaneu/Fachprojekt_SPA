@@ -10,6 +10,7 @@ import java.io.File
  *
  * @param projectJars Required files to the main project jar files to be analyzed.
  * @param libraryJars List of some/all third party libraries (can be direct dependencies or transitive ones) of the project.
+ * @param tplJar Required path to the jar of the third party library of which the class files should be created from.
  * @param includeNonPublicMethods Flag whether non-public methods should also be included in the class files,
  *                                which may be reachable via indirect calls. Defaults to true.
  * @param entryPointsFinder Combination of the EntryPointsFinder and InstantiatedTypesFinder to use for the project.
@@ -20,15 +21,14 @@ import java.io.File
  * @param callGraphAlgorithm Call graph algorithm to use. User can decide in config between
  *                           "cha", "rta", "xta" and "1-1-cfa".
  * @param outputClassFiles FOLDER where the created class files will be written to.
- * @param outputJson Optional output file name for results. If not given, no output file is generated.
  */
 case class AnalysisConfig(
   projectJars: List[File],
   libraryJars: List[File],
+  tplJar: File,
   includeNonPublicMethods: Boolean,
   entryPointsFinder: (String, String),
   customEntryPoints: List[SelectedMethodsOfClass],
   callGraphAlgorithm: CallGraphKey,
-  outputClassFiles: String,
-  outputJson: Option[String]
+  outputClassFiles: String
 )

@@ -7,9 +7,11 @@
     "examples_4.1.2/guava-33.4.8-jre.jar"
   ],
 
-  "includeNonPublicMethods": false,
+  "tplJar": "examples_4.1.2/guava-33.4.8-jre.jar",
 
-  "entryPointsFinder": "applicationWithJre",
+  "includeNonPublicMethods": true,
+
+  "entryPointsFinder": "application",
 
   "customEntryPoints": [
     {
@@ -26,9 +28,7 @@
     }
   ],
 
-  "callGraphAlgorithm": "CHA",
+  "callGraphAlgorithm": "XTA",
 
-  "outputClassFiles": "results_4.1.2",
-
-  "outputJson": "test2.json"
+  "outputClassFiles": "results_4.1.2"
 }
