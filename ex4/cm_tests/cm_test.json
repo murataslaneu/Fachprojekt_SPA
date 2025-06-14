@@ -1,0 +1,21 @@
+{
+  "projectJars": [
+    "lib/cm/ExampleWithSecurityManager.jar"
+  ],
+  "libraryJars": [
+    "lib/cm/pdfbox-3.0.5.jar"
+  ],
+  "includeNonPublicMethods": true,
+  "entryPointsFinder": "application",
+  "customEntryPoints": [],
+  "callGraphAlgorithm": "rta",
+  "outputClassFiles": "output/yget_nset",
+  "outputJson": "output/yget_nset/cm_test_result.json",
+  "criticalMethods": [
+    {
+      "className": "java.lang.System",
+      "methods": ["setSecurityManager"]
+    }
+  ],
+  "ignoreCalls": []
+}

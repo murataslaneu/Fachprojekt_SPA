@@ -1,6 +1,6 @@
 import com.typesafe.config.{Config, ConfigFactory}
 import modify.JsonIO
-import modify.data.{AnalysisConfig, AnalysisResult}
+import modify.data.{AnalysisConfig, AnalysisResult, IgnoredCall, RemovedCall}
 import org.opalj.br.analyses.{Analysis, AnalysisApplication, BasicReport, ProgressManagement, Project, ReportableAnalysisResult}
 import org.opalj.log.LogContext
 import org.opalj.br.instructions._
@@ -27,14 +27,10 @@ import scala.jdk.CollectionConverters.{IterableHasAsJava, MapHasAsJava}
  */
 object CriticalMethodsRemover extends Analysis[URL, BasicReport] with AnalysisApplication {
 
-  /** Results string to print after analysis */
-  private val analysisResults = new StringBuilder()
-
   /** Object holding the configuration for the analysis */
   private var config: Option[AnalysisConfig] = None
 
-  /** Flag set during analysis to indicate if at least one found method call has been ignored. */
-  private var ignoredAtLeastOneCall: Boolean = false
+  private val resultsBuffer = ListBuffer.empty[AnalysisResult]
 
   override def title: String = "Critical methods remover"
 
@@ -94,6 +90,7 @@ object CriticalMethodsRemover extends Analysis[URL, BasicReport] with AnalysisAp
     super.setupProject(config.get.projectJars, config.get.libraryJars, config.get.completelyLoadLibraries, newConfig)
   }
 
+  /** Main analysis logic */
   override def analyze(
                         project: Project[URL],
                         parameters: Seq[String],
@@ -101,7 +98,7 @@ object CriticalMethodsRemover extends Analysis[URL, BasicReport] with AnalysisAp
                       ): BasicReport = {
 
     // Print loaded configuration for debugging
-    println("Loaded the following config:")
+    println("==================== Loaded Configuration ====================")
     println(s"  - projectJars: ${config.get.projectJars}")
     println(s"  - libraryJars: ${config.get.libraryJars}")
     println(s"  - completelyLoadLibraries: ${config.get.completelyLoadLibraries}")
@@ -112,6 +109,7 @@ object CriticalMethodsRemover extends Analysis[URL, BasicReport] with AnalysisAp
     println(s"  - callGraphAlgorithm: ${config.get.callGraphAlgorithm}")
     println(s"  - outputClassFiles: ${config.get.outputClassFiles}")
     println(s"  - outputJson: ${config.get.outputJson}")
+    println("===============================================================\n")
 
     // Convert the critical methods list into a flat list of (className, methodName) tuples
     val criticalMethods: List[(String, String)] =
@@ -120,7 +118,6 @@ object CriticalMethodsRemover extends Analysis[URL, BasicReport] with AnalysisAp
       )
 
     val outputDir = config.get.outputClassFiles
-    val detectedCalls = scala.collection.mutable.Map.empty[Method, List[String]]
 
     // Analyze all methods in the project
     project.allProjectClassFiles.foreach { cf =>
@@ -129,18 +126,21 @@ object CriticalMethodsRemover extends Analysis[URL, BasicReport] with AnalysisAp
 
         // If critical calls are found, proceed with modification
         if (foundInvokes.nonEmpty && m.body.isDefined) {
-          println(s"Found critical call(s) in: ${cf.thisType.toJava}.${m.name}${m.descriptor.toJava}")
-          printMethodBytecode(m)
-
-          // Save found method names (invocations) for result reporting
-          detectedCalls += (m -> foundInvokes.collect {
-            case (_, instr: MethodInvocationInstruction) => instr.name
-          }.toList)
+          //println(s"Found critical call(s) in: ${cf.thisType.toJava}.${m.name}${m.descriptor.toJava}")
+          println(s"\n>>> Found critical call(s) in method: ${cf.thisType.toJava}.${m.name}${m.descriptor.toJava}")
+          println(f"--- Bytecode for: ${m.name}${m.descriptor.toJava} ---")
 
           // Modify the method body to remove critical calls
           val oldCode = m.body.get
-          val newInstructions = removeCriticalInvokes(oldCode, criticalMethods)
+          val newInstructions = removeCriticalInvokes(
+            oldCode,
+            criticalMethods,
+            config.get.ignoreCalls,
+            cf.thisType.toJava,
+            m.name
+          )
 
+          // Create updated method and class
           val updatedMethod = m.copy(
             body = Some(oldCode.copy(instructions = newInstructions, exceptionHandlers = NoExceptionHandlers))
           )
@@ -159,30 +159,82 @@ object CriticalMethodsRemover extends Analysis[URL, BasicReport] with AnalysisAp
 
           Files.createDirectories(outputFile.getParent)
           Files.write(outputFile, classBytes)
-          println(s"Written modified class to: $outputFile")
+
+          // After class writing
+          println(s"[OK] Modified class written to: $outputFile")
+
+          // Track removed calls
+          val removed = foundInvokes.collect {
+            case (_, instr: MethodInvocationInstruction)
+              if !config.get.ignoreCalls.exists(ic =>
+                ic.callerClass == cf.thisType.toJava &&
+                  ic.callerMethod == m.name &&
+                  ic.targetClass == instr.declaringClass.toJava &&
+                  ic.targetMethod == instr.name
+              ) =>
+              RemovedCall(instr.declaringClass.toJava, instr.name)
+          }.toList
+
+          // Determine if any matched calls were ignored
+          val wasIgnored = foundInvokes.exists {
+            case (_, instr: MethodInvocationInstruction) =>
+              config.get.ignoreCalls.exists(ic =>
+                ic.callerClass == cf.thisType.toJava &&
+                  ic.callerMethod == m.name &&
+                  ic.targetClass == instr.declaringClass.toJava &&
+                  ic.targetMethod == instr.name
+              )
+          }
+
+          // Verify if bytecode is clean from removed calls
+          val bytecodeVerified = if (removed.isEmpty && wasIgnored) {
+            true
+          } else {
+            !removed.exists { call =>
+              updatedMethod.body.exists { code =>
+                code.instructions.exists {
+                  case i: MethodInvocationInstruction =>
+                    i.declaringClass.toJava == call.targetClass &&
+                      i.name == call.targetMethod
+                  case _ => false
+                }
+              }
+            }
+          }
+
+          // Collect analysis result
+          val result = AnalysisResult(
+            className = cf.thisType.toJava,
+            methodName = m.name,
+            removedCalls = removed,
+            status = s"Modified and written to $outputDir/${cf.thisType.toJava.replace('.', '/')}.class",
+            ignored = wasIgnored,
+            bytecodeVerified = bytecodeVerified
+          )
+
+          resultsBuffer += result
         }
       }
     }
 
-    // Build result list for JSON
-    val resultList = detectedCalls.map {
-      case (method, calls) =>
-        AnalysisResult(
-          className = method.classFile.thisType.toJava,
-          methodName = method.name,
-          removedCalls = calls
-        )
-    }.toList
-
     // Write analysis results to JSON if configured
+    val resultList = resultsBuffer.toList
+
     config.foreach { conf =>
       conf.outputJson.foreach { path =>
         modify.JsonIO.writeResult(resultList, path)
-        println(s"Result JSON written to $path")
+
+        // After JSON writing
+        println(s"[OK] Result JSON written to: $path")
       }
     }
 
-    BasicReport("Critical methods removed and class files updated.")
+    resultsBuffer.foreach { result =>
+      // After verification
+      println(s"[OK] ${result.className}.${result.methodName} -> bytecodeVerified = ${result.bytecodeVerified}")
+    }
+
+    BasicReport(">>> Bytecode modification complete. Critical methods removed.")
   }
 
   /**
@@ -224,19 +276,48 @@ object CriticalMethodsRemover extends Analysis[URL, BasicReport] with AnalysisAp
   }
 
   /**
-   * Removes critical method calls from a method's bytecode.
+   * Removes all critical method invocations from the bytecode if not ignored.
    *
-   * @param code The original method code.
-   * @param criticalMethods List of (className, methodName) identifying critical calls.
-   * @return A new instruction array with critical method invocations removed.
+   * @param code The original bytecode of the method.
+   * @param criticalMethods A list of (className, methodName) tuples representing critical method calls.
+   * @param ignoreCalls A list of IgnoredCall objects representing whitelisted calls that should not be removed.
+   * @param className The name of the current class being analyzed (used for matching ignoreCalls).
+   * @param methodName The name of the current method being analyzed (used for matching ignoreCalls).
+   * @return A filtered array of instructions without the non-ignored critical method invocations.
    */
-  private def removeCriticalInvokes(code: Code, criticalMethods: List[(String, String)]): Array[Instruction] = {
+  private def removeCriticalInvokes(
+                                     code: Code,
+                                     criticalMethods: List[(String, String)],
+                                     ignoreCalls: List[IgnoredCall],
+                                     className: String,
+                                     methodName: String
+                                   ): Array[Instruction] = {
     val filtered = code.instructions.filterNot {
       case i: MethodInvocationInstruction =>
-        criticalMethods.contains((i.declaringClass.toJava, i.name))
+        val call = (i.declaringClass.toJava, i.name)
+
+        val shouldIgnore = ignoreCalls.exists { ic =>
+          ic.callerClass == className &&
+            ic.callerMethod == methodName &&
+            ic.targetClass == call._1 &&
+            ic.targetMethod == call._2
+        }
+
+        // Debug for each call check (inside removeCriticalInvokes)
+        println(f"[?] Should ignore: $className.$methodName -> ${call._1}.${call._2} = $shouldIgnore")
+
+        // Show active critical methods
+        println(s"[!] Active criticalMethods: " + criticalMethods.map { case (c, m) => s"$c#$m" }.mkString(", "))
+
+        // Final report
+        println(">>> Bytecode modification complete. Critical methods removed.")
+
+        criticalMethods.contains(call) && !shouldIgnore
+
       case _ => false
-    }.filter(_ != null) // avoid nulls for assembler
-    filtered
+    }
+
+    filtered.filter(_ != null) // avoid nulls for assembler
   }
 
   override val analysis: Analysis[URL, ReportableAnalysisResult] = this

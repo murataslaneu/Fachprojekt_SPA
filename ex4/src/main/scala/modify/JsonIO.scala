@@ -215,4 +215,12 @@ object JsonIO {
     writer.write(json)
     writer.close()
   }
+
+  // Helper method for reading JSON result files in tests
+  def readJsonResult(path: String): List[AnalysisResult] = {
+    val source = scala.io.Source.fromFile(path, "UTF-8")
+    val content = try source.mkString finally source.close()
+    val parsed = Json.parse(content).validate[List[AnalysisResult]]
+    parsed.getOrElse(throw new IllegalArgumentException(s"Invalid JSON in $path"))
+  }
 }
