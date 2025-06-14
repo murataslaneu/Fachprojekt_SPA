@@ -132,13 +132,16 @@ object CriticalMethodsRemover extends Analysis[URL, BasicReport] with AnalysisAp
 
           // Modify the method body to remove critical calls
           val oldCode = m.body.get
-          val newInstructions = removeCriticalInvokes(
+          val newInstructions = replaceCriticalInvokesWithNOP(
             oldCode,
             criticalMethods,
             config.get.ignoreCalls,
             cf.thisType.toJava,
             m.name
           )
+
+          println("--- Modified bytecode ---")
+          printCodeInstructions(newInstructions)
 
           // Create updated method and class
           val updatedMethod = m.copy(
@@ -309,8 +312,7 @@ object CriticalMethodsRemover extends Analysis[URL, BasicReport] with AnalysisAp
         // Show active critical methods
         println(s"[!] Active criticalMethods: " + criticalMethods.map { case (c, m) => s"$c#$m" }.mkString(", "))
 
-        // Final report
-        println(">>> Bytecode modification complete. Critical methods removed.")
+
 
         criticalMethods.contains(call) && !shouldIgnore
 
@@ -318,6 +320,74 @@ object CriticalMethodsRemover extends Analysis[URL, BasicReport] with AnalysisAp
     }
 
     filtered.filter(_ != null) // avoid nulls for assembler
+  }
+
+  // Replace critical method calls with NOPs to preserve the stack and instruction layout
+  private def printCodeInstructions(instructions: Array[Instruction]): Unit = {
+    instructions.zipWithIndex.foreach {
+      case (instr, idx) =>
+        println(f"$idx%03d: $instr")
+    }
+  }
+
+  /**
+   * Replaces all critical method invocation instructions with NOP instructions,
+   * unless the invocation is listed in the ignoreCalls whitelist.
+   *
+   * This approach avoids deleting instructions outright, which may cause issues
+   * with bytecode verification or control flow consistency (e.g., jump offsets).
+   *
+   * @param code The original bytecode of the method
+   * @param criticalMethods A list of (className, methodName) tuples defining critical method calls
+   * @param ignoreCalls A list of IgnoredCall entries representing calls that should not be removed
+   * @param className The name of the current class (used to match ignoreCalls)
+   * @param methodName The name of the current method (used to match ignoreCalls)
+   * @return A modified instruction array where matched INVOKEs are replaced with NOPs
+   */
+  private def replaceCriticalInvokesWithNOP(
+                                             code: Code,
+                                             criticalMethods: List[(String, String)],
+                                             ignoreCalls: List[IgnoredCall],
+                                             className: String,
+                                             methodName: String
+                                           ): Array[Instruction] = {
+
+    val modifiedInstructions = code.instructions.zipWithIndex.map {
+      case (instr: MethodInvocationInstruction, idx) =>
+        val call = (instr.declaringClass.toJava, instr.name)
+
+        val shouldIgnore = ignoreCalls.exists { ic =>
+          ic.callerClass == className &&
+            ic.callerMethod == methodName &&
+            ic.targetClass == call._1 &&
+            ic.targetMethod == call._2
+        }
+
+        val isCritical = criticalMethods.contains(call)
+
+        // Debug for each call check
+        println(f"[?] Should ignore: $className.$methodName -> ${call._1}.${call._2} = $shouldIgnore")
+
+        // Show active critical methods
+        println(s"[!] Active criticalMethods: " + criticalMethods.map { case (c, m) => s"$c#$m" }.mkString(", "))
+
+        // Final report
+        println(">>> Bytecode modification complete. Critical methods replaced with NOP.")
+
+        if (isCritical && !shouldIgnore) {
+          println(s"[REPLACE] Replacing ${call._1}.${call._2} at index $idx with NOP")
+          NOP
+        } else {
+          instr
+        }
+
+      case (instr, _) if instr != null => instr
+      case (null, idx) =>
+        println(s"[WARNING] Found null instruction at index $idx, replacing with NOP")
+        NOP
+    }
+
+    modifiedInstructions.filter(_ != null)
   }
 
   override val analysis: Analysis[URL, ReportableAnalysisResult] = this
