@@ -1,7 +1,6 @@
 package modify.data
 
 import play.api.libs.json._
-import modify.data.RemovedCall
 
 /**
  * Represents the result of analyzing and modifying a specific method.
@@ -12,6 +11,8 @@ import modify.data.RemovedCall
  * @param status           Status message about what was done (e.g., whether class was modified).
  * @param ignored          True if any critical calls were ignored due to ignore list.
  * @param bytecodeVerified True if the bytecode was successfully verified after modification.
+ * @param nopReplacements (Optional) List of tuples marking which instruction indices (PCs)
+ *                        were replaced with NOPs during modification, including the original instruction.
  */
 case class AnalysisResult(
                            className: String,
@@ -19,8 +20,10 @@ case class AnalysisResult(
                            removedCalls: List[RemovedCall],
                            status: String,
                            ignored: Boolean,
-                           bytecodeVerified: Boolean
+                           bytecodeVerified: Boolean,
+                           nopReplacements: Option[List[(Int, String)]] = None
                          )
+
 
 object AnalysisResult {
   // Enables automatic JSON serialization/deserialization for AnalysisResult

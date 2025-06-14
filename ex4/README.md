@@ -47,25 +47,30 @@ festgelegt werden.
 ## Benutzung (über sbt)
 
 1. Öffne ein Terminal und navigiere in das Verzeichnis `TUDO-FP-VulnSPA-25-3/ex4`.
+
 2. Starte sbt mit dem Befehl:
 
    ```bash
    sbt
-   ```
+    ```
+
 3. Führe die Analyse mit einer JSON-Konfigurationsdatei aus:
 
    ```bash
    run -config=cm_tests/cm_test.json
    ```
+
 4. Die modifizierten `.class`-Dateien werden im konfigurierten Ordner abgelegt (z.B. `output/`).
+
 5. Die Analyseergebnisse werden zusätzlich als JSON-Datei ausgegeben (z.B. `output/cm_test_result.json`).
+
 6. Optional: Automatische Tests können mit folgendem Befehl ausgeführt werden:
 
    ```bash
    test
    ```
 
-> Hinweis: Die Konfiguration erfolgt ausschließlich über die JSON-Datei, welche Pfade zu Projektdateien, kritische Methoden, ignorierte Aufrufe usw. enthält.
+> **Hinweis:** Die Konfiguration erfolgt ausschließlich über die JSON-Datei, welche Pfade zu Projektdateien, kritische Methoden, ignorierte Aufrufe usw. enthält.
 
 ---
 
@@ -77,63 +82,109 @@ Entwicklung einer Analyse, die kritische Methodenaufrufe im Bytecode erkennt, op
 
 ### Umgesetzte Anforderungen
 
-* **Konfigurierbare kritische Methoden (`criticalMethods`)**: Methoden können über JSON spezifiziert werden.
+* **Konfigurierbare kritische Methoden (`criticalMethods`):** Methoden können über JSON spezifiziert werden.
 * **Ausgabe des Bytecodes der Methoden mit kritischen Aufrufen**
-* **Entfernung der Aufrufe aus dem Bytecode (`INVOKE*`)**
+* **Entfernung der Aufrufe aus dem Bytecode (`INVOKE*`), ersetzt durch NOP für Stack-Sicherheit**
 * **Berücksichtigung von `ignoreCalls` (Whitelist)**
 * **Speicherung der modifizierten `.class`-Dateien**
 * **Verifikation der Änderungen (`bytecodeVerified`)**
-* **Ausgabe als strukturierte JSON-Datei (`AnalysisResult`)**
-* **Vier kombinatorische Testszenarien erfolgreich implementiert und getestet**
-* **Stack-Layout-Analyse**: Durch Entfernen von Methodenaufrufen wird der JVM-Stack nicht inkonsistent, da
-  entweder `void`-Methoden betroffen sind oder OPALs Assembler die Stackstruktur korrekt behandelt.
+* **Strukturierte JSON-Ausgabe (`AnalysisResult`) inklusive NOP-Patch-Log**
+* **Bytecode-Dump pro Methode als JSON (z.B. `Main_main_bytecode.json`)**
+* **Vier kombinatorische Testszenarien automatisiert getestet**
+* **Stack-Layout bleibt durch NOPs konsistent**
 * **Automatische Unit-Tests mit `sbt test` decken alle Fälle ab**
+* **(Neu) Automatisierter Test, der das `.class`-File parst und prüft, ob NOPs korrekt gesetzt sind**
 
 ---
 
-### Verwendung des Call-Graphen (bzw. Verzicht darauf)
+### Call-Graph Usage
 
-In der Analyse von Aufgabe 4.1.1 wurde **bewusst auf die explizite Verwendung eines Call-Graphen verzichtet**, da für diese Teilaufgabe lediglich der statische Bytecode der einzelnen Methoden überprüft und manipuliert werden sollte. Die Aufgabe fokussiert sich darauf, alle im Bytecode vorkommenden Aufrufe von konfigurierten kritischen Methoden zu erkennen und ggf. zu entfernen – unabhängig davon, ob sie zur Laufzeit tatsächlich aufgerufen werden.
+Im Rahmen von 4.1.1 wurde **kein expliziter Call-Graph verwendet**, da lediglich statischer Bytecode bearbeitet wird. Ein Call-Graph wäre nur bei weiterführender Ausführbarkeitsanalyse erforderlich. Die Erkennung und Entfernung der Aufrufe erfolgt rein auf Bytecode-Ebene und ist durch eigene Unit-Tests validiert.
 
-> Ein Call-Graph wäre nur dann zwingend notwendig, wenn zusätzlich die Ausführbarkeit oder Erreichbarkeit der Methoden analysiert werden müsste.
+---
 
-Zur Validierung wurde ein separates Testmodul (`CriticalMethodsRemoverTest.scala`) erstellt, das vier Kombinationen von kritischen und ignorierten Methodenaufrufen testet. Die Analyse funktioniert vollständig auf Bytecode-Ebene und erkennt auch mehrfach eingebettete oder verschachtelte Aufrufe korrekt, **ohne dass ein Call-Graph notwendig ist**.
+### Output & Tests
 
-Somit stellt der Verzicht auf den Call-Graph in diesem Kontext **keine Einschränkung** dar, sondern entspricht der Aufgabenstellung, die lediglich verlangt, dass Methodenaufrufe erkannt und entfernt werden, nicht aber ob sie tatsächlich aufrufbar sind.
+**Beispiel Ergebnis-JSON:**
+
+```json
+[
+  {
+    "className": "Main",
+    "methodName": "main",
+    "removedCalls": [
+      { "targetClass": "java.lang.System", "targetMethod": "setSecurityManager" }
+    ],
+    "status": "Modified and written to output/yget_nset/Main.class",
+    "ignored": false,
+    "bytecodeVerified": true,
+    "nopReplacements": [
+      [31, "INVOKESTATIC(java.lang.System{ void setSecurityManager(java.lang.SecurityManager) })"]
+    ]
+  }
+]
+```
+
+**Beispiel Bytecode-Dump (JSON):**
+
+```json
+{
+  "class": "Main",
+  "method": "main",
+  "bytecode": [
+    { "pc": 0, "instruction": "ICONST_0" },
+    
+    { "pc": 31, "instruction": "NOP" },
+    { "pc": 32, "instruction": "NOP" }
+  ]
+}
+```
+
+---
 
 ### Testkombinationen (4.1.1)
-
-Die folgenden vier JSON-Konfigurationsfälle wurden zur Validierung getestet:
 
 ```scala
 /**
  * Case: yget_nset
- * Description: getSecurityManager remains, setSecurityManager is removed
  * Only setSecurityManager is marked as critical, getSecurityManager is allowed (not critical)
- */
-
-/**
+ *
  * Case: nget_yset
- * Description: setSecurityManager remains, getSecurityManager is removed
  * Only getSecurityManager is marked as critical, setSecurityManager is allowed (not critical)
- */
-
-/**
+ *
  * Case: yget_yset
- * Description: both getSecurityManager and setSecurityManager are removed
  * Both methods are marked as critical and neither is ignored
- */
-
-/**
+ *
  * Case: nget_nset
- * Description: both getSecurityManager and setSecurityManager remain
  * Both methods are marked as critical but are explicitly ignored via ignoreCalls
  */
- ```
+```
+
+---
+
+### Testautomatisierung & Validierung
+
+* Vier Unit-Tests prüfen:
+
+    * Ob erwartete Aufrufe entfernt (`NOP`) wurden,
+    * ob Modifikationen tatsächlich im `.class`-File stehen,
+    * und ob keine kritischen Methoden entfernt wurden, wenn sie ignoriert werden sollen.
+
+```scala
+test("setSecurityManager should be replaced with NOP in yget_nset") {
+  val instructionsOpt = loadMainMethodBytecode("output/yget_nset")
+  assert(instructionsOpt.isDefined)
+  val instructions = instructionsOpt.get
+  val nops = instructions.slice(31, 34)
+  assert(nops.forall(i => i != null && i.mnemonic.equalsIgnoreCase("nop")))
+}
+```
+
+---
 
 ## Aufgabe 4.1.2: Bytecode Erstellen
 
-*( . . . )*
+*( ... in Bearbeitung ... )*
 
 ### Optionen der Config-Datei
 

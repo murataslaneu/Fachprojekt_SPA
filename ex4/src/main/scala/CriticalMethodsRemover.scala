@@ -7,6 +7,8 @@ import org.opalj.br.instructions._
 import org.opalj.br.NoExceptionHandlers
 import org.opalj.bc.Assembler
 import org.opalj.ba.toDA
+import java.nio.charset.StandardCharsets
+import play.api.libs.json._
 
 import java.nio.file.{Files, Paths}
 import org.opalj.br.instructions.Instruction
@@ -31,6 +33,8 @@ object CriticalMethodsRemover extends Analysis[URL, BasicReport] with AnalysisAp
   private var config: Option[AnalysisConfig] = None
 
   private val resultsBuffer = ListBuffer.empty[AnalysisResult]
+
+  private var lastNOPReplacements: Option[List[(Int, String)]] = None
 
   override def title: String = "Critical methods remover"
 
@@ -142,6 +146,7 @@ object CriticalMethodsRemover extends Analysis[URL, BasicReport] with AnalysisAp
 
           println("--- Modified bytecode ---")
           printCodeInstructions(newInstructions)
+          writeBytecodeJsonDump(newInstructions, cf.thisType.toJava, m.name, outputDir)
 
           // Create updated method and class
           val updatedMethod = m.copy(
@@ -212,7 +217,8 @@ object CriticalMethodsRemover extends Analysis[URL, BasicReport] with AnalysisAp
             removedCalls = removed,
             status = s"Modified and written to $outputDir/${cf.thisType.toJava.replace('.', '/')}.class",
             ignored = wasIgnored,
-            bytecodeVerified = bytecodeVerified
+            bytecodeVerified = bytecodeVerified,
+            nopReplacements = lastNOPReplacements // <- ADD THIS FIELD
           )
 
           resultsBuffer += result
@@ -272,6 +278,45 @@ object CriticalMethodsRemover extends Analysis[URL, BasicReport] with AnalysisAp
   }
 
   /**
+   * Writes the bytecode instructions of a method as a JSON file.
+   *
+   * Each instruction is exported with its program counter (PC) and mnemonic string.
+   * This allows for machine-readable inspection or comparison of the full modified bytecode.
+   *
+   * @param instructions The instruction array of the method (typically after modification).
+   * @param className    The fully qualified class name for file naming.
+   * @param methodName   The name of the method for file naming.
+   * @param outputDir    The directory where the JSON file will be written.
+   */
+  private def writeBytecodeJsonDump(
+                                     instructions: Array[Instruction],
+                                     className: String,
+                                     methodName: String,
+                                     outputDir: String
+                                   ): Unit = {
+
+    val instrList = instructions.zipWithIndex.map {
+      case (instr, idx) =>
+        Json.obj(
+          "pc" -> idx,
+          "instruction" -> instr.toString
+        )
+    }
+
+    val json = Json.prettyPrint(Json.obj(
+      "class" -> className,
+      "method" -> methodName,
+      "bytecode" -> instrList
+    ))
+
+    val path = Paths.get(outputDir, s"${className.replace('.', '_')}_${methodName}_bytecode.json")
+    Files.write(path, json.getBytes(StandardCharsets.UTF_8))
+
+    //DEBUG Output
+    println(s"[OK] Bytecode dump written to: $path")
+  }
+
+  /**
    * Replaces all critical method invocation instructions with NOP instructions,
    * unless the invocation is listed in the ignoreCalls whitelist.
    *
@@ -293,9 +338,11 @@ object CriticalMethodsRemover extends Analysis[URL, BasicReport] with AnalysisAp
                                              methodName: String
                                            ): Array[Instruction] = {
 
-    val modifiedInstructions = code.instructions.zipWithIndex.map {
-      case (instr: MethodInvocationInstruction, idx) =>
-        val call = (instr.declaringClass.toJava, instr.name)
+    val replacedWithNOP = mutable.Buffer[(Int, String)]()
+
+    val filtered = code.instructions.zipWithIndex.map {
+      case (i: MethodInvocationInstruction, idx) =>
+        val call = (i.declaringClass.toJava, i.name)
 
         val shouldIgnore = ignoreCalls.exists { ic =>
           ic.callerClass == className &&
@@ -304,31 +351,27 @@ object CriticalMethodsRemover extends Analysis[URL, BasicReport] with AnalysisAp
             ic.targetMethod == call._2
         }
 
-        val isCritical = criticalMethods.contains(call)
-
-        // Debug for each call check
+        //DEBUG logs
         println(f"[?] Should ignore: $className.$methodName -> ${call._1}.${call._2} = $shouldIgnore")
-
-        // Show active critical methods
         println(s"[!] Active criticalMethods: " + criticalMethods.map { case (c, m) => s"$c#$m" }.mkString(", "))
 
-        // Final report
-        println(">>> Bytecode modification complete. Critical methods replaced with NOP.")
-
-        if (isCritical && !shouldIgnore) {
-          println(s"[REPLACE] Replacing ${call._1}.${call._2} at index $idx with NOP")
+        if (criticalMethods.contains(call) && !shouldIgnore) {
+          println(s">>> Will replace with NOP: $i at PC=$idx")
+          replacedWithNOP += ((idx, i.toString))
           NOP
-        } else {
-          instr
-        }
+        } else i
 
-      case (instr, _) if instr != null => instr
-      case (null, idx) =>
-        println(s"[WARNING] Found null instruction at index $idx, replacing with NOP")
-        NOP
+      case (null, _) => NOP
+      case (other, _) => other
     }
 
-    modifiedInstructions.filter(_ != null)
+    //Final report
+    println(">>> Bytecode modification complete. Critical methods replaced with NOP.")
+
+    //Attach NOP info to global state for JSON generation
+    lastNOPReplacements = Some(replacedWithNOP.toList) //GLOBAL
+
+    filtered
   }
 
   override val analysis: Analysis[URL, ReportableAnalysisResult] = this
