@@ -1,11 +1,22 @@
 ThisBuild / version := "0.1.0-SNAPSHOT"
 
-ThisBuild / scalaVersion := "2.13.14"
+// Using plugin sbt-scoverage to measure the test coverage requires at least scala version 2.13.16
+// However, for the Fachprojekt, version 2.13.14 should be used
+// If any problems occur, revert back to 2.13.14
+ThisBuild / scalaVersion := "2.13.16"
+//ThisBuild / scalaVersion := "2.13.14"
 
 lazy val root = (project in file("."))
   .settings(
     name := "ex4"
   )
+
+// OPAL depends on scala-xml version 1.3.0, while plugin sbt-scoverage depends on version 2.3.0
+// This forces the used version to be 1.3.0 to keep compatibility with OPAL
+dependencyOverrides += "org.scala-lang.modules" %% "scala-xml" % "1.3.0"
+
+// For testing
+libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.19" % "test"
 
 libraryDependencies += "de.opal-project" % "framework_2.13" % "5.0.0"
 libraryDependencies += "com.typesafe.play" %% "play-json" % "2.10.6"

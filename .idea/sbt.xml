@@ -35,7 +35,7 @@
             <option value="$PROJECT_DIR$/ex4/project" />
           </set>
         </option>
-        <option name="sbtVersion" value="1.10.11" />
+        <option name="sbtVersion" value="1.11.2" />
         <option name="separateProdAndTestSourcesIsExplicit" value="true" />
       </SbtProjectSettings>
       <SbtProjectSettings>
@@ -47,7 +47,7 @@
             <option value="$PROJECT_DIR$/ex5/project" />
           </set>
         </option>
-        <option name="sbtVersion" value="1.10.11" />
+        <option name="sbtVersion" value="1.11.2" />
         <option name="separateProdAndTestSourcesIsExplicit" value="true" />
       </SbtProjectSettings>
       <SbtProjectSettings>
@@ -59,7 +59,7 @@
             <option value="$PROJECT_DIR$/ex6/project" />
           </set>
         </option>
-        <option name="sbtVersion" value="1.10.11" />
+        <option name="sbtVersion" value="1.11.2" />
         <option name="separateProdAndTestSourcesIsExplicit" value="true" />
       </SbtProjectSettings>
       <SbtProjectSettings>
@@ -71,7 +71,7 @@
             <option value="$PROJECT_DIR$/ex7/project" />
           </set>
         </option>
-        <option name="sbtVersion" value="1.10.11" />
+        <option name="sbtVersion" value="1.11.2" />
         <option name="separateProdAndTestSourcesIsExplicit" value="true" />
       </SbtProjectSettings>
     </option>

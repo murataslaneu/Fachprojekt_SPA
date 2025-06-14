@@ -1,0 +1,21 @@
+{
+  "projectJars": [
+    "src/test/4.1.2_testFiles/Test_ExampleProject.jar"
+  ],
+  "libraryJars": [
+    "src/test/4.1.2_testFiles/Test_ExampleLib.jar",
+    "src/test/4.1.2_testFiles/Test_UnusedLib.jar"
+  ],
+  "tplJar" : "src/test/4.1.2_testFiles/Test_ExampleLib.jar",
+  "includeNonPublicMethods" : false,
+  "customEntryPoints" : [
+    {
+      "className": "some.nonExistentClass",
+      "methods": [
+        "onlyHereToTestReadingConfig"
+      ]
+    }
+  ],
+  "callGraphAlgorithm" : "XTA",
+  "outputClassFiles" : "src/test/4.1.2_testFiles/results"
+}

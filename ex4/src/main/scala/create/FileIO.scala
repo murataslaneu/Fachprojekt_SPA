@@ -1,6 +1,9 @@
 package create
 
 import create.data.{AnalysisConfig, SelectedMethodsOfClass}
+import org.opalj.ba.toDA
+import org.opalj.bc.Assembler
+import org.opalj.br.ClassFile
 import org.opalj.tac.cg.{CFA_1_1_CallGraphKey, CHACallGraphKey, RTACallGraphKey, XTACallGraphKey}
 import play.api.libs.json._
 
@@ -13,7 +16,8 @@ import java.nio.file.{FileVisitResult, Files, Path, SimpleFileVisitor}
  * Handles config and result file read/write as JSON.
  */
 object FileIO {
-  /** Reads a json config file and returns the AnalysisConfig object.
+  /**
+   * Reads a json config file and returns the AnalysisConfig object.
    *
    * The json file may contain the following options:
    *  - "projectJars"
@@ -188,6 +192,54 @@ object FileIO {
   }
 
   /**
+   * Writes the created modified class files to the given output path.
+   *
+   * @param path Path where to output the dummy (must be a folder!)
+   * @param modifiedClassFiles The modified class files created by the analysis.
+   */
+  def writeModifiedClassFiles(path: String, modifiedClassFiles: Iterable[ClassFile]): Unit = {
+    val outputPath = Path.of(path)
+    var replacedInvalidCharacter = false
+    println(s"\nWriting created class files to path $outputPath ...\n")
+    modifiedClassFiles.foreach { modifiedClassFile =>
+      val usedMethods = modifiedClassFile.methods.length
+      val sampleMethod = modifiedClassFile.methods(scala.util.Random.nextInt(usedMethods))
+      println(s"Class file ${modifiedClassFile.fqn.replace('/','.')}:")
+      println(s"  - Used Methods: $usedMethods")
+      println(s"  - Sample method: ${sampleMethod.signatureToJava(true)}\n")
+
+      val newClassBytes: Array[Byte] = Assembler(toDA(modifiedClassFile))
+
+      // Windows does not accept some characters that may be contained in the class file names
+      // Thus, replace them with similar-looking characters that are allowed
+      val sanitizedClassFileName = modifiedClassFile.fqn.map { c =>
+        c match {
+          case ':' =>
+            replacedInvalidCharacter = true
+            'ː' // Unicode character U+02D0
+          case '<' =>
+            replacedInvalidCharacter = true
+            '‹' // Unicode character U+2039
+          case '>' =>
+            replacedInvalidCharacter = true
+            '›' // Unicode character U+203A
+          case other => other
+        }
+      }
+
+      val classFilePath = Path.of(s"$outputPath/$sanitizedClassFileName.class")
+
+      Files.createDirectories(classFilePath.getParent)
+      Files.write(classFilePath, newClassBytes)
+    }
+
+    if (replacedInvalidCharacter) {
+      println(s"${Console.BLUE}Note: At least one of the class files contained a character not allowed in Windows file names (':', '<' or '>').${Console.RESET}")
+      println(s"${Console.BLUE}      Such characters have been replaced with similar-looking Unicode characters (U+02D0, U+2039 or U+203A).${Console.RESET}\n")
+    }
+  }
+
+  /**
    * Function that checks for the given path if:
    *  - Parent folder exists   --> If not, throw exception
    *  - Result folder exists   --> If not, create the folder
@@ -195,7 +247,7 @@ object FileIO {
    *
    * @param resultFolderPath The path where the class files should be saved in
    */
-  def checkOutputClassFiles(resultFolderPath: String): Unit = {
+  private def checkOutputClassFiles(resultFolderPath: String): Unit = {
     val pathObject = Path.of(resultFolderPath).toAbsolutePath
     // Check if parent directory of given folder path exists
     if (!Files.exists(pathObject.getParent)) throw new IllegalArgumentException(
