@@ -263,65 +263,6 @@ object CriticalMethodsRemover extends Analysis[URL, BasicReport] with AnalysisAp
     result.getOrElse(Seq.empty[(Int, Instruction)])
   }
 
-  /**
-   * Utility function to print the bytecode instructions of a method.
-   *
-   * @param method The method whose bytecode will be printed.
-   */
-  private def printMethodBytecode(method: Method): Unit = {
-    println(s"Bytecode for method: ${method.name}${method.descriptor.toJava}")
-    method.body.foreach { code =>
-      code.instructions.zipWithIndex.foreach {
-        case (instr, idx) =>
-          println(f"$idx%03d: $instr")
-      }
-    }
-  }
-
-  /**
-   * Removes all critical method invocations from the bytecode if not ignored.
-   *
-   * @param code The original bytecode of the method.
-   * @param criticalMethods A list of (className, methodName) tuples representing critical method calls.
-   * @param ignoreCalls A list of IgnoredCall objects representing whitelisted calls that should not be removed.
-   * @param className The name of the current class being analyzed (used for matching ignoreCalls).
-   * @param methodName The name of the current method being analyzed (used for matching ignoreCalls).
-   * @return A filtered array of instructions without the non-ignored critical method invocations.
-   */
-  private def removeCriticalInvokes(
-                                     code: Code,
-                                     criticalMethods: List[(String, String)],
-                                     ignoreCalls: List[IgnoredCall],
-                                     className: String,
-                                     methodName: String
-                                   ): Array[Instruction] = {
-    val filtered = code.instructions.filterNot {
-      case i: MethodInvocationInstruction =>
-        val call = (i.declaringClass.toJava, i.name)
-
-        val shouldIgnore = ignoreCalls.exists { ic =>
-          ic.callerClass == className &&
-            ic.callerMethod == methodName &&
-            ic.targetClass == call._1 &&
-            ic.targetMethod == call._2
-        }
-
-        // Debug for each call check (inside removeCriticalInvokes)
-        println(f"[?] Should ignore: $className.$methodName -> ${call._1}.${call._2} = $shouldIgnore")
-
-        // Show active critical methods
-        println(s"[!] Active criticalMethods: " + criticalMethods.map { case (c, m) => s"$c#$m" }.mkString(", "))
-
-
-
-        criticalMethods.contains(call) && !shouldIgnore
-
-      case _ => false
-    }
-
-    filtered.filter(_ != null) // avoid nulls for assembler
-  }
-
   // Replace critical method calls with NOPs to preserve the stack and instruction layout
   private def printCodeInstructions(instructions: Array[Instruction]): Unit = {
     instructions.zipWithIndex.foreach {
