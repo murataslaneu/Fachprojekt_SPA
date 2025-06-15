@@ -9,11 +9,11 @@ import org.opalj.bc.Assembler
 import org.opalj.ba.toDA
 import java.nio.charset.StandardCharsets
 import play.api.libs.json._
+import org.opalj.br.Method
 
 import java.nio.file.{Files, Paths}
 import org.opalj.br.instructions.Instruction
 import org.opalj.br.Code
-import org.opalj.br.Method
 
 import java.io.File
 import java.net.URL
@@ -130,9 +130,8 @@ object CriticalMethodsRemover extends Analysis[URL, BasicReport] with AnalysisAp
 
         // If critical calls are found, proceed with modification
         if (foundInvokes.nonEmpty && m.body.isDefined) {
-          //println(s"Found critical call(s) in: ${cf.thisType.toJava}.${m.name}${m.descriptor.toJava}")
+          printOriginalBytecode(m, s"Original Bytecode of ${cf.thisType.toJava}.${m.name}")
           println(s"\n>>> Found critical call(s) in method: ${cf.thisType.toJava}.${m.name}${m.descriptor.toJava}")
-          println(f"--- Bytecode for: ${m.name}${m.descriptor.toJava} ---")
 
           // Modify the method body to remove critical calls
           val oldCode = m.body.get
@@ -143,10 +142,6 @@ object CriticalMethodsRemover extends Analysis[URL, BasicReport] with AnalysisAp
             cf.thisType.toJava,
             m.name
           )
-
-          println("--- Modified bytecode ---")
-          printCodeInstructions(newInstructions)
-          writeBytecodeJsonDump(newInstructions, cf.thisType.toJava, m.name, outputDir)
 
           // Create updated method and class
           val updatedMethod = m.copy(
@@ -170,6 +165,8 @@ object CriticalMethodsRemover extends Analysis[URL, BasicReport] with AnalysisAp
 
           // After class writing
           println(s"[OK] Modified class written to: $outputFile")
+
+          writeBytecodeJsonDump(newInstructions, cf.thisType.toJava, m.name, outputDir)
 
           // Track removed calls
           val removed = foundInvokes.collect {
@@ -269,12 +266,17 @@ object CriticalMethodsRemover extends Analysis[URL, BasicReport] with AnalysisAp
     result.getOrElse(Seq.empty[(Int, Instruction)])
   }
 
-  // Replace critical method calls with NOPs to preserve the stack and instruction layout
-  private def printCodeInstructions(instructions: Array[Instruction]): Unit = {
-    instructions.zipWithIndex.foreach {
-      case (instr, idx) =>
-        println(f"$idx%03d: $instr")
+  // Prints the original bytecode instructions of a method before modification
+  private def printOriginalBytecode(method: Method, header: String): Unit = {
+    println(s"====== $header ======")
+    method.body.foreach { code =>
+      code.instructions.zipWithIndex.foreach {
+        case (instr, idx) =>
+          val display = if (instr == null) "null" else instr.toString
+          println(f"$idx%03d: $display")
+      }
     }
+    println("=" * 40)
   }
 
   /**
@@ -351,9 +353,15 @@ object CriticalMethodsRemover extends Analysis[URL, BasicReport] with AnalysisAp
             ic.targetMethod == call._2
         }
 
-        //DEBUG logs
-        println(f"[?] Should ignore: $className.$methodName -> ${call._1}.${call._2} = $shouldIgnore")
-        println(s"[!] Active criticalMethods: " + criticalMethods.map { case (c, m) => s"$c#$m" }.mkString(", "))
+        //DEBUG for Ignore and CriticalMethods
+        var debugLogCounter: Int = 0
+        val debugLogLimit: Int = 0
+
+        if (debugLogCounter < debugLogLimit) {
+          println(f"[?] Should ignore: $className.$methodName -> ${call._1}.${call._2} = $shouldIgnore")
+          println(s"[!] Active criticalMethods: " + criticalMethods.map { case (c, m) => s"$c#$m" }.mkString(", "))
+          debugLogCounter += 1
+        }
 
         if (criticalMethods.contains(call) && !shouldIgnore) {
           println(s">>> Will replace with NOP: $i at PC=$idx")
