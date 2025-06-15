@@ -13,9 +13,9 @@
     <content url="file://$MODULE_DIR$/../../../target/scala-2.13/src_managed/test" />
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="sbt: scala-sdk-2.13.14" level="project" />
+    <orderEntry type="library" name="sbt: scala-sdk-2.13.16" level="project" />
     <orderEntry type="module" module-name="ex7.main" />
-    <orderEntry type="library" name="sbt: org.scala-lang:scala-library:2.13.14:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.scala-lang:scala-library:2.13.16:jar" level="project" />
     <orderEntry type="library" name="sbt: de.opal-project:framework_2.13:5.0.0:jar" level="project" />
     <orderEntry type="library" name="sbt: de.opal-project:bytecode-assembler_2.13:5.0.0:jar" level="project" />
     <orderEntry type="library" name="sbt: de.opal-project:architecture-validation_2.13:5.0.0:jar" level="project" />
@@ -31,7 +31,7 @@
     <orderEntry type="library" name="sbt: org.scala-lang.modules:scala-xml_2.13:1.3.0:jar" level="project" />
     <orderEntry type="library" name="sbt: de.opal-project:common_2.13:5.0.0:jar" level="project" />
     <orderEntry type="library" name="sbt: org.apache.commons:commons-text:1.9:jar" level="project" />
-    <orderEntry type="library" name="sbt: org.scala-lang:scala-reflect:2.13.14:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.scala-lang:scala-reflect:2.13.16:jar" level="project" />
     <orderEntry type="library" name="sbt: org.scala-lang.modules:scala-parallel-collections_2.13:1.0.4:jar" level="project" />
     <orderEntry type="library" name="sbt: com.typesafe.play:play-json_2.13:2.9.2:jar" level="project" />
     <orderEntry type="library" name="sbt: com.iheart:ficus_2.13:1.5.0:jar" level="project" />
