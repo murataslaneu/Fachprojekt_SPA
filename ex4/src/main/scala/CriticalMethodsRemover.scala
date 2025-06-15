@@ -215,7 +215,7 @@ object CriticalMethodsRemover extends Analysis[URL, BasicReport] with AnalysisAp
             status = s"Modified and written to $outputDir/${cf.thisType.toJava.replace('.', '/')}.class",
             ignored = wasIgnored,
             bytecodeVerified = bytecodeVerified,
-            nopReplacements = lastNOPReplacements // <- ADD THIS FIELD
+            nopReplacements = lastNOPReplacements
           )
 
           resultsBuffer += result
@@ -377,8 +377,8 @@ object CriticalMethodsRemover extends Analysis[URL, BasicReport] with AnalysisAp
     println(">>> Bytecode modification complete. Critical methods replaced with NOP.")
 
     //Attach NOP info to global state for JSON generation
-    lastNOPReplacements = Some(replacedWithNOP.toList) //GLOBAL
-
+    lastNOPReplacements = Some(replacedWithNOP.toList)
+    
     filtered
   }
 
