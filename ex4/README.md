@@ -1,19 +1,18 @@
 # Fachprojekt Analyseaufgabe 4: Manipulation von Bytecode
 
-Dieses Projekt besteht aus zwei Analysen (*CriticalMethodsRemover* für Aufgabe 4.1.1 und *TPLMethodsRemover*
+Dieses Projekt besteht aus zwei Analysen (`CriticalMethodsRemover` für Aufgabe 4.1.1 und `TPLMethodsRemover`
 für Aufgabe 4.1.2), die sich mit der Manipulation von Java Bytecode beschäftigen.
-
----
 
 ## Inhalt:
 - [Benutzung der Analysen](#benutzung-über-intellij--sbt)
 - [4.1.1: CriticalMethodsRemover](#411-criticalmethodsremover-bytecode-modifizieren)
   - [Umgesetzte Anforderungen](#umgesetzte-anforderungen)
   - [Optionen der Config-Datei](#optionen-der-config-datei)
-  - [Anmerkungen zu Tests](#tests)
+  - [Durchgeführte Tests](#tests)
 - [4.1.2: TPLMethodsRemover](#412-tplmethodsremover-bytecode-erzeugen)
   - [Optionen der Config-Datei](#optionen-der-config-datei-1)
-- [Tests](#tests-1)
+  - [Durchgeführte Tests](#tests-1)
+- [ScalaTest & sbt-scoverage](#scalatest--sbt-scoverage)
 
 ---
 
@@ -24,6 +23,9 @@ für Aufgabe 4.1.2), die sich mit der Manipulation von Java Bytecode beschäftig
    ```
    run -config=examples_4.1.1/exampleConfig.json
    run -config=examples_4.1.2/exampleConfig.json
+   
+   run -config=example_RealProject/4.1.1_config.json
+   run -config=example_RealProject/4.1.2_config.json
    ```
    Die Analyse wird ausschließlich über die Config-Datei konfiguriert. Die Standard-Optionen der AnalysisApplication von
    OPAL werden daher ignoriert! *Optionen siehe im jeweiligen Abschnitt der Analyse.*
@@ -52,24 +54,19 @@ json-Datei überprüft werden.
 > sinnvoll erachtet wurde. Ein Call-Graph wäre nur bei weiterführender Ausführbarkeitsanalyse erforderlich.
 > Die Erkennung und Entfernung der Aufrufe erfolgt rein auf Bytecode-Ebene und ist durch eigene Unit-Tests validiert.
 
----
-
 ### Umgesetzte Anforderungen
 
-* **Konfigurierbare kritische Methoden (`criticalMethods`):** Methoden können über JSON spezifiziert werden.
-* **Ausgabe des Bytecodes der Methoden mit kritischen Aufrufen**
-* **Entfernung der Aufrufe aus dem Bytecode (`INVOKE*`), ersetzt durch NOP für Stack-Sicherheit**
-* **Berücksichtigung von `ignoreCalls` (Whitelist)**
-* **Speicherung der modifizierten `.class`-Dateien**
-* **Verifikation der Änderungen (`bytecodeVerified`)**
-* **Strukturierte JSON-Ausgabe (`AnalysisResult`) inklusive NOP-Patch-Log**
-* **Bytecode-Dump pro Methode als JSON (z.B. `Main_main_bytecode.json`)**
-* **Vier kombinatorische Testszenarien automatisiert getestet**
-* **Stack-Layout bleibt durch NOPs konsistent**
-* **Automatische Unit-Tests mit `sbt test` decken alle Fälle ab**
-* **(Neu) Automatisierter Test, der das `.class`-File parst und prüft, ob NOPs korrekt gesetzt sind**
-
----
+* Konfigurierbare kritische Methoden (`criticalMethods`): Methoden können über eine JSON-Config spezifiziert werden.
+* Ausgabe des Bytecodes der Methoden mit kritischen Aufrufen
+* Entfernung der Aufrufe aus dem Bytecode (`INVOKE*`), ersetzt durch NOP um keine weiteren Inkonsistenzen im Bytecode zu
+  verursachen
+* Erlauben spezifischer kritischer Methodenaufrufe via `ignoreCalls` ("Whitelist")
+* Speicherung der modifizierten `.class`-Dateien
+* Verifikation der Änderungen (`bytecodeVerified`)
+* Strukturierte JSON-Ausgabe (`AnalysisResult`) inklusive NOP-Patch-Log
+* Automatische Unit-Tests mit `sbt test` decken vier verschiedene Testfälle ab
+* Automatisierter Test, der das `.class`-File parst und prüft, ob NOPs korrekt gesetzt sind
+* ~~Stack-Layout wird berücksichtigt~~
 
 ### Optionen der Config-Datei
 
@@ -115,6 +112,24 @@ json-Datei überprüft werden.
 > Ergebnis der Analyse, da hier kein Call-Graph (mehr) verwendet wird. Die Option, das einzustellen,
 > wurde aber sicherheitshalber mit drin gelassen.
 
+#### Config-Datei: Beispiel
+```json
+{
+  "projectJars": [
+    "examples_4.1.1/ExampleWithSecurityManager.jar"
+  ],
+  "criticalMethods": [
+    {
+      "className": "java.lang.System",
+      "methods": ["getSecurityManager", "setSecurityManager"]
+    }
+  ],
+  "ignoreCalls": [],
+  "outputClassFiles": "results_4.1.1",
+  "outputJson": "results_4.1.1/analysisResult.json"
+}
+```
+
 ---
 
 ### Output
@@ -157,41 +172,15 @@ json-Datei überprüft werden.
 ---
 
 ### Tests
-#### Testkombinationen
 
-```scala
-/**
- * Case: yget_nset
- * Only setSecurityManager is marked as critical, getSecurityManager is allowed (not critical)
- *
- * Case: nget_yset
- * Only getSecurityManager is marked as critical, setSecurityManager is allowed (not critical)
- *
- * Case: yget_yset
- * Both methods are marked as critical and neither is ignored
- *
- * Case: nget_nset
- * Both methods are marked as critical but are explicitly ignored via ignoreCalls
- */
-```
-
-#### Testautomatisierung & Validierung
-
-* Vier Unit-Tests prüfen:
-
-    * Ob erwartete Aufrufe entfernt (`NOP`) wurden,
-    * ob Modifikationen tatsächlich im `.class`-File stehen,
-    * und ob keine kritischen Methoden entfernt wurden, wenn sie ignoriert werden sollen.
-
-```scala
-test("setSecurityManager should be replaced with NOP in yget_nset") {
-  val instructionsOpt = loadMainMethodBytecode("output/yget_nset")
-  assert(instructionsOpt.isDefined)
-  val instructions = instructionsOpt.get
-  val nops = instructions.slice(31, 34)
-  assert(nops.forall(i => i != null && i.mnemonic.equalsIgnoreCase("nop")))
-}
-```
+Es wurde auf einem selbstgeschriebenen Beispielprojekt `ExampleWithSecurityManager.jar` getestet, ob die korrekten Instruktionen
+erkannt wurden und ob der Bytecode erfolgreich modifiziert wird. Der Fokus lag hierbei auf die Methoden `getSecurityManager`
+und `setSecurityManager` von `java.lang.System`. Es wurden 4 Fälle getestet:
+- Fall 1: `getSecurityManager`-Aufruf erlaubt, `setSecurityManager` verboten und soll entfernt werden (`yget-nset`).
+- Fall 2: `getSecurityManager`-Aufruf verboten und soll entfernt werden, `setSecurityManager` erlaubt (`nget-yset`).
+- Fall 3: Sowohl `getSecurityManager` als auch `setSecurityManager` verboten und sollen entfernt werden (`nget-nset`).
+- Fall 4: `getSecurityManager` und `setSecurityManager` kritische Methoden, Aufrufe werden aber über `ignoreCalls` der
+  Config-Datei zugelassen (`yget-yset`).
 
 ---
 
@@ -289,16 +278,25 @@ festgelegt werden.
   "outputClassFiles": "results_4.1.2"
 }
 ```
+### Tests
+Es wird getestet, ob das Objekt `create.FileIO` die json-Config-Datei korrekt einliest.
+
+Außerdem wird auf einem selbstgeschriebenen Beispielprojekt und -bibliothek
+(genannt `Test_ExampleProject` und `Test_ExampleLib`) getestet, ob die Class-Dateien an den erwarteten Orten gespeichert
+werden und die korrekten Methoden enthält. Es werden zwei Fälle getestet:
+- Fall 1: Nur öffentliche Methoden enthalten (direkter oder indirekter Aufruf)
+- Fall 2: Sämtliche aufgerufene Methoden enthalten (auch nicht-öffentliche Methoden, die z.B. indirekt mit Aufruf einer
+  anderen Methode mit aufgerufen werden).
 
 ---
 
-## Tests
+## ScalaTest & sbt-scoverage
 Dieses Projekt nutzt ScalaTest und enthält Tests, um die (grobe) Funktionsfähigkeit der Analysen zu testen.
 
 ### Ausführung (über IntelliJ & sbt)
 1. Öffne das Terminal und stelle sicher, im richtigen Verzeichnis zu sein (`TUDO-FP-VulnSPA-25-3/ex4`).
 2. Führe im Terminal `sbt test` aus.
-3. Tests werden ausgeführt. Nach Ausführung wird das Ergebnis der Tests ausgegeben. Im Idealfall sollten alle Tests
+3. Tests werden ausgeführt. Nach Ausführung wird das Ergebnis der Tests ausgegeben. Es sollten alle Tests
    erfolgreich sein! :)
 
 ### Coverage

@@ -4,16 +4,12 @@ import modify.data.{AnalysisConfig, AnalysisResult, IgnoredCall, RemovedCall}
 import org.opalj.br.analyses.{Analysis, AnalysisApplication, BasicReport, ProgressManagement, Project, ReportableAnalysisResult}
 import org.opalj.log.LogContext
 import org.opalj.br.instructions._
-import org.opalj.br.NoExceptionHandlers
+import org.opalj.br.{ClassFile, Code, Method, NoExceptionHandlers}
 import org.opalj.bc.Assembler
 import org.opalj.ba.toDA
-import java.nio.charset.StandardCharsets
-import play.api.libs.json._
-import org.opalj.br.Method
 
-import java.nio.file.{Files, Paths}
+import java.nio.file.{Files, Path, Paths}
 import org.opalj.br.instructions.Instruction
-import org.opalj.br.Code
 
 import java.io.File
 import java.net.URL
@@ -86,15 +82,27 @@ object CriticalMethodsRemover extends Analysis[URL, BasicReport] with AnalysisAp
                         initProgressManagement: Int => ProgressManagement
                       ): BasicReport = {
 
-    // Print loaded configuration for debugging
+    // Print loaded config
     println("==================== Loaded Configuration ====================")
-    println(s"  - projectJars: ${config.get.projectJars}")
-    println(s"  - libraryJars: ${config.get.libraryJars}")
-    println(s"  - completelyLoadLibraries: ${config.get.completelyLoadLibraries}")
-    println(s"  - criticalMethods: ${config.get.criticalMethods}")
-    println(s"  - ignoreCalls: ${config.get.ignoreCalls}")
-    println(s"  - outputClassFiles: ${config.get.outputClassFiles}")
-    println(s"  - outputJson: ${config.get.outputJson}")
+    println(s"* projectJars: ${if (config.get.projectJars.isEmpty) "[None]" else ""}")
+    config.get.projectJars.foreach {file => println(s"  - $file")}
+    println(s"* libraryJars: ${if (config.get.libraryJars.isEmpty) "[None]" else ""}")
+    config.get.libraryJars.foreach {file => println(s"  - $file")}
+    println(s"* completelyLoadLibraries: ${config.get.completelyLoadLibraries}")
+    println(s"* criticalMethods: ${config.get.criticalMethods}")
+    config.get.criticalMethods.foreach { crit =>
+      if (crit.methods.nonEmpty) {
+        println(s"  - Class ${crit.className.replace('/', '.')}:")
+        crit.methods.foreach { method => println(s"    -- $method")}
+      }
+    }
+    println(s"* ignoreCalls: ${if (config.get.ignoreCalls.isEmpty) "[None]" else ""}")
+    config.get.ignoreCalls.foreach { ignoredCall =>
+      println(s"  - Caller ${ignoredCall.callerClass} in ${ignoredCall.callerMethod} -> Target ${ignoredCall.targetClass} with ${ignoredCall.targetMethod}")
+    }
+    println(s"* outputClassFiles: ${config.get.outputClassFiles}")
+    val outputJson = config.get.outputJson
+    println(s"* outputJson: ${if (outputJson.isDefined) outputJson.get else "[None]"}")
     println("===============================================================\n")
 
     // Convert the critical methods list into a flat list of (className, methodName) tuples
@@ -105,6 +113,7 @@ object CriticalMethodsRemover extends Analysis[URL, BasicReport] with AnalysisAp
 
     val outputDir = config.get.outputClassFiles
 
+    var replacedInvalidCharacter = false
     // Analyze all methods in the project
     project.allProjectClassFiles.foreach { cf =>
       cf.methods.foreach { m =>
@@ -112,7 +121,7 @@ object CriticalMethodsRemover extends Analysis[URL, BasicReport] with AnalysisAp
 
         // If critical calls are found, proceed with modification
         if (foundInvokes.nonEmpty && m.body.isDefined) {
-          printOriginalBytecode(m, s"Original Bytecode of ${cf.thisType.toJava}.${m.name}")
+          printOriginalBytecode(cf, m)
           println(s"\n>>> Found critical call(s) in method: ${cf.thisType.toJava}.${m.name}${m.descriptor.toJava}")
 
           // Modify the method body to remove critical calls
@@ -139,16 +148,29 @@ object CriticalMethodsRemover extends Analysis[URL, BasicReport] with AnalysisAp
           )
 
           // Assemble new ClassFile and write to disk
-          val classBytes: Array[Byte] = Assembler(toDA(newClassFile))
-          val outputFile = Paths.get(outputDir, s"${cf.thisType.toJava.replace('.', '/')}.class")
-
-          Files.createDirectories(outputFile.getParent)
-          Files.write(outputFile, classBytes)
+          val newClassBytes: Array[Byte] = Assembler(toDA(newClassFile))
+          // Windows does not accept some characters that may be contained in the class file names
+          // Thus, replace them with similar-looking characters that are allowed
+          val sanitizedClassFileName = newClassFile.fqn.map { c =>
+            c match {
+              case ':' =>
+                replacedInvalidCharacter = true
+                'ː' // Unicode character U+02D0
+              case '<' =>
+                replacedInvalidCharacter = true
+                '‹' // Unicode character U+2039
+              case '>' =>
+                replacedInvalidCharacter = true
+                '›' // Unicode character U+203A
+              case other => other
+            }
+          }
+          val classFilePath = Path.of(s"$outputDir/$sanitizedClassFileName.class")
+          Files.createDirectories(classFilePath.getParent)
+          Files.write(classFilePath, newClassBytes)
 
           // After class writing
-          println(s"[OK] Modified class written to: $outputFile")
-
-          //writeBytecodeJsonDump(newInstructions, cf.thisType.toJava, m.name, outputDir)
+          println(s"[OK] Modified class written to: $classFilePath")
 
           // Track removed calls
           val removed = foundInvokes.collect {
@@ -222,6 +244,11 @@ object CriticalMethodsRemover extends Analysis[URL, BasicReport] with AnalysisAp
       println(s"[OK] ${result.className}.${result.methodName} -> bytecodeVerified = ${result.bytecodeVerified}")
     }
 
+    if (replacedInvalidCharacter) {
+      println(s"${Console.BLUE}Note: At least one of the class files contained a character not allowed in Windows file names (':', '<' or '>').${Console.RESET}")
+      println(s"${Console.BLUE}      Such characters have been replaced with similar-looking Unicode characters (U+02D0, U+2039 or U+203A).${Console.RESET}\n")
+    }
+
     BasicReport(">>> Bytecode modification complete. Critical methods removed.")
   }
 
@@ -249,8 +276,8 @@ object CriticalMethodsRemover extends Analysis[URL, BasicReport] with AnalysisAp
   }
 
   // Prints the original bytecode instructions of a method before modification
-  private def printOriginalBytecode(method: Method, header: String): Unit = {
-    println(s"====== $header ======")
+  private def printOriginalBytecode(classFile: ClassFile, method: Method): Unit = {
+    println(s"====== Original Bytecode of ${classFile.thisType.toJava}.${method.name} ======")
     method.body.foreach { code =>
       code.instructions.zipWithIndex.foreach {
         case (instr, idx) =>
@@ -259,45 +286,6 @@ object CriticalMethodsRemover extends Analysis[URL, BasicReport] with AnalysisAp
       }
     }
     println("=" * 40)
-  }
-
-  /**
-   * Writes the bytecode instructions of a method as a JSON file.
-   *
-   * Each instruction is exported with its program counter (PC) and mnemonic string.
-   * This allows for machine-readable inspection or comparison of the full modified bytecode.
-   *
-   * @param instructions The instruction array of the method (typically after modification).
-   * @param className    The fully qualified class name for file naming.
-   * @param methodName   The name of the method for file naming.
-   * @param outputDir    The directory where the JSON file will be written.
-   */
-  private def writeBytecodeJsonDump(
-                                     instructions: Array[Instruction],
-                                     className: String,
-                                     methodName: String,
-                                     outputDir: String
-                                   ): Unit = {
-
-    val instrList = instructions.zipWithIndex.map {
-      case (instr, idx) =>
-        Json.obj(
-          "pc" -> idx,
-          "instruction" -> instr.toString
-        )
-    }
-
-    val json = Json.prettyPrint(Json.obj(
-      "class" -> className,
-      "method" -> methodName,
-      "bytecode" -> instrList
-    ))
-
-    val path = Paths.get(outputDir, s"${className.replace('.', '_')}_${methodName}_bytecode.json")
-    Files.write(path, json.getBytes(StandardCharsets.UTF_8))
-
-    //DEBUG Output
-    println(s"[OK] Bytecode dump written to: $path")
   }
 
   /**

@@ -1,11 +1,11 @@
 {
   "projectJars": [
-    "examples_4.1.1/ExampleWithSecurityManager.jar"
+    "example_RealProject/joda-time-2.14.0.jar"
   ],
   "criticalMethods": [
     {
-      "className": "java.lang.System",
-      "methods": ["getSecurityManager", "setSecurityManager"]
+      "className": "org.joda.time.tz.ZoneInfoCompiler",
+      "methods": ["printUsage"]
     }
   ],
   "ignoreCalls": [],

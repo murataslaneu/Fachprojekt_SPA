@@ -89,13 +89,13 @@ class TestCriticalMethodsRemover extends AnyFunSuite with BeforeAndAfterEach {
   }
 
   /**
-   * Case: yget_yset
+   * Case: nget_nset
    * Description: both getSecurityManager and setSecurityManager are removed
    * Both methods are marked as critical and neither is ignored
    */
-  test("Case: yget_yset -> both should be removed") {
+  test("Case: nget_nset -> both should be removed") {
     println("Running case yget_yset -> both should be removed")
-    runAnalysis("src/test/4.1.1_testFiles/test_yget_yset.json")
+    runAnalysis("src/test/4.1.1_testFiles/test_nget_nset.json")
     println("Reading analysis results...")
     println("Starting with generated results json file...")
     val result = FileIO.readJsonResult("src/test/4.1.1_testFiles/resultFiles/test_result.json")
@@ -110,23 +110,23 @@ class TestCriticalMethodsRemover extends AnyFunSuite with BeforeAndAfterEach {
     val instructions = instructionsOpt.get
     val setNops = instructions.slice(31, 34) // Approx. position of setSecurityManager
     val getNops = instructions.slice(37, 40) // Approx. position of getSecurityManager
-    println("Bytecode (yget_yset):")
+    println("Bytecode (nget_nset):")
     printInstructions(instructions)
     // Assert both are NOPs
     assert(setNops.forall(i => i != null && i.mnemonic.equalsIgnoreCase("nop")))
     assert(getNops.forall(i => i != null && i.mnemonic.equalsIgnoreCase("nop")))
 
-    println("Case yget_yset finished successfully")
+    println("Case nget_nset finished successfully")
   }
 
   /**
-   * Case: nget_nset
+   * Case: yget_yset
    * Description: both getSecurityManager and setSecurityManager remain
    * Both methods are marked as critical but are explicitly ignored via ignoreCalls
    */
-  test("Case: nget_nset -> both should be ignored") {
-    println("Running case nget_nset -> both should be ignored")
-    runAnalysis("src/test/4.1.1_testFiles/test_nget_nset.json")
+  test("Case: yget_yset -> both should be ignored") {
+    println("Running case yget_yset -> both should be ignored")
+    runAnalysis("src/test/4.1.1_testFiles/test_yget_yset.json")
     println("Reading analysis results...")
     println("Starting with generated results json file...")
     val result = FileIO.readJsonResult("src/test/4.1.1_testFiles/resultFiles/test_result.json")
@@ -139,12 +139,12 @@ class TestCriticalMethodsRemover extends AnyFunSuite with BeforeAndAfterEach {
     assert(instructionsOpt.isDefined)
     val instructions = instructionsOpt.get
     val checkRange = instructions.slice(30, 41) // Scan typical area where critical calls may exist
-    println("Bytecode (nget_nset):")
+    println("Bytecode (yget_yset):")
     printInstructions(instructions)
     // Assert that no NOP instructions are found
     assert(!checkRange.exists(i => i != null && i.mnemonic.equalsIgnoreCase("nop")))
 
-    println("Case nget_nset finished successfully")
+    println("Case yget_yset finished successfully")
   }
 
   /* Helper methods */

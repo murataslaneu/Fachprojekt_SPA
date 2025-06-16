@@ -10,5 +10,19 @@
       "className": "java.lang.System",
       "methods": ["getSecurityManager", "setSecurityManager"]
     }
+  ],
+  "ignoreCalls": [
+    {
+      "callerClass": "Main",
+      "callerMethod": "main",
+      "targetClass": "java.lang.System",
+      "targetMethod": "getSecurityManager"
+    },
+    {
+      "callerClass": "Main",
+      "callerMethod": "main",
+      "targetClass": "java.lang.System",
+      "targetMethod": "setSecurityManager"
+    }
   ]
 }

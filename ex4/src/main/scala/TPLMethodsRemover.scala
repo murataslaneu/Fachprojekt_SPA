@@ -83,10 +83,10 @@ object TPLMethodsRemover extends Analysis[URL, BasicReport] with AnalysisApplica
 
   override def analyze(project: Project[URL], parameters: Seq[String], initProgressManagement: Int => ProgressManagement): BasicReport = {
     // Print config
-    println("\nLoaded the following config:")
-    println(s"* projectJars:")
+    println("\n==================== Loaded Configuration ====================")
+    println(s"* projectJars: ${if (config.get.projectJars.isEmpty) "[None]" else ""}")
     config.get.projectJars.foreach {file => println(s"  - $file")}
-    println(s"* libraryJars:")
+    println(s"* libraryJars: ${if (config.get.libraryJars.isEmpty) "[None]" else ""}")
     config.get.libraryJars.foreach {file => println(s"  - $file")}
     println(s"* tplJar: ${config.get.tplJar}")
     println(s"* includeNonPublicMethods: ${config.get.includeNonPublicMethods}")
@@ -97,7 +97,7 @@ object TPLMethodsRemover extends Analysis[URL, BasicReport] with AnalysisApplica
       case "org.opalj.br.analyses.cg.LibraryEntryPointsFinder" => "library"
     }
     println(s"* entryPointsFinder: $entryPointsFinder")
-    println(s"* customEntryPoints:")
+    println(s"* customEntryPoints: ${if (config.get.customEntryPoints.isEmpty) "[None]" else ""}")
     config.get.customEntryPoints.foreach { eps =>
       if (eps.methods.nonEmpty) {
         println(s"  - Class ${eps.className.replace('/', '.')}:")
@@ -111,7 +111,8 @@ object TPLMethodsRemover extends Analysis[URL, BasicReport] with AnalysisApplica
       case CFA_1_1_CallGraphKey => "1-1-CFA"
     }
     println(s"* callGraphAlgorithm: $callGraphAlgorithmName")
-    println(s"* outputClassFiles: ${config.get.outputClassFiles}\n")
+    println(s"* outputClassFiles: ${config.get.outputClassFiles}")
+    println("===============================================================\n")
 
     // Create call graph and do analysis with it
     println("Calculate call graph...")

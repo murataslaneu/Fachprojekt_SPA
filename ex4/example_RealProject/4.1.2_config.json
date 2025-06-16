@@ -1,0 +1,20 @@
+{
+  "projectJars": [
+    "example_RealProject/joda-time-2.14.0.jar"
+  ],
+
+  "libraryJars": [
+    "example_RealProject/lib/joda-convert-1.9.2.jar",
+    "example_RealProject/lib/junit-3.8.2.jar"
+  ],
+
+  "tplJar": "example_RealProject/lib/joda-convert-1.9.2.jar",
+
+  "includeNonPublicMethods": true,
+
+  "entryPointsFinder": "library",
+
+  "callGraphAlgorithm": "XTA",
+
+  "outputClassFiles": "results_4.1.2"
+}
