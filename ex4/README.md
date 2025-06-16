@@ -130,8 +130,6 @@ json-Datei überprüft werden.
 }
 ```
 
----
-
 ### Output
 
 **Beispiel Ergebnis-JSON:**
@@ -169,8 +167,6 @@ json-Datei überprüft werden.
 }
 ```
 
----
-
 ### Tests
 
 Es wurde auf einem selbstgeschriebenen Beispielprojekt `ExampleWithSecurityManager.jar` getestet, ob die korrekten Instruktionen
@@ -191,8 +187,6 @@ genutzten TPLs** erzeugt, der nur die genutzten class files und dessen genutzten
 In diesem Dummy werden aber auch die Methoden-Körper entfernt (führen nichts aus und geben ggf.
 nur null oder 0 zurück, je nach Ausgabetyp der Methode). Der Pfad, wo der Dummy ausgegeben werden soll, kann ebenfalls
 festgelegt werden.
-
----
 
 ### Optionen der Config-Datei
 
