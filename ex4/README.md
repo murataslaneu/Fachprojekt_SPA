@@ -1,84 +1,58 @@
 # Fachprojekt Analyseaufgabe 4: Manipulation von Bytecode
 
-Dieses Projekt besteht aus zwei Analysen (*CriticalMethodsRemover* für Aufgabe 4.1.1 und *TPMMethodsRemover*
+Dieses Projekt besteht aus zwei Analysen (*CriticalMethodsRemover* für Aufgabe 4.1.1 und *TPLMethodsRemover*
 für Aufgabe 4.1.2), die sich mit der Manipulation von Java Bytecode beschäftigen.
 
+---
+
 ## Inhalt:
-
-- [4.1.1: CriticalMethodsRemover](#411-criticalmethodsremover)
-  - TODO
-- [4.1.2: TPLMethodsRemover](#412-tplmethodsremover)
-  - [Benutzung](#benutzung-über-intellij--sbt)
+- [Benutzung der Analysen](#benutzung-über-intellij--sbt)
+- [4.1.1: CriticalMethodsRemover](#411-criticalmethodsremover-bytecode-modifizieren)
+  - [Umgesetzte Anforderungen](#umgesetzte-anforderungen)
   - [Optionen der Config-Datei](#optionen-der-config-datei)
-- [Tests](#tests)
+  - [Anmerkungen zu Tests](#tests)
+- [4.1.2: TPLMethodsRemover](#412-tplmethodsremover-bytecode-erzeugen)
+  - [Optionen der Config-Datei](#optionen-der-config-datei-1)
+- [Tests](#tests-1)
 
-## 4.1.1: CriticalMethodsRemover
-> TODO
+---
 
-## 4.1.2: TPLMethodsRemover
-Diese Analyse sucht nach genutzten Methoden aus Third Party Libraries (TPLs) in einem Projekt (wie in ex3).
-Der Unterschied ist aber, dass hier keine Usage Ratios berechnet werden, sondern ein **Dummy <ins>einer</ins> der
-genutzten TPLs** erzeugt, der nur die genutzten class files und dessen genutzten Methoden enthält.
-In diesem Dummy werden aber auch die Methoden-Körper entfernt (führen nichts aus und geben ggf.
-nur null oder 0 zurück, je nach Ausgabetyp der Methode). Der Pfad, wo der Dummy ausgegeben werden soll, kann ebenfalls
-festgelegt werden.
-
-### Benutzung (über IntelliJ & sbt)
+## Benutzung (über IntelliJ & sbt)
 1. Öffne das Terminal und stelle sicher, im richtigen Verzeichnis zu sein (`TUDO-FP-VulnSPA-25-3/ex4`).
 2. Starte sbt mit `sbt`.
 3. Führe das Programm mit einer vorher definierten JSON-Config-Datei aus, z.B.
    ```
+   run -config=examples_4.1.1/exampleConfig.json
    run -config=examples_4.1.2/exampleConfig.json
    ```
    Die Analyse wird ausschließlich über die Config-Datei konfiguriert. Die Standard-Optionen der AnalysisApplication von
-   OPAL werden daher ignoriert! *Optionen siehe im folgenden Abschnitt.*
+   OPAL werden daher ignoriert! *Optionen siehe im jeweiligen Abschnitt der Analyse.*
 > **Achte bitte darauf, dass der Pfad zur Config-Datei <ins>keine Leerzeichen</ins> enthält.** Lege idealerweise die Config-Datei
 > im selben Verzeichnis ab und stelle sicher, dass der Dateiname ebenfalls keine Leerzeichen enthält!
 4. Weil dieses Projekt mehrere Main-Klassen enthält, muss noch ausgewählt werden, was ausgeführt werden soll.
-   Wähle die Klasse `TPLMethodsRemover` aus (vermutlich Option `2`, muss aber nicht der Fall sein).
+   Wähle eines der Klassen aus (`CriticalMethodsRemover` (für 4.1.1) oder `TPLMethodsRemover` (für 4.1.2)), indem die
+   jeweilige angezeigte Zahl eingegeben wird.
 5. Die Analyse wird gestartet. Hierbei wird zuerst die Config eingelesen und einige Checks durchgeführt. Es wird auch
-   überprüft, ob der Ausgabepfad für `outputClassFiles` (der Ausgabepfad für den Dummy) leer ist. **Sollte der Ordner
-   angegebener Ordner nicht leer sein, werden für die Analyse die Inhalte des Ordners <ins>gelöscht</ins>!** Die Analyse
-   fragt in diesem Fall vorher nach, ob diese Aktion wirklich durchgeführt werden soll. **STELLE SICHER, DASS DER
-   ANGEGEBENE PFAD KORREKT IST, UM UNGEWOLLTEN DATENVERLUST ZU VERMEIDEN!**
-6. Die Analyse wird durchgeführt und der Dummy wird im angegebenen Pfad ausgegeben.
-# Fachprojekt Analyseaufgabe 4: Bytecode-Manipulation
-
-## Benutzung (über sbt)
-
-1. Öffne ein Terminal und navigiere in das Verzeichnis `TUDO-FP-VulnSPA-25-3/ex4`.
-
-2. Starte sbt mit dem Befehl:
-
-   ```bash
-   sbt
-    ```
-
-3. Führe die Analyse mit einer JSON-Konfigurationsdatei aus:
-
-   ```bash
-   run -config=cm_tests/cm_test.json
-   ```
-
-4. Die modifizierten `.class`-Dateien werden im konfigurierten Ordner abgelegt (z.B. `output/`).
-
-5. Die Analyseergebnisse werden zusätzlich als JSON-Datei ausgegeben (z.B. `output/cm_test_result.json`).
-
-6. Optional: Automatische Tests können mit folgendem Befehl ausgeführt werden:
-
-   ```bash
-   test
-   ```
-
-> **Hinweis:** Die Konfiguration erfolgt ausschließlich über die JSON-Datei, welche Pfade zu Projektdateien, kritische Methoden, ignorierte Aufrufe usw. enthält.
+   überprüft, ob der Ausgabepfad für `outputClassFiles` (der Ausgabepfad für die generierten Class Files) leer ist.
+   **Sollte der Ordner angegebener Ordner nicht leer sein, werden für die Analyse die Inhalte des Ordners
+   <ins>gelöscht</ins>!** Die Analyse fragt in diesem Fall vorher nach, ob diese Aktion wirklich durchgeführt werden
+   soll. **STELLE SICHER, DASS DER ANGEGEBENE PFAD KORREKT IST, UM UNGEWOLLTEN DATENVERLUST ZU VERMEIDEN!**
+6. Die Analyse wird durchgeführt und der die Class Files im angegebenen Pfad ausgegeben.
+   Bei der Analyse `CriticalMethodsRemover` wird ggf. auch eine json-Datei ausgegeben, sofern ein Pfad dafür angegeben
+   wurde.
 
 ---
 
-## Aufgabe 4.1.1: Bytecode Modifizieren
+## 4.1.1: CriticalMethodsRemover (Bytecode modifizieren)
 
-### Ziel
+Analyse, die kritische Methodenaufrufe im Bytecode erkennt und ggf. entfernt. Die Änderungen können in der generierten
+json-Datei überprüft werden.
 
-Entwicklung einer Analyse, die kritische Methodenaufrufe im Bytecode erkennt, optional entfernt und die Änderungen überprüfbar macht.
+> **Anmerkung:** Im Gegensatz zu Implementierung in ex2 wird hier kein Call-Graph verwendet, da es hier nicht als
+> sinnvoll erachtet wurde. Ein Call-Graph wäre nur bei weiterführender Ausführbarkeitsanalyse erforderlich.
+> Die Erkennung und Entfernung der Aufrufe erfolgt rein auf Bytecode-Ebene und ist durch eigene Unit-Tests validiert.
+
+---
 
 ### Umgesetzte Anforderungen
 
@@ -97,13 +71,53 @@ Entwicklung einer Analyse, die kritische Methodenaufrufe im Bytecode erkennt, op
 
 ---
 
-### Call-Graph Usage
+### Optionen der Config-Datei
 
-Im Rahmen von 4.1.1 wurde **kein expliziter Call-Graph verwendet**, da lediglich statischer Bytecode bearbeitet wird. Ein Call-Graph wäre nur bei weiterführender Ausführbarkeitsanalyse erforderlich. Die Erkennung und Entfernung der Aufrufe erfolgt rein auf Bytecode-Ebene und ist durch eigene Unit-Tests validiert.
+#### Notwendig (muss immer in Config mit angegeben werden!)
+
+- `projectJars`: Liste aus Strings. Die Strings enthalten die Pfade zu den jar-Dateien (bzw. der jar-Datei) des
+  Projekts. Es wird von der Analyse überprüft, ob die Pfade existieren.
+
+#### Optional (muss nicht in Config enthalten/festgelegt werden)
+- `criticalMethods`: Liste von {"className": \<String\>, "methods": \<Liste von Strings\>}. Dient zur Angabe der
+  kritischen/verbotenen Methoden **und sollte normalerweise immer mit angegeben werden!**
+  Falls dies aber nicht getan wird, werden standardmäßig die Methdoen `getSecurityManger` und `setSecurityManager`
+  von `java.lang.System` hinzugefügt.
+
+
+- `ignoredCalls`: Liste von {"callerClass": \<String\>, "callerMethod": \<String\>,
+  "targetClass": \<String\>, "targetMethod": \<String\>}. Kann als eine Art "Whitelist" angesehen werden, die in einzelnen
+  Methode den Aufruf einer kritischen Methode erlaubt. `callerClass` und `callerMethod` ist der Name der Klasse und
+  Methode, in der ein kritischer Methodenaufruf sein (könnte). `targetClass` und `targetMethod` ist der Name der Klasse
+  und Methode der kritischen Methode, welche für `callerClass` und `callerMethod` erlaubt werden soll.
+
+
+- `outputClassFiles`: String. Ausgabepfad für die modifizierten .class-Dateien. Muss ein (idealerweise leerer!) Ordner sein.
+  Standardmäßig `"result"`, also ein Ordner mit dem Namen "result" im Verzeichnis, wo die Analyse
+  ausgeführt wird. Ordner wird bei Bedarf erstellt, falls dieser noch nicht existiert. Falls der
+  Ordner existiert und nicht leer ist, **werden die enthaltenen Daten vor der Analyse gelöscht**
+  (wobei einem die Analyse einem davor noch warnt)!
+
+
+- `outputJson`: String. Ausgabepfad einer json-Datei, die zusätzliche Informationen bezüglich der Analyse enthält.
+  Dazu gehört z.B., in welcher Klasse welche Bytecode-Zeilen geändert wurden, oder ob mindestens ein kritischer
+  Methodenaufruf ignoriert wurde. Wenn kein Pfad angegeben, wird auch keine json-Datei generiert.
+
+
+- `libraryJars`: Liste aus Strings. Die Strings enthalten die Pfade zu den Bibliotheken/TPLs des Projekts.
+  Die TPLs können direkte Abhängigkeiten des Projekts sein, als auch transitive Abhängigkeiten.
+  Es kann ebenfalls die Java-Standardbibliothek (`rt.jar`) eingebunden werden.
+- `completelyLoadLibraries`: Boolean. Flag, der angibt, ob für die Analyse die Bibliotheken, die über `libraryJars`
+  übergeben werden, komplett in OPAL geladen werden sollen (`true`), oder nur als Interface geladen werden (`false`).
+  Standardmäßig `false`.
+
+> **Anmerkung:** Sowohl `libraryJars`, als auch `completelyLoadLibraries` haben vermutlich keinen Effekt auf das
+> Ergebnis der Analyse, da hier kein Call-Graph (mehr) verwendet wird. Die Option, das einzustellen,
+> wurde aber sicherheitshalber mit drin gelassen.
 
 ---
 
-### Output & Tests
+### Output
 
 **Beispiel Ergebnis-JSON:**
 
@@ -142,7 +156,8 @@ Im Rahmen von 4.1.1 wurde **kein expliziter Call-Graph verwendet**, da lediglich
 
 ---
 
-### Testkombinationen (4.1.1)
+### Tests
+#### Testkombinationen
 
 ```scala
 /**
@@ -160,9 +175,7 @@ Im Rahmen von 4.1.1 wurde **kein expliziter Call-Graph verwendet**, da lediglich
  */
 ```
 
----
-
-### Testautomatisierung & Validierung
+#### Testautomatisierung & Validierung
 
 * Vier Unit-Tests prüfen:
 
@@ -182,9 +195,15 @@ test("setSecurityManager should be replaced with NOP in yget_nset") {
 
 ---
 
-## Aufgabe 4.1.2: Bytecode Erstellen
+## 4.1.2: TPLMethodsRemover (Bytecode erzeugen)
+Diese Analyse sucht nach genutzten Methoden aus Third Party Libraries (TPLs) in einem Projekt (wie in ex3).
+Der Unterschied ist aber, dass hier keine Usage Ratios berechnet werden, sondern ein **Dummy <ins>einer</ins> der
+genutzten TPLs** erzeugt, der nur die genutzten class files und dessen genutzten Methoden enthält.
+In diesem Dummy werden aber auch die Methoden-Körper entfernt (führen nichts aus und geben ggf.
+nur null oder 0 zurück, je nach Ausgabetyp der Methode). Der Pfad, wo der Dummy ausgegeben werden soll, kann ebenfalls
+festgelegt werden.
 
-*( ... in Bearbeitung ... )*
+---
 
 ### Optionen der Config-Datei
 
@@ -192,11 +211,15 @@ test("setSecurityManager should be replaced with NOP in yget_nset") {
 
 - `projectJars`: Liste aus Strings. Die Strings enthalten die Pfade zu den jar-Dateien (bzw. der jar-Datei) des
                  Projekts. Es wird von der Analyse überprüft, ob die Pfade existieren.
+
+
 - `libraryJars`: Liste aus Strings. Die Strings enthalten die Pfade zu den Bibliotheken/TPLs des Projekts. **Dazu
                  gehört auch die TPL, von der der Dummy generiert werden soll!** Die TPLs können direkte Abhängigkeiten
                  des Projekts sein, als auch transitive Abhängigkeiten. Die Java-Standardbibliothek (`rt.jar` kann
                  ebenfalls eingebunden werden). Je vollständiger die Liste, desto präziser ist der Call-Graph, aber auch
                  die notwendige Leistung für die Analyse steigt!
+
+
 - `tplJar`: <ins>Ein</ins> String. Pfad zu der TPL, von der der Dummy generiert werden soll. **Tipp: Kopiere den
             <ins>exakt selben</ins> Pfad der TPL, der in libraryJars verwendet wurde, hier rein, damit erkannt wird,
             damit bei Lesen der Config keine Fehler auftreten!**
@@ -207,6 +230,7 @@ test("setSecurityManager should be replaced with NOP in yget_nset") {
                              indirekt über den Aufruf einer (in-)direkt genutzten `public` Methode der TPL aufgerufen 
                              wurden), oder eben nur die (in-)direkt genutzten `public` Methoden. Standardmäßig `true`
                              (Methoden, die nicht public sind, sind ebenfalls enthalten).
+
 - `entryPointsFinder`: String "custom", "application", "applicationWithJre" oder "library". Bestimmt die Einstiegspunkte
                        für den Call-Graphen, um genutzte Methoden zu erkennen. Standardmäßig `"application"`
   - `"custom"`: Standardmäßig nichts als Einstiegspunkt festgelegt. Lege eigene Einstiegspunkte über Option
@@ -216,13 +240,19 @@ test("setSecurityManager should be replaced with NOP in yget_nset") {
                            Java-Runtime-Environment (JRE), sofern im Projekt enthalten.
   - `"library"`: Für den Fall, dass das Projekt eine Bibliothek ist. Enthält alle von außen erreichbaren Methoden
                  (z.B. alle `public` Methoden des Projekts).
-- `customEntryPoints`: Liste von {"className": \<name\>, "methods": \<Liste von Strings\>}. Ermöglicht es, (weitere)
+
+
+- `customEntryPoints`: Liste von {"className": \<String\>, "methods": \<Liste von Strings\>}. Ermöglicht es, (weitere)
                        Einstiegspunkte festzulegen. `"className"` ist der fully qualified name der Klasse, zu der die
                        Methodennamen gehören, und `"methods"` sind die zugehörigen Methoden<ins>namen</ins>. Rückgabetyp
                        und Parameter dürfen/können (leider) nicht mit angegeben werden. Standardmäßig eine leere Liste.
+
+
 - `callGraphAlgorithm`: String "CHA", "RTA", "XTA" oder "1-1-CFA". Bestimmt den verwendeten Algorithmus für den
                         Call-Graph. Sortiert nach Präzision des Algorithmus. Standardmäßig `"RTA"`, weíl niedrigere
                         Leistungsanforderungen.
+
+
 - `outputClassFiles`: String. Ausgabepfad für den Dummy der TPL. Muss ein (idealerweise leerer!) Ordner sein.
                       Standardmäßig `"result"`, also ein Ordner mit dem Namen "result" im Verzeichnis, wo die Analyse
                       ausgeführt wird. Ordner wird bei Bedarf erstellt, falls dieser noch nicht existiert. Falls der 
@@ -260,8 +290,10 @@ test("setSecurityManager should be replaced with NOP in yget_nset") {
 }
 ```
 
+---
+
 ## Tests
-Dieses Projekt nutzt ScalaTest und enthält Tests, um die (grobe) Funktionsfähigkeit der Analyse zu testen.
+Dieses Projekt nutzt ScalaTest und enthält Tests, um die (grobe) Funktionsfähigkeit der Analysen zu testen.
 
 ### Ausführung (über IntelliJ & sbt)
 1. Öffne das Terminal und stelle sicher, im richtigen Verzeichnis zu sein (`TUDO-FP-VulnSPA-25-3/ex4`).

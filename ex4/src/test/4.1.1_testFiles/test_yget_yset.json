@@ -1,0 +1,14 @@
+{
+  "projectJars": [
+    "src/test/4.1.1_testFiles/ExampleWithSecurityManager.jar"
+  ],
+  "entryPointsFinder": "application",
+  "outputClassFiles": "src/test/4.1.1_testFiles/resultFiles",
+  "outputJson": "src/test/4.1.1_testFiles/resultFiles/test_result.json",
+  "criticalMethods": [
+    {
+      "className": "java.lang.System",
+      "methods": ["getSecurityManager", "setSecurityManager"]
+    }
+  ]
+}

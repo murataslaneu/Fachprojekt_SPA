@@ -166,6 +166,7 @@ class TestTPLMethodsRemover extends AnyFunSuite {
 
   /** Helper method to automatically delete the files created in the results folder */
   private def cleanUpResultsFolder(): Unit = {
+    // Change path on your own risk! Here, the tests will NOT ask you before deleting the contents of the folder!
     val pathObject = Path.of("src/test/4.1.2_testFiles/results").toAbsolutePath
     Files.walkFileTree(pathObject, new SimpleFileVisitor[Path]() {
       override def visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult = {
@@ -174,10 +175,7 @@ class TestTPLMethodsRemover extends AnyFunSuite {
       }
 
       override def postVisitDirectory(dir: Path, exc: IOException): FileVisitResult = {
-        // Result folder itself should not be deleted!
-        if (dir != pathObject) {
-          Files.delete(dir)
-        }
+        Files.delete(dir)
         FileVisitResult.CONTINUE
       }
     })

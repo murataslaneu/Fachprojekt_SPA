@@ -1,7 +1,5 @@
 package modify.data
 
-import org.opalj.tac.cg.CallGraphKey
-
 import java.io.File
 
 /**
@@ -16,13 +14,6 @@ import java.io.File
  * @param criticalMethods List of selected methods for each entered class that should be treated as critical.
  * @param ignoreCalls List of method calls in a method of a class to ignore/suppress. These calls will not be replaced
  *                    if found, even if the method call is critical.
- * @param entryPointsFinder Combination of the EntryPointsFinder and InstantiatedTypesFinder to use for the project.
- *                          First string contains the EntryPointsFinder, second one the InstantiatedTypesFinder. In the
- *                          config json, you have 4 different options to choose from that set this tuple accordingly:
- *                          "custom", "application", "applicationwithjre" and "library". Defaults to "application".
- * @param customEntryPoints Additional entry points the user can enter for the call graph of the project.
- * @param callGraphAlgorithm Call graph algorithm to use. User can decide in config between
- *                           "cha", "rta", "xta" and "1-1-cfa".
  * @param outputClassFiles FOLDER where the modified class files will be written to.
  * @param outputJson Optional output file name for results. If not given, no output file is generated.
  */
@@ -32,9 +23,6 @@ case class AnalysisConfig(
   completelyLoadLibraries: Boolean,
   criticalMethods: List[SelectedMethodsOfClass],
   ignoreCalls: List[IgnoredCall],
-  entryPointsFinder: (String, String),
-  customEntryPoints: List[SelectedMethodsOfClass],
-  callGraphAlgorithm: CallGraphKey,
   outputClassFiles: String,
   outputJson: Option[String]
 )

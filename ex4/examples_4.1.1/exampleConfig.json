@@ -1,54 +1,17 @@
 {
   "projectJars": [
-    "examples_4.1.1/ExampleWithSecurityManager.jar"
+    "lib/cm/ExampleWithSecurityManager.jar"
   ],
-
   "libraryJars": [
-    "examples_4.1.1/pdfbox-3.0.5.jar"
+    "lib/cm/pdfbox-3.0.5.jar"
   ],
-
-  "completelyLoadLibraries": true,
-
+  "outputClassFiles": "output/yget_yset",
+  "outputJson": "output/yget_yset/cm_test_result.json",
   "criticalMethods": [
     {
       "className": "java.lang.System",
-      "methods": [
-        "getSecurityManager",
-        "setSecurityManager",
-        "someOtherMethod"
-      ]
+      "methods": ["getSecurityManager", "setSecurityManager"]
     }
   ],
-
-  "ignoreCalls": [
-    {
-      "callerClass": "Main",
-      "callerMethod": "main",
-      "targetClass": "java.lang.System",
-      "targetMethod": "someOtherMethod"
-    }
-  ],
-
-  "entryPointsFinder": "applicationWithJre",
-
-  "customEntryPoints": [
-    {
-      "className": "com.something.SomeClass",
-      "methods": [
-        "someMethod"
-      ]
-    },
-    {
-      "className": "com.something.OtherClass",
-      "methods": [
-        "someMethod"
-      ]
-    }
-  ],
-
-  "callGraphAlgorithm": "XTA",
-
-  "outputClassFiles": "results_4.1.1",
-
-  "outputJson": "results_4.1.1/test.json"
+  "ignoreCalls": []
 }

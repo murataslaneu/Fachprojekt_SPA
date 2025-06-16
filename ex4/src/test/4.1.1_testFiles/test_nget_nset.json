@@ -1,16 +1,10 @@
 {
   "projectJars": [
-    "lib/cm/ExampleWithSecurityManager.jar"
+    "src/test/4.1.1_testFiles/ExampleWithSecurityManager.jar"
   ],
-  "libraryJars": [
-    "lib/cm/pdfbox-3.0.5.jar"
-  ],
-  "includeNonPublicMethods": true,
   "entryPointsFinder": "application",
-  "customEntryPoints": [],
-  "callGraphAlgorithm": "rta",
-  "outputClassFiles": "output/nget_nset",
-  "outputJson": "output/nget_nset/cm_test_result.json",
+  "outputClassFiles": "src/test/4.1.1_testFiles/resultFiles",
+  "outputJson": "src/test/4.1.1_testFiles/resultFiles/test_result.json",
   "criticalMethods": [
     {
       "className": "java.lang.System",

@@ -1,5 +1,5 @@
-import com.typesafe.config.{Config, ConfigFactory}
-import modify.JsonIO
+import com.typesafe.config.Config
+import modify.FileIO
 import modify.data.{AnalysisConfig, AnalysisResult, IgnoredCall, RemovedCall}
 import org.opalj.br.analyses.{Analysis, AnalysisApplication, BasicReport, ProgressManagement, Project, ReportableAnalysisResult}
 import org.opalj.log.LogContext
@@ -19,7 +19,6 @@ import java.io.File
 import java.net.URL
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
-import scala.jdk.CollectionConverters.{IterableHasAsJava, MapHasAsJava}
 
 // Application that implements exercise 4.1.1
 
@@ -30,7 +29,7 @@ import scala.jdk.CollectionConverters.{IterableHasAsJava, MapHasAsJava}
 object CriticalMethodsRemover extends Analysis[URL, BasicReport] with AnalysisApplication {
 
   /** Object holding the configuration for the analysis */
-  private var config: Option[AnalysisConfig] = None
+  var config: Option[AnalysisConfig] = None
 
   private val resultsBuffer = ListBuffer.empty[AnalysisResult]
 
@@ -50,7 +49,7 @@ object CriticalMethodsRemover extends Analysis[URL, BasicReport] with AnalysisAp
         val configPath = getValue(arg)
         try {
           configMissing = false
-          config = Some(JsonIO.readConfig(configPath))
+          config = Some(FileIO.readConfig(configPath))
         }
         catch {
           case ex: Exception => issues += s"Config file at path $configPath could not be parsed correctly: $ex"
@@ -75,23 +74,9 @@ object CriticalMethodsRemover extends Analysis[URL, BasicReport] with AnalysisAp
       | """.stripMargin
 
   override def setupProject(cpFiles: Iterable[File], libcpFiles: Iterable[File], completelyLoadLibraries: Boolean, configuredConfig: Config)(implicit initialLogContext: LogContext): Project[URL] = {
-    val overridesMap: mutable.Map[String, Object] = mutable.Map(
-      "org.opalj.br.analyses.cg.InitialEntryPointsKey.analysis" -> config.get.entryPointsFinder._1,
-      "org.opalj.br.analyses.cg.InitialInstantiatedTypesKey.analysis" -> config.get.entryPointsFinder._2
-    )
-
-    if (config.get.customEntryPoints.nonEmpty) {
-      val customEntryPoints = config.get.customEntryPoints.flatMap { eps =>
-        eps.methods.map { epMethod =>
-          Map("declaringClass" -> eps.className, "name" -> epMethod).asJava
-        }
-      }.asJava
-      overridesMap.put("org.opalj.br.analyses.cg.InitialEntryPointsKey.entryPoints", customEntryPoints)
-    }
-
-    val newConfig = ConfigFactory.parseMap(overridesMap.asJava).withFallback(configuredConfig).resolve()
-
-    super.setupProject(config.get.projectJars, config.get.libraryJars, config.get.completelyLoadLibraries, newConfig)
+    // Emptying the resultsBuffer is needed for the tests to succeed
+    resultsBuffer.clear()
+    super.setupProject(config.get.projectJars, config.get.libraryJars, config.get.completelyLoadLibraries, configuredConfig)
   }
 
   /** Main analysis logic */
@@ -108,9 +93,6 @@ object CriticalMethodsRemover extends Analysis[URL, BasicReport] with AnalysisAp
     println(s"  - completelyLoadLibraries: ${config.get.completelyLoadLibraries}")
     println(s"  - criticalMethods: ${config.get.criticalMethods}")
     println(s"  - ignoreCalls: ${config.get.ignoreCalls}")
-    println(s"  - entryPointsFinder: ${config.get.entryPointsFinder}")
-    println(s"  - customEntryPoints: ${config.get.customEntryPoints}")
-    println(s"  - callGraphAlgorithm: ${config.get.callGraphAlgorithm}")
     println(s"  - outputClassFiles: ${config.get.outputClassFiles}")
     println(s"  - outputJson: ${config.get.outputJson}")
     println("===============================================================\n")
@@ -166,7 +148,7 @@ object CriticalMethodsRemover extends Analysis[URL, BasicReport] with AnalysisAp
           // After class writing
           println(s"[OK] Modified class written to: $outputFile")
 
-          writeBytecodeJsonDump(newInstructions, cf.thisType.toJava, m.name, outputDir)
+          //writeBytecodeJsonDump(newInstructions, cf.thisType.toJava, m.name, outputDir)
 
           // Track removed calls
           val removed = foundInvokes.collect {
@@ -228,7 +210,7 @@ object CriticalMethodsRemover extends Analysis[URL, BasicReport] with AnalysisAp
 
     config.foreach { conf =>
       conf.outputJson.foreach { path =>
-        modify.JsonIO.writeResult(resultList, path)
+        modify.FileIO.writeResult(resultList, path)
 
         // After JSON writing
         println(s"[OK] Result JSON written to: $path")
