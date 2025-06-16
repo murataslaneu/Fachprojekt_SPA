@@ -8,7 +8,7 @@ import org.opalj.br.{ClassFile, Code, Method, NoExceptionHandlers}
 import org.opalj.bc.Assembler
 import org.opalj.ba.toDA
 
-import java.nio.file.{Files, Path, Paths}
+import java.nio.file.{Files, Path}
 import org.opalj.br.instructions.Instruction
 
 import java.io.File
