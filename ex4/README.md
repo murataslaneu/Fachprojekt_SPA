@@ -67,6 +67,17 @@ json-Datei überprüft werden.
 * Automatische Unit-Tests mit `sbt test` decken vier verschiedene Testfälle ab
 * Automatisierter Test, der das `.class`-File parst und prüft, ob NOPs korrekt gesetzt sind
 * ~~Stack-Layout wird berücksichtigt~~
+> **Hinweis zu Stack-Konsistenz:**
+> 
+> In unserer aktuellen Implementierung werden kritische Methodenaufrufe (INVOKE*) lediglich durch NOP-Instruktionen ersetzt.
+> Dadurch wird der Methodenaufruf zwar entfernt, jedoch bleiben die für den Aufruf auf den Stack geladenen Parameter erhalten.
+> Dies kann dazu führen, dass der Stack nach der Entfernung der Instruktion einen inkonsistenten Zustand hat,
+> was bei der weiteren Ausführung zu Fehlern führen kann.
+>
+> Eine vollständige und sichere Lösung müsste nicht nur die Aufrufinstruktion, sondern auch sämtliche Parameter,
+> die für diesen Aufruf auf den Stack geladen werden, entfernen. Dies ist insbesondere schwierig,
+> wenn die Parameter selbst das Ergebnis anderer Methodenaufrufe sind --> Rekursiver Ansatz nötig.
+> Unsere Implementierung verfolgt diesen rekursiven Ansatz nicht, sondern ersetzt ausschließlich die Aufrufinstruktion durch NOP.
 
 ### Optionen der Config-Datei
 
