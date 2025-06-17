@@ -34,12 +34,12 @@ für Aufgabe 4.1.2), die sich mit der Manipulation von Java Bytecode beschäftig
 4. Weil dieses Projekt mehrere Main-Klassen enthält, muss noch ausgewählt werden, was ausgeführt werden soll.
    Wähle eines der Klassen aus (`CriticalMethodsRemover` (für 4.1.1) oder `TPLMethodsRemover` (für 4.1.2)), indem die
    jeweilige angezeigte Zahl eingegeben wird.
-5. Die Analyse wird gestartet. Hierbei wird zuerst die Config eingelesen und einige Checks durchgeführt. Es wird auch
+5. Die Analyse wird gestartet. Hierbei werden zuerst die Config eingelesen und einige Checks durchgeführt. Es wird auch
    überprüft, ob der Ausgabepfad für `outputClassFiles` (der Ausgabepfad für die generierten Class Files) leer ist.
-   **Sollte der Ordner angegebener Ordner nicht leer sein, werden für die Analyse die Inhalte des Ordners
+   **Sollte der angegebene Ordner nicht leer sein, werden für die Analyse die Inhalte des Ordners
    <ins>gelöscht</ins>!** Die Analyse fragt in diesem Fall vorher nach, ob diese Aktion wirklich durchgeführt werden
    soll. **STELLE SICHER, DASS DER ANGEGEBENE PFAD KORREKT IST, UM UNGEWOLLTEN DATENVERLUST ZU VERMEIDEN!**
-6. Die Analyse wird durchgeführt und der die Class Files im angegebenen Pfad ausgegeben.
+6. Die Analyse wird durchgeführt und die Class Files im angegebenen Pfad ausgegeben.
    Bei der Analyse `CriticalMethodsRemover` wird ggf. auch eine json-Datei ausgegeben, sofern ein Pfad dafür angegeben
    wurde.
 
@@ -95,28 +95,28 @@ json-Datei überprüft werden.
 
 - `ignoredCalls`: Liste von {"callerClass": \<String\>, "callerMethod": \<String\>,
   "targetClass": \<String\>, "targetMethod": \<String\>}. Kann als eine Art "Whitelist" angesehen werden, die in einzelnen
-  Methode den Aufruf einer kritischen Methode erlaubt. `callerClass` und `callerMethod` ist der Name der Klasse und
-  Methode, in der ein kritischer Methodenaufruf sein (könnte). `targetClass` und `targetMethod` ist der Name der Klasse
-  und Methode der kritischen Methode, welche für `callerClass` und `callerMethod` erlaubt werden soll.
+  Methoden den Aufruf einer kritischen Methode erlaubt. `callerClass` und `callerMethod` sind der Name der Klasse und
+  Methode, in der ein kritischer Methodenaufruf ist bzw. sein könnte. `targetClass` und `targetMethod` sind der Name der Klasse
+  und Methode der kritischen Methode, welche für `callerClass` und `callerMethod` erlaubt werden sollen.
 
 
 - `outputClassFiles`: String. Ausgabepfad für die modifizierten .class-Dateien. Muss ein (idealerweise leerer!) Ordner sein.
   Standardmäßig `"result"`, also ein Ordner mit dem Namen "result" im Verzeichnis, wo die Analyse
   ausgeführt wird. Ordner wird bei Bedarf erstellt, falls dieser noch nicht existiert. Falls der
   Ordner existiert und nicht leer ist, **werden die enthaltenen Daten vor der Analyse gelöscht**
-  (wobei einem die Analyse einem davor noch warnt)!
+  (wobei einem die Analyse davor noch warnt)!
 
 
 - `outputJson`: String. Ausgabepfad einer json-Datei, die zusätzliche Informationen bezüglich der Analyse enthält.
-  Dazu gehört z.B., in welcher Klasse welche Bytecode-Zeilen geändert wurden, oder ob mindestens ein kritischer
-  Methodenaufruf ignoriert wurde. Wenn kein Pfad angegeben, wird auch keine json-Datei generiert.
+  Dazu gehört z.B. in welcher Klasse welche Bytecode-Zeilen geändert wurden, oder ob mindestens ein kritischer
+  Methodenaufruf ignoriert wurde. Wenn kein Pfad angegeben wurde, wird auch keine json-Datei generiert.
 
 
 - `libraryJars`: Liste aus Strings. Die Strings enthalten die Pfade zu den Bibliotheken/TPLs des Projekts.
   Die TPLs können direkte Abhängigkeiten des Projekts sein, als auch transitive Abhängigkeiten.
   Es kann ebenfalls die Java-Standardbibliothek (`rt.jar`) eingebunden werden.
 - `completelyLoadLibraries`: Boolean. Flag, der angibt, ob für die Analyse die Bibliotheken, die über `libraryJars`
-  übergeben werden, komplett in OPAL geladen werden sollen (`true`), oder nur als Interface geladen werden (`false`).
+  übergeben werden, komplett in OPAL geladen werden sollen (`true`), oder nur als Interface (`false`).
   Standardmäßig `false`.
 
 > **Anmerkung:** Sowohl `libraryJars`, als auch `completelyLoadLibraries` haben vermutlich keinen Effekt auf das
@@ -181,7 +181,7 @@ json-Datei überprüft werden.
 ### Tests
 
 Es wurde auf einem selbstgeschriebenen Beispielprojekt `ExampleWithSecurityManager.jar` getestet, ob die korrekten Instruktionen
-erkannt wurden und ob der Bytecode erfolgreich modifiziert wird. Der Fokus lag hierbei auf die Methoden `getSecurityManager`
+erkannt werden und ob der Bytecode erfolgreich modifiziert wird. Der Fokus lag hierbei auf die Methoden `getSecurityManager`
 und `setSecurityManager` von `java.lang.System`. Es wurden 4 Fälle getestet:
 - Fall 1: `getSecurityManager`-Aufruf erlaubt, `setSecurityManager` verboten und soll entfernt werden (`yget-nset`).
 - Fall 2: `getSecurityManager`-Aufruf verboten und soll entfernt werden, `setSecurityManager` erlaubt (`nget-yset`).
@@ -194,9 +194,9 @@ und `setSecurityManager` von `java.lang.System`. Es wurden 4 Fälle getestet:
 ## 4.1.2: TPLMethodsRemover (Bytecode erzeugen)
 Diese Analyse sucht nach genutzten Methoden aus Third Party Libraries (TPLs) in einem Projekt (wie in ex3).
 Der Unterschied ist aber, dass hier keine Usage Ratios berechnet werden, sondern ein **Dummy <ins>einer</ins> der
-genutzten TPLs** erzeugt, der nur die genutzten class files und dessen genutzten Methoden enthält.
-In diesem Dummy werden aber auch die Methoden-Körper entfernt (führen nichts aus und geben ggf.
-nur null oder 0 zurück, je nach Ausgabetyp der Methode). Der Pfad, wo der Dummy ausgegeben werden soll, kann ebenfalls
+genutzten TPLs** erzeugt wird, der nur die genutzten .class-Dateien und dessen genutzten Methoden enthält.
+In diesem Dummy werden aber auch die Methodenkörper entfernt (führen nichts aus und geben ggf.
+nur `null` oder 0 zurück, je nach Ausgabetyp der Methode). Der Pfad, wo der Dummy ausgegeben werden soll, kann ebenfalls
 festgelegt werden.
 
 ### Optionen der Config-Datei
@@ -215,35 +215,35 @@ festgelegt werden.
 
 
 - `tplJar`: <ins>Ein</ins> String. Pfad zu der TPL, von der der Dummy generiert werden soll. **Tipp: Kopiere den
-            <ins>exakt selben</ins> Pfad der TPL, der in libraryJars verwendet wurde, hier rein, damit erkannt wird,
-            damit bei Lesen der Config keine Fehler auftreten!**
+            <ins>exakt selben</ins> Pfad der TPL, der in libraryJars verwendet wurde, hier rein,
+            damit beim Lesen der Config keine Fehler auftreten und alle Dateien korrekt erkannt werden!**
 
 #### Optional (muss nicht in Config enthalten/festgelegt werden)
 
-- `includeNonPublicMethods`: Boolean. Gibt an, ob der Dummy auch Methoden enthält, die nicht `public` sind (die z.B. 
+- `includeNonPublicMethods`: Boolean. Gibt an, ob der Dummy auch Methoden enthalten soll, die nicht `public` sind (die z.B. 
                              indirekt über den Aufruf einer (in-)direkt genutzten `public` Methode der TPL aufgerufen 
                              wurden), oder eben nur die (in-)direkt genutzten `public` Methoden. Standardmäßig `true`
-                             (Methoden, die nicht public sind, sind ebenfalls enthalten).
+                             (Methoden, die nicht `public` sind, sind ebenfalls enthalten).
 
 - `entryPointsFinder`: String "custom", "application", "applicationWithJre" oder "library". Bestimmt die Einstiegspunkte
                        für den Call-Graphen, um genutzte Methoden zu erkennen. Standardmäßig `"application"`
   - `"custom"`: Standardmäßig nichts als Einstiegspunkt festgelegt. Lege eigene Einstiegspunkte über Option
-                'customEntryPoints' fest!
+                `customEntryPoints` fest!
   - `"application"`: Beinhaltet alle main-Methoden des Projekts.
   - `"applicationWithJre`: Behaltet alle main-Methoden des Projekts, und auch die Einstiegspunkte der mitgelieferten
                            Java-Runtime-Environment (JRE), sofern im Projekt enthalten.
   - `"library"`: Für den Fall, dass das Projekt eine Bibliothek ist. Enthält alle von außen erreichbaren Methoden
-                 (z.B. alle `public` Methoden des Projekts).
+                 (unter anderem alle `public` Methoden des Projekts).
 
 
 - `customEntryPoints`: Liste von {"className": \<String\>, "methods": \<Liste von Strings\>}. Ermöglicht es, (weitere)
                        Einstiegspunkte festzulegen. `"className"` ist der fully qualified name der Klasse, zu der die
-                       Methodennamen gehören, und `"methods"` sind die zugehörigen Methoden<ins>namen</ins>. Rückgabetyp
+                       Methoden gehören, und `"methods"` sind die zugehörigen Methoden<ins>namen</ins>. Rückgabetyp
                        und Parameter dürfen/können (leider) nicht mit angegeben werden. Standardmäßig eine leere Liste.
 
 
 - `callGraphAlgorithm`: String "CHA", "RTA", "XTA" oder "1-1-CFA". Bestimmt den verwendeten Algorithmus für den
-                        Call-Graph. Sortiert nach Präzision des Algorithmus. Standardmäßig `"RTA"`, weíl niedrigere
+                        Call-Graph. Aufzählung sortiert nach Präzision des Algorithmus. Standardmäßig `"RTA"`, weil niedrigere
                         Leistungsanforderungen.
 
 
@@ -289,7 +289,7 @@ Es wird getestet, ob das Objekt `create.FileIO` die json-Config-Datei korrekt ei
 Außerdem wird auf einem selbstgeschriebenen Beispielprojekt und -bibliothek
 (genannt `Test_ExampleProject` und `Test_ExampleLib`) getestet, ob die Class-Dateien an den erwarteten Orten gespeichert
 werden und die korrekten Methoden enthält. Es werden zwei Fälle getestet:
-- Fall 1: Nur öffentliche Methoden enthalten (direkter oder indirekter Aufruf)
+- Fall 1: Nur öffentliche Methoden enthalten (direkter oder indirekter Aufruf).
 - Fall 2: Sämtliche aufgerufene Methoden enthalten (auch nicht-öffentliche Methoden, die z.B. indirekt mit Aufruf einer
   anderen Methode mit aufgerufen werden).
 
@@ -306,12 +306,12 @@ Dieses Projekt nutzt ScalaTest und enthält Tests, um die (grobe) Funktionsfähi
 
 ### Coverage
 Ebenfalls wird die Test Coverage mithilfe von sbt-scoverage (einem Plugin für sbt) gemessen. Ausführung ist ähnlich zu
-Tests, aber mit Befehl:
+den Tests, aber mit Befehl:
    ```
    sbt clean coverage test coverageReport
    ```
-Dieser Befehl räumt erst das Projekt auf, dann wird der Test ausgeführt mit Messung der Coverage, und anschließend 
+Dieser Befehl räumt erst das Projekt auf. Dann wird der Test ausgeführt mit Messung der Coverage, und abschließend 
 wird ein Coverage-Report erstellt.
 
-Der Coverage-Report wird (unter anderem) als HTML-Format ausgegeben. Dieser kann sich dann beim
-Öffnen der jeweiligen Datei im Browser graphisch angeguckt werden.
+Der Coverage-Report wird (unter anderem) im HTML-Format ausgegeben. Dieser kann sich dann beim
+Öffnen der jeweiligen Datei im Browser graphisch angeschaut werden.
