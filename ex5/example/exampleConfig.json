@@ -1,0 +1,10 @@
+{
+  "projectJars": [
+    "example/ExampleWithDeadCode.jar"
+  ],
+  "libraryJars": [
+  ],
+  "interactive": true,
+  "showResults": true,
+  "outputJson": "result.json"
+}
