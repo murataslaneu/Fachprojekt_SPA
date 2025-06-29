@@ -52,7 +52,7 @@ object DeadCodeAnalysis {
     }
   }
 
-  def analyze(project: Project[URL], domainStr: String, config: AnalysisConfig): DeadCodeReport = {
+  def analyze(project: Project[URL], domainStr: String, domainName: String, config: AnalysisConfig): DeadCodeReport = {
     // Measuring required time for the analysis
     val startTime = System.currentTimeMillis()
     val ai = new BaseAI(IdentifyDeadVariables = true, RegisterStoreMayThrowExceptions = false)
@@ -108,7 +108,7 @@ object DeadCodeAnalysis {
     // Create report object
     DeadCodeReport(
       config.projectJars.map { file => file.getPath.replace('\\', '/') },
-      domainStr,
+      domainName,
       java.time.LocalDateTime.now(),
       runtime,
       methodsWithDeadCode.toList

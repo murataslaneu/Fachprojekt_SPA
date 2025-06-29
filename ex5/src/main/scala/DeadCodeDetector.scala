@@ -26,10 +26,10 @@ object DeadCodeDetector extends Analysis[URL, BasicReport] with AnalysisApplicat
   private var outputJsonPath: String = "result.json"
 
   /** Boolean whether the -config option has been entered in the terminal */
-  private var configSet: Boolean = false
+  var configSet: Boolean = false
 
   /** Object holding the configuration for the analysis */
-  private var config: Option[AnalysisConfig] = None
+  var config: Option[AnalysisConfig] = None
 
   override def title: String = "Dead code detector"
 
@@ -63,7 +63,8 @@ object DeadCodeDetector extends Analysis[URL, BasicReport] with AnalysisApplicat
     issues
   }
 
-  override def analysisSpecificParametersDescription: String = """
+  override def analysisSpecificParametersDescription: String =
+    """
       | ========================= CUSTOM PARAMETERS =========================
       | [-config=<config.json> (Optional. Configuration used for analysis. See template for schema.)]
       | [-interactive (Flag. If given, the analysis will ask you what domain to use for the abstract interpretation.)]
@@ -88,9 +89,9 @@ object DeadCodeDetector extends Analysis[URL, BasicReport] with AnalysisApplicat
     // Print config
     println(s"\n==================== Loaded Configuration (${if (configSet) "via config json" else "via terminal options"}) ====================")
     println(s"* projectJars: ${if (config.get.projectJars.isEmpty) "[None]" else ""}")
-    config.get.projectJars.foreach {file => println(s"  - $file")}
+    config.get.projectJars.foreach { file => println(s"  - $file") }
     println(s"* libraryJars: ${if (config.get.libraryJars.isEmpty) "[None]" else ""}")
-    config.get.libraryJars.foreach {file => println(s"  - $file")}
+    config.get.libraryJars.foreach { file => println(s"  - $file") }
     println(s"* completelyLoadLibraries: ${config.get.completelyLoadLibraries}")
     println(s"* interactive: ${config.get.interactive}")
     println(s"* showResults: ${config.get.showResults}")
@@ -100,10 +101,11 @@ object DeadCodeDetector extends Analysis[URL, BasicReport] with AnalysisApplicat
     println("Selecting domain...")
     var domainStr = DeadCodeAnalysis.selectDomain(config.get.interactive)
     // This is needed because there is likely a bug in the way OPAL 5.0.0 handles domain identifiers.
+    val domainName = domainStr.substring(domainStr.indexOf("[") + 1, domainStr.indexOf("]"))
     domainStr = domainStr.substring(domainStr.indexOf("]") + 2)
 
     println("Starting analysis...")
-    val report = DeadCodeAnalysis.analyze(project, domainStr, config.get)
+    val report = DeadCodeAnalysis.analyze(project, domainStr, domainName, config.get)
     println("Analysis finished.")
 
     JsonIO.writeResult(report, config.get.outputJson)

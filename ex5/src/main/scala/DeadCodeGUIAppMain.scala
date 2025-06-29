@@ -1,23 +1,26 @@
-import javafx.application.Application
+import javafx.application.{Application, Platform}
 import javafx.stage.{FileChooser, Stage}
 import javafx.scene.Scene
 import javafx.scene.control._
 import javafx.scene.layout._
 import javafx.geometry.{Insets, Pos}
 import javafx.collections.{FXCollections, ObservableList}
-import javafx.scene.chart.{PieChart, BarChart, CategoryAxis, NumberAxis, XYChart}
+import javafx.scene.chart.{BarChart, CategoryAxis, NumberAxis, PieChart, XYChart}
+
 import java.io.{File, PrintWriter}
 import scala.collection.mutable.ListBuffer
-import scala.util.{Try, Success, Failure}
+import scala.util.{Failure, Success, Try}
 import helpers.JsonIO
 import data.{AnalysisConfig, DeadCodeReport, MethodWithDeadCode}
 import org.opalj.ai.common.DomainRegistry
 import org.opalj.log.GlobalLogContext
 import com.typesafe.config.ConfigFactory
 import play.api.libs.json._
+
 import scala.jdk.CollectionConverters._
 import helpers.DeadCodeAnalysis
 import org.opalj.br.analyses.Project
+
 import java.net.URL
 import scala.util.Random
 
@@ -93,11 +96,17 @@ class DeadCodeGUIApp extends Application {
 
     tabPane.getTabs.addAll(analysisTab, resultsTab)
 
-    val scene = new Scene(tabPane, 1920, 1080)
+    val scene = new Scene(tabPane, 1280, 720)
 
     primaryStage.setTitle("Dead Code Analysis Tool – Enhanced GUI")
     primaryStage.setScene(scene)
     primaryStage.show()
+
+    primaryStage.setOnCloseRequest(_ => {
+      Platform.exit()
+      System.exit(0)
+    })
+    primaryStage.setMaximized(true)
   }
 
   /**
@@ -1415,13 +1424,19 @@ class DeadCodeGUIApp extends Application {
       domainDescriptions.head
     }
 
+    val cleanDomainName = if (selectedDomainStr.contains("]")) {
+      selectedDomainStr.substring(selectedDomainStr.indexOf("[") + 1, selectedDomainStr.indexOf("]"))
+    } else {
+      selectedDomainStr
+    }
+
     val cleanDomainStr = if (selectedDomainStr.contains("]")) {
       selectedDomainStr.substring(selectedDomainStr.indexOf("]") + 2)
     } else {
       selectedDomainStr
     }
 
-    DeadCodeAnalysis.analyze(project, cleanDomainStr, config)
+    DeadCodeAnalysis.analyze(project, cleanDomainStr, cleanDomainName, config)
   }
 
   /**

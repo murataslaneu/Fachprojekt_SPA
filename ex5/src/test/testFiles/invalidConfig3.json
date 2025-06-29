@@ -1,0 +1,5 @@
+{
+  "libraryJars": [
+    "foo/bar.jar"
+  ]
+}

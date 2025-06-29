@@ -1,0 +1,8 @@
+{
+  "projectJars": [
+    "example/MinimalExample.jar"
+  ],
+  "libraryJars": [
+    "foo/bar.jar"
+  ]
+}

@@ -1,0 +1,6 @@
+{
+  "projectJars": [
+    "example/ExampleWithDeadCode.jar"
+  ],
+  "outputJson": "resultFile"
+}

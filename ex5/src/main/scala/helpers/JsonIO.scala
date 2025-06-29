@@ -75,11 +75,11 @@ object JsonIO {
     }
 
     // showResults: Boolean
-    // - Optional, defaults to true
+    // - Optional, defaults to false
     val showResults = {
       val result = json \ "showResults"
       if (result.isDefined) result.get.as[Boolean]
-      else true
+      else false
     }
 
     // outputJson: String

@@ -17,6 +17,8 @@
     <orderEntry type="library" name="sbt: org.scala-lang:scala-library:2.13.16:jar" level="project" />
     <orderEntry type="library" name="sbt: de.opal-project:framework_2.13:5.0.0:jar" level="project" />
     <orderEntry type="library" name="sbt: com.typesafe.play:play-json_2.13:2.10.6:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.openjfx:javafx-controls:20:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.openjfx:javafx-fxml:20:jar" level="project" />
     <orderEntry type="library" name="sbt: de.opal-project:bytecode-assembler_2.13:5.0.0:jar" level="project" />
     <orderEntry type="library" name="sbt: de.opal-project:architecture-validation_2.13:5.0.0:jar" level="project" />
     <orderEntry type="library" name="sbt: de.opal-project:three-address-code_2.13:5.0.0:jar" level="project" />
@@ -27,11 +29,17 @@
     <orderEntry type="library" name="sbt: com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.14.3:jar" level="project" />
     <orderEntry type="library" name="sbt: com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.14.3:jar" level="project" />
     <orderEntry type="library" name="sbt: com.fasterxml.jackson.core:jackson-databind:2.14.3:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.openjfx:javafx-controls:20:win:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.openjfx:javafx-graphics:20:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.openjfx:javafx-fxml:20:win:jar" level="project" />
     <orderEntry type="library" name="sbt: de.opal-project:bytecode-creator_2.13:5.0.0:jar" level="project" />
     <orderEntry type="library" name="sbt: de.opal-project:abstract-interpretation-framework_2.13:5.0.0:jar" level="project" />
     <orderEntry type="library" name="sbt: de.opal-project:dependencies-extraction-library_2.13:5.0.0:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.openjfx:javafx-graphics:20:win:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.openjfx:javafx-base:20:jar" level="project" />
     <orderEntry type="library" name="sbt: de.opal-project:bytecode-disassembler_2.13:5.0.0:jar" level="project" />
     <orderEntry type="library" name="sbt: de.opal-project:bytecode-representation_2.13:5.0.0:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.openjfx:javafx-base:20:win:jar" level="project" />
     <orderEntry type="library" name="sbt: de.opal-project:bytecode-infrastructure_2.13:5.0.0:jar" level="project" />
     <orderEntry type="library" name="sbt: de.opal-project:static-analysis-infrastructure_2.13:5.0.0:jar" level="project" />
     <orderEntry type="library" name="sbt: org.scala-lang.modules:scala-parser-combinators_2.13:1.1.2:jar" level="project" />
