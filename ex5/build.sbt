@@ -16,3 +16,8 @@ libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.19" % "test"
 
 libraryDependencies += "de.opal-project" % "framework_2.13" % "5.0.0"
 libraryDependencies += "com.typesafe.play" %% "play-json" % "2.10.6"
+
+libraryDependencies ++= Seq(
+  "org.openjfx" % "javafx-controls" % "20",
+  "org.openjfx" % "javafx-fxml" % "20"
+)
