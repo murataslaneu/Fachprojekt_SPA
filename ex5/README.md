@@ -16,6 +16,7 @@ Man kann die Analyse aber auch über das Terminal oder Config-Datei starten und 
 - [Benutzung der GUI](#benutzung-der-analyse-über-die-gui)
   - [Analysis](#analysis)
   - [Results Viewer](#results-viewer)
+- [Tests](#tests)
 
 ## Starten der GUI (mit sbt)
 1. Öffne das Terminal und stelle sicher, im richtigen Verzeichnis zu sein (`TUDO-FP-VulnSPA-25-3/ex5`).
@@ -136,3 +137,25 @@ Ergebnisse, wenn man weiter runterscrollt.
 Bei den detaillierten Ergebnissen sieht man die Methoden, die mindestens eine tote Instruktion enthalten.
 Klickt man auf eine der Methoden, bekommt man in einer Liste darunter die einzelnen toten Instruktionen der
 Methode angezeigt.
+
+## Tests
+
+Dieses Projekt nutzt ScalaTest und enthält Tests, um die (grobe) Funktionsfähigkeit der Analyse zu testen.
+
+### Ausführung (über sbt)
+1. Öffne das Terminal und stelle sicher, im richtigen Verzeichnis zu sein (`TUDO-FP-VulnSPA-25-3/ex5`).
+2. Führe im Terminal `sbt test` aus.
+3. Tests werden ausgeführt. Nach Ausführung wird das Ergebnis der Tests ausgegeben. Es sollten alle Tests
+   erfolgreich sein! :)
+
+### Coverage
+Ebenfalls wird die Test Coverage mithilfe von sbt-scoverage gemessen. Ausführung ist ähnlich zu
+den Tests, aber mit Befehl:
+   ```
+   sbt clean coverage test coverageReport
+   ```
+Dieser Befehl räumt erst das Projekt auf. Dann wird der Test ausgeführt mit Messung der Coverage, und abschließend
+wird ein Coverage-Report erstellt.
+
+Der Coverage-Report wird (unter anderem) im HTML-Format ausgegeben. Dieser kann sich dann beim
+Öffnen der jeweiligen Datei im Browser graphisch angeschaut werden.

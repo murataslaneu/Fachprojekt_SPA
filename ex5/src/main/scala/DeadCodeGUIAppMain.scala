@@ -118,6 +118,7 @@ class DeadCodeGUIApp extends Application {
     // Main control buttons
     val selectButton = new Button("Choose Config File")
     val autoDetectButton = new Button("Auto-Detect Configs")
+    val loadResultButton = new Button("Load results from JSON")
     val runButton = new Button("Run Analysis")
 
     // Domain selection controls
@@ -297,6 +298,46 @@ class DeadCodeGUIApp extends Application {
         runButton.setDisable(false)
         configListView.setVisible(false)
         logArea.appendText(s"Config file selected: ${selected.getAbsolutePath}\n")
+      }
+    })
+
+    loadResultButton.setOnAction(_ => {
+      val chooser = new FileChooser()
+      chooser.setTitle("Select results JSON file")
+      chooser.getExtensionFilters.add(
+        new FileChooser.ExtensionFilter("JSON Result Files", "*.json")
+      )
+
+      // Set initial directory based on current project directory
+      val initialDir = projectDirectory.getOrElse(new File(System.getProperty("user.dir")))
+      if (initialDir.exists() && initialDir.isDirectory) {
+        chooser.setInitialDirectory(initialDir)
+      }
+      val selected = chooser.showOpenDialog(primaryStage)
+
+      logArea.appendText(s"Selected JSON results file: $selected\n")
+
+      val tabPane = primaryStage.getScene.getRoot.asInstanceOf[TabPane]
+      val resultsTab = tabPane.getTabs.get(1)
+
+      if (selected != null) {
+        val source = scala.io.Source.fromFile(selected)
+        val jsonContents = try Json.parse(source.mkString) finally source.close()
+        val reportResult = jsonContents.validate[DeadCodeReport]
+        val report = reportResult.getOrElse(null)
+        if (report != null) {
+          lastAnalysisResult = Some(report)
+          resultsTab.setDisable(false)
+          refreshResultsVisualization()
+          logArea.appendText(s"Generated report from JSON file: $selected\n")
+        } else{
+          logArea.appendText(s"File could not be decoded properly: $selected\n")
+          lastAnalysisResult = None
+          resultsTab.setDisable(true)
+        }
+      }
+      else {
+        resultsTab.setDisable(true)
       }
     })
 
@@ -522,7 +563,7 @@ class DeadCodeGUIApp extends Application {
 
     val buttonSection = new HBox(15)
     buttonSection.setAlignment(Pos.CENTER)
-    buttonSection.getChildren.addAll(selectButton, autoDetectButton)
+    buttonSection.getChildren.addAll(selectButton, autoDetectButton, loadResultButton)
 
     val statusSection = new VBox(5)
     statusSection.getChildren.addAll(statusLabel, configListView)
