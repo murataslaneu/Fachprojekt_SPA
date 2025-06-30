@@ -47,7 +47,8 @@ class TestDeadCodeAnalysis extends AnyFunSuite {
     assert(report.methodsFound.length == 1)
     // Check (only) method
     val method = report.methodsFound.head
-    assert(method.fullSignature == "com.example.Main{ public static void main(java.lang.String[]) }")
+    assert(method.fullSignature == "void main(java.lang.String[])")
+    assert(method.enclosingTypeName == "com.example.Main")
     assert(method.numberOfTotalInstructions == 13)
     assert(method.numberOfDeadInstructions == method.deadInstructions.length)
     assert(method.deadInstructions.nonEmpty)
