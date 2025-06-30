@@ -18,7 +18,6 @@ object JsonIO {
    *  - "libraryJars"
    *  - "completelyLoadLibraries"
    *  - "interactive"
-   *  - "showResults"
    *  - "outputJson"
    *
    * @param path Path to the config json
@@ -74,14 +73,6 @@ object JsonIO {
       else true
     }
 
-    // showResults: Boolean
-    // - Optional, defaults to false
-    val showResults = {
-      val result = json \ "showResults"
-      if (result.isDefined) result.get.as[Boolean]
-      else false
-    }
-
     // outputJson: String
     // - Optional, defaults to "result.json"
     // - No further checks o path (path may e.g. already exists and gets overridden!)
@@ -98,7 +89,6 @@ object JsonIO {
       libraryJarFiles,
       completelyLoadLibraries,
       interactive,
-      showResults,
       outputJson
     )
   }
@@ -108,7 +98,7 @@ object JsonIO {
    *
    * @param result The DeadCodeReport to write
    * @param path Path where the report should be written to
-   * */
+   */
   def writeResult(result: DeadCodeReport, path: String): Unit = {
     val json = Json.prettyPrint(Json.toJson(result))
     val writer = new PrintWriter(new File(path))

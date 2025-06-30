@@ -15,7 +15,6 @@ class TestDeadCodeAnalysis extends AnyFunSuite {
     libraryJars = List.empty[File],
     completelyLoadLibraries = false,
     interactive = false,
-    showResults = false,
     outputJson = "src/test/testFiles/testResults.json"
   )
 

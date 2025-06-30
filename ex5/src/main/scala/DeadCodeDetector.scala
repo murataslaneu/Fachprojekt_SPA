@@ -19,9 +19,6 @@ object DeadCodeDetector extends Analysis[URL, BasicReport] with AnalysisApplicat
   /** Boolean whether the -interactive flag has been entered in the terminal */
   private var interactive: Boolean = false
 
-  /** Boolean whether the -showResults flag has been entered in the terminal */
-  private var showResults: Boolean = false
-
   /** String entered in the terminal where the result json file should be written to */
   private var outputJsonPath: String = "result.json"
 
@@ -50,7 +47,6 @@ object DeadCodeDetector extends Analysis[URL, BasicReport] with AnalysisApplicat
           case ex: Exception => issues += s"Config file at path $configPath could not be parsed correctly: $ex"
         }
       case arg if arg.equals("-interactive") => interactive = true
-      case arg if arg.equals("-showResults") => showResults = true
       case arg if arg.startsWith("-outputJson=") => outputJsonPath = getValue(arg)
       case unknown => issues += s"Unknown parameter: $unknown"
     }
@@ -68,7 +64,6 @@ object DeadCodeDetector extends Analysis[URL, BasicReport] with AnalysisApplicat
       | ========================= CUSTOM PARAMETERS =========================
       | [-config=<config.json> (Optional. Configuration used for analysis. See template for schema.)]
       | [-interactive (Flag. If given, the analysis will ask you what domain to use for the abstract interpretation.)]
-      | [-showResults (Flag. If given, the DeadCodeReportViewer will be automatically started after the analysis finishes.)]
       | [-outputJson=<result.json> (Optional string. Output path for the generated json file containing the analysis results.)]
       |
       | Note: This analysis can be configured with a custom config json instead of via the terminal.
@@ -80,7 +75,7 @@ object DeadCodeDetector extends Analysis[URL, BasicReport] with AnalysisApplicat
       super.setupProject(config.get.projectJars, config.get.libraryJars, config.get.completelyLoadLibraries, configuredConfig)
     }
     else {
-      this.config = Some(AnalysisConfig(cpFiles.toList, libcpFiles.toList, completelyLoadLibraries, interactive, showResults, outputJsonPath))
+      this.config = Some(AnalysisConfig(cpFiles.toList, libcpFiles.toList, completelyLoadLibraries, interactive, outputJsonPath))
       super.setupProject(cpFiles, libcpFiles, completelyLoadLibraries, configuredConfig)
     }
   }
@@ -94,7 +89,6 @@ object DeadCodeDetector extends Analysis[URL, BasicReport] with AnalysisApplicat
     config.get.libraryJars.foreach { file => println(s"  - $file") }
     println(s"* completelyLoadLibraries: ${config.get.completelyLoadLibraries}")
     println(s"* interactive: ${config.get.interactive}")
-    println(s"* showResults: ${config.get.showResults}")
     println(s"* outputJson path: ${config.get.outputJson}")
     println("===============================================================\n")
 

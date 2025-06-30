@@ -5,6 +5,5 @@
   "libraryJars": [
   ],
   "interactive": true,
-  "showResults": true,
   "outputJson": "result.json"
 }

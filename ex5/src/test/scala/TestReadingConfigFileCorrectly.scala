@@ -14,9 +14,6 @@ class TestReadingConfigFileCorrectly extends AnyFunSuite {
     // Check interactive
     assertResult(true)(analysisConfig.interactive)
 
-    // Check showResults
-    assertResult(true)(analysisConfig.showResults)
-
     // Check outputJson
     assertResult("resultFile.json")(analysisConfig.outputJson)
   }
@@ -32,9 +29,6 @@ class TestReadingConfigFileCorrectly extends AnyFunSuite {
 
       // Check interactive
       assertResult(true)(analysisConfig.interactive)
-
-      // Check showResults
-      assertResult(false)(analysisConfig.showResults)
 
       // Check outputJson
       assertResult("result.json")(analysisConfig.outputJson)

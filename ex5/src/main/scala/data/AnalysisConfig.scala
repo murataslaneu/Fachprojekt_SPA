@@ -12,8 +12,6 @@ import java.io.File
  * @param completelyLoadLibraries Optional boolean whether OPAL should load the libraries completely (`true`) or only
  *                                use as interfaces (`false`)
  * @param interactive Optional boolean whether the selecting the domain is interactive or not. Defaults to `true`.
- * @param showResults Optional boolean whether automatically the DeadCodeReportViewer should be called.
- *                    Defaults to `false`.
  * @param outputJson Path, where the resulting json file should be saved at. Defaults to "result.json", i.e. in the
  *                   directory where the analysis was executed from.
  */
@@ -22,6 +20,5 @@ case class AnalysisConfig(
                            libraryJars: List[File],
                            completelyLoadLibraries: Boolean,
                            interactive: Boolean,
-                           showResults: Boolean,
                            outputJson: String
                          )

@@ -33,12 +33,11 @@ Man kann die Analyse aber auch über das Terminal oder Config-Datei starten und 
    Optionen befinden sich in den jeweiligen Abschnitten.
    ```
    runMain DeadCodeDetector -config=example/exampleConfig.json
-   runMain DeadCodeDetector -cp=example/ExampleWithDeadCode.jar -interactive -showResults -outputJson=result.json
+   runMain DeadCodeDetector -cp=example/ExampleWithDeadCode.jar -interactive -outputJson=result.json
    ```
 4. Die Analyse wird ausgeführt, und das Ergebnis wird als JSON-Datei am angegebenen Pfad ausgegeben 
    (oder standardmäßig in `result.json` im aktuellen Verzeichnis.)
-5. Sollte Option `showResults` übergeben worden sein, wird automatisch der Report-Viewer gestartet für das Ergebnis
-   dieser Analyse. TODO
+5. Das Ergebnis kann auch in der GUI wieder eingelesen werden, um sich den Report zu visualisieren.
 
 ### Konfiguration über das Terminal (+ Übergabe der Config-Datei)
 Geeignet dafür, wenn man schnell etwas einmal testen möchte. Konfigurierung über die Config-Datei wird aber
@@ -53,8 +52,6 @@ wahrscheinlich angenehmer sein.
     nur als Interfaces.
 - `-interactive`: Flag, der den Nutzer während der Ausführung der Analyse auswählen lässt, welche Domäne für die
     abstrakte Interpretation verwendet werden soll.
-- `-showResults`: Flag, der dafür sorgt, dass nach der Analyse direkt die GUI des Programms aufgerufen wird, um sich die
-    Analyse-Ergebnisse anzuschauen. Option TODO
 - `-outputJson=<output path>`: Optional, dient zur Konfiguration des Pfades, wo der Report im JSON-Format als Datei ausgegeben
       werden soll. Standardmäßig wird eine Datei `result.json` im aktuellen Verzeichnis angelegt, wenn diese Option
       nicht übergeben wird.
@@ -80,8 +77,6 @@ Projekts, welches analysiert werden soll.
   Standardmäßig `false` (OPAL lädt dann die Bibliotheken nur als Interface).
 - `interactive`: Optionaler Boolean. Wenn `true`, wird während der Analyse ausgewählt, welche Domäne für die abstrakte
   Interpretation genutzt werden soll. Bei `false` wird einfach automatisch die erste Option gewählt. Standardmäßig `true`.
-- `showResults`: Optionaler Boolean. Wenn `true`, wird nach der Analyse automatisch der Report-Viewer für die generierten
-  Ergebnisse aufgerufen. Bei `false` beendet sich das Programm nach der Analyse. Standardmäßig `false`. TODO
 - `outputJson`: Optionaler String. Ausgabepfad, wo die Analyseergebnisse im json-Format hingeschrieben werden sollen.
   Standardmäßig wird eine Datei `result.json` im aktuellen Verzeichnis angelegt.
 
@@ -101,7 +96,6 @@ Beispiel für Config-JSON (nicht unbedingt sinnvoll):
     "example/rt.jar"
   ],
   "interactive": true,
-  "showResults": true,
   "outputJson": "example/result.json"
 }
 ```

@@ -1,10 +1,10 @@
 {
   "filesAnalyzed" : [ "src/test/testFiles/MinimalExample.jar" ],
   "domainUsed" : "org.opalj.ai.fpcf.domain.L1DefaultDomainWithCFGAndDefUseAndSignatureRefinement",
-  "timeFinished" : "2025-06-29T18:39:09.1402036",
-  "totalRuntimeMs" : 130,
+  "timeFinished" : "2025-06-30T23:38:07.9642587",
+  "totalRuntimeMs" : 131,
   "methodsFound" : [ {
-    "fullSignature" : "com.example.Main{ public static void main(java.lang.String[]) }",
+    "fullSignature" : "void main(java.lang.String[])",
     "numberOfTotalInstructions" : 13,
     "numberOfDeadInstructions" : 4,
     "enclosingTypeName" : "com.example.Main",

@@ -1494,7 +1494,6 @@ class DeadCodeGUIApp extends Application {
       "libraryJars" -> config.libraryJars.map(_.getAbsolutePath),
       "completelyLoadLibraries" -> config.completelyLoadLibraries,
       "interactive" -> config.interactive,
-      "showResults" -> config.showResults,
       "outputJson" -> config.outputJson
     )
 
