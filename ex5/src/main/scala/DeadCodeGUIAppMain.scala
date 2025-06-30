@@ -98,7 +98,7 @@ class DeadCodeGUIApp extends Application {
 
     val scene = new Scene(tabPane, 1280, 720)
 
-    primaryStage.setTitle("Dead Code Analysis Tool – Enhanced GUI")
+    primaryStage.setTitle("Dead Code Analysis Tool - GUI")
     primaryStage.setScene(scene)
     primaryStage.show()
 
