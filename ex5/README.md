@@ -8,6 +8,9 @@ Außerdem wurde besonders auf die Benutzbarkeit des Programms geachtet und eine 
 die man das Programm vollständig bedienen kann (sowohl Starten der Analyse als auch Anschauen der Ergebnisse).
 Man kann die Analyse aber auch über das Terminal oder Config-Datei starten und konfigurieren.
 
+Der Benchmark, der zu diesem Projekt erzeugt wurde, befindet sich in *benchmark.zip* (nicht mit anderen Gruppen
+abgesprochen, da Kommunikation im Forum nicht wirklich möglich).
+
 ## Inhalt
 - [Starten der GUI](#starten-der-gui-mit-sbt)
 - [Benutzung Analyse über Terminal](#benutzung-der-analyse-mit-sbt-konfiguration-über-terminal)
