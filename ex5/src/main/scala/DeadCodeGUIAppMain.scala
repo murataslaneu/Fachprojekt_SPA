@@ -313,30 +313,44 @@ class DeadCodeGUIApp extends Application {
       if (initialDir.exists() && initialDir.isDirectory) {
         chooser.setInitialDirectory(initialDir)
       }
+
       val selected = chooser.showOpenDialog(primaryStage)
-
       logArea.appendText(s"Selected JSON results file: $selected\n")
-
       val tabPane = primaryStage.getScene.getRoot.asInstanceOf[TabPane]
       val resultsTab = tabPane.getTabs.get(1)
 
       if (selected != null) {
         val source = scala.io.Source.fromFile(selected)
         val jsonContents = try Json.parse(source.mkString) finally source.close()
-        val reportResult = jsonContents.validate[DeadCodeReport]
-        val report = reportResult.getOrElse(null)
-        if (report != null) {
-          lastAnalysisResult = Some(report)
-          resultsTab.setDisable(false)
-          refreshResultsVisualization()
-          logArea.appendText(s"Generated report from JSON file: $selected\n")
-        } else{
-          logArea.appendText(s"File could not be decoded properly: $selected\n")
-          lastAnalysisResult = None
-          resultsTab.setDisable(true)
+
+        // First attempt to parse as a single DeadCodeReport object
+        jsonContents.validate[DeadCodeReport] match {
+          case JsSuccess(report, _) =>
+            lastAnalysisResult = Some(report)
+            lastMultiAnalysisResults = List.empty // Clear multi-results when loading single report
+            resultsTab.setDisable(false)
+            refreshResultsVisualization()
+            logArea.appendText(s"Generated report from JSON file: $selected\n")
+
+          case JsError(_) =>
+            // If single report parsing fails, attempt to parse as List[DeadCodeReport]
+            jsonContents.validate[List[DeadCodeReport]] match {
+              case JsSuccess(reports, _) if reports.nonEmpty =>
+                lastAnalysisResult = None
+                lastMultiAnalysisResults = reports // Store multiple reports for batch processing
+                resultsTab.setDisable(false)
+                refreshResultsVisualization()
+                logArea.appendText(s"Loaded multi-domain report from JSON file: $selected\n")
+
+              case _ =>
+                // If neither format matches, log error and disable results tab
+                logArea.appendText(s"File could not be decoded properly: $selected\n")
+                lastAnalysisResult = None
+                lastMultiAnalysisResults = List.empty // Clear all results on parsing failure
+                resultsTab.setDisable(true)
+            }
         }
-      }
-      else {
+      } else {
         resultsTab.setDisable(true)
       }
     })
