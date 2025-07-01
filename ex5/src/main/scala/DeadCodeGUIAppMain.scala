@@ -123,7 +123,7 @@ class DeadCodeGUIApp extends Application {
 
     // Domain selection controls
     val domainCheckListView = new ListView[CheckBox]()
-    domainCheckListView.setPrefHeight(250)
+    domainCheckListView.setPrefHeight(350)
     domainCheckListView.setVisible(false)
 
     // Status and information labels
@@ -135,7 +135,7 @@ class DeadCodeGUIApp extends Application {
 
     // Configuration file list view for auto-detection
     val configListView = new ListView[String]()
-    configListView.setPrefHeight(200)
+    configListView.setPrefHeight(350)
     configListView.setVisible(false)
 
     // Domain selection section setup
