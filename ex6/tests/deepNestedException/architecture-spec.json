@@ -1,0 +1,31 @@
+{
+  "defaultRule": "FORBIDDEN",
+  "rules": [
+    {
+      "from": "testpkg",
+      "to": "utilpkg",
+      "type": "ALLOWED",
+      "except": [
+        {
+          "from": "testpkg.internal",
+          "to": "utilpkg",
+          "type": "FORBIDDEN",
+          "except": [
+            {
+              "from": "testpkg.internal.legacy",
+              "to": "utilpkg",
+              "type": "ALLOWED",
+              "except": [
+                {
+                  "from": "testpkg.internal.legacy.temp",
+                  "to": "utilpkg",
+                  "type": "FORBIDDEN"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

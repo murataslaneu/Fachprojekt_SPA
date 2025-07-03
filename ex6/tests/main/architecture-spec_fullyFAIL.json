@@ -1,0 +1,10 @@
+{
+  "defaultRule": "FORBIDDEN",
+  "rules": [
+    {
+      "from": "not.a.real.package",
+      "to": "not.a.real.target",
+      "type": "ALLOWED"
+    }
+  ]
+}

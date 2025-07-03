@@ -1,0 +1,15 @@
+{
+  "defaultRule": "FORBIDDEN",
+  "rules": [
+    {
+      "from": "exampleproject.jar",
+      "to": "pdfbox-3.0.5.jar",
+      "type": "ALLOWED"
+    },
+    {
+      "from": "testproject.jar",
+      "to": "pdfbox-3.0.5.jar",
+      "type": "ALLOWED"
+    }
+  ]
+}

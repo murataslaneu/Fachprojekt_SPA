@@ -1,0 +1,17 @@
+{
+  "defaultRule": "FORBIDDEN",
+  "rules": [
+    {
+      "from": "com.example.api",
+      "to": "com.example.util",
+      "type": "ALLOWED",
+      "except": [
+        {
+          "from": "com.example.api.internal",
+          "to": "com.example.util",
+          "type": "FORBIDDEN"
+        }
+      ]
+    }
+  ]
+}

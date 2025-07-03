@@ -1,0 +1,15 @@
+{
+  "defaultRule": "FORBIDDEN",
+  "rules": [
+    {
+      "from": "exampleproject.jar",
+      "to": "exampleproject.jar",
+      "type": "ALLOWED"
+    },
+    {
+      "from": "testproject.jar",
+      "to": "testproject.jar",
+      "type": "ALLOWED"
+    }
+  ]
+}
