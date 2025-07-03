@@ -3,7 +3,7 @@ package helpers
 import data._
 import org.opalj.br.analyses.Project
 import org.opalj.br.instructions.{GETFIELD, GETSTATIC, INVOKEINTERFACE, INVOKESPECIAL, INVOKESTATIC, INVOKEVIRTUAL, PUTFIELD, PUTSTATIC}
-import org.opalj.br.{ClassFile, Method, ObjectType, ReferenceType}
+import org.opalj.br.{ClassFile, ObjectType, ReferenceType}
 import play.api.libs.json.Json
 
 import java.io.File
@@ -16,7 +16,7 @@ object ArchitectureValidation {
   /**
    * Reads architecture specification from JSON file
    */
-  def readSpecification(specFile: String): ArchitectureSpec = {
+  private def readSpecification(specFile: String): ArchitectureSpec = {
     val source = Source.fromFile(specFile)
     val json = try Json.parse(source.mkString) finally source.close()
     json.as[ArchitectureSpec]
@@ -25,7 +25,7 @@ object ArchitectureValidation {
   /**
    * Extracts JAR name from a class file path
    */
-  def getJarName(classFile: ClassFile, project: Project[URL]): String = {
+  private def getJarName(classFile: ClassFile, project: Project[URL]): String = {
     project.source(classFile) match {
       case Some(source) =>
         val sourcePath = source.toString
@@ -47,7 +47,7 @@ object ArchitectureValidation {
   /**
    * Helper method to get package name from ReferenceType
    */
-  def getPackageName(refType: ReferenceType): String = {
+  private def getPackageName(refType: ReferenceType): String = {
     refType match {
       case objType: ObjectType => objType.packageName
       case _ => ""
@@ -57,7 +57,7 @@ object ArchitectureValidation {
   /**
    * Helper method to convert ReferenceType to Java class name
    */
-  def getJavaClassName(refType: ReferenceType): String = {
+  private def getJavaClassName(refType: ReferenceType): String = {
     refType match {
       case objType: ObjectType => objType.toJava
       case _ => refType.toJava
@@ -67,7 +67,7 @@ object ArchitectureValidation {
   /**
    * Helper method to get JAR name from ReferenceType
    */
-  def getJarNameFromRefType(refType: ReferenceType, project: Project[URL]): String = {
+  private def getJarNameFromRefType(refType: ReferenceType, project: Project[URL]): String = {
     refType match {
       case objType: ObjectType =>
         project.classFile(objType) match {
@@ -81,7 +81,7 @@ object ArchitectureValidation {
   /**
    * Improved rule matching with better semantics
    */
-  def matchesRule(rule: Rule, fromEntity: String, toEntity: String): Boolean = {
+  private def matchesRule(rule: Rule, fromEntity: String, toEntity: String): Boolean = {
     def matchesEntity(ruleEntity: String, actualEntity: String): Boolean = {
       if (ruleEntity.endsWith(".jar")) {
         // JAR matching - exact match
@@ -102,9 +102,9 @@ object ArchitectureValidation {
    * Evaluates if a dependency is allowed based on the specification
    * Improved logic for handling all combinations
    */
-  def isAllowed(spec: ArchitectureSpec, fromClass: String, toClass: String,
-                fromPackage: String, toPackage: String,
-                fromJar: String, toJar: String): Boolean = {
+  private def isAllowed(spec: ArchitectureSpec, fromClass: String, toClass: String,
+                        fromPackage: String, toPackage: String,
+                        fromJar: String, toJar: String): Boolean = {
 
     def evaluateRule(rule: Rule): Option[Boolean] = {
       // Check all possible matching combinations
@@ -160,7 +160,7 @@ object ArchitectureValidation {
   /**
    * Enhanced specification validation with semantic error checking
    */
-  def validateSpecification(spec: ArchitectureSpec, project: Project[URL]): List[String] = {
+  private def validateSpecification(spec: ArchitectureSpec, project: Project[URL]): List[String] = {
     val warnings = mutable.ListBuffer.empty[String]
 
     // Get all available entities from the project
@@ -240,7 +240,7 @@ object ArchitectureValidation {
   /**
    * Enhanced dependency detection including potential calls
    */
-  def findAllDependencies(project: Project[URL]): Set[(String, String, String, String, String, String, String)] = {
+  private def findAllDependencies(project: Project[URL]): Set[(String, String, String, String, String, String, String)] = {
     val dependencies = mutable.Set.empty[(String, String, String, String, String, String, String)]
 
     project.allClassFiles.foreach { classFile =>
@@ -367,7 +367,7 @@ object ArchitectureValidation {
   /**
    * Debug method to show all packages and classes in the project
    */
-  def debugPackageNames(project: Project[URL]): Unit = {
+  private def debugPackageNames(project: Project[URL]): Unit = {
     println("=== DEBUG: All packages in project ===")
     val allPackages = project.allClassFiles.map(_.thisType.packageName).toSet.toList.sorted
     allPackages.foreach(pkg => println(s"  Package: $pkg"))
