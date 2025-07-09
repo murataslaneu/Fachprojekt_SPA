@@ -7,12 +7,21 @@ import java.io.{File, PrintWriter}
 
 object ArchitectureJsonIO {
   /**
-   * Reads architecture configuration from JSON file
+   * Reads architecture configuration from JSON file.
+   *
+   * Possible options:
+   * - projectJars
+   * - libraryJars
+   * - specificationsFile
+   * - outputJson
+   * - completelyLoadLibraries
    */
   def readConfig(path: String): ArchitectureConfig = {
     val source = scala.io.Source.fromFile(path)
     val json = try Json.parse(source.mkString) finally source.close()
 
+    // projectJars: List[String]
+    // - Required, must contain valid paths!
     val projectJarPaths = (json \ "projectJars").as[List[String]]
     val projectJarFiles = projectJarPaths.map { path =>
       val file = new File(path.replace('\\', '/'))
@@ -20,6 +29,9 @@ object ArchitectureJsonIO {
       file
     }
 
+    // libraryJars: List[String]
+    // - Optional, defaults to empty list
+    // - If given, the paths must be valid!
     val libraryJarPaths = (json \ "libraryJars").asOpt[List[String]].getOrElse(List.empty)
     val libraryJarFiles = libraryJarPaths.map { path =>
       val file = new File(path.replace('\\', '/'))
@@ -27,8 +39,23 @@ object ArchitectureJsonIO {
       file
     }
 
+    // specificationFile: String (containing the path to the file)
+    // - Required, must contain valid path and lead to a json file
     val specificationFile = (json \ "specificationFile").as[String]
-    val outputJson = (json \ "outputJson").asOpt[String].getOrElse("architecture-report.json")
+    val specFile = new File(specificationFile.replace('\\', '/'))
+    if (!specFile.exists()) throw new java.io.IOException(s"Specification file not found: $specificationFile")
+    if (!specificationFile.toLowerCase.endsWith(".json")) {
+      throw new IllegalArgumentException(s"Specification file does not lead to a json file: $specificationFile")
+    }
+
+    // outputJson: String
+    // - Optional, defaults to "architecture-report.json"
+    var outputJson = (json \ "outputJson").asOpt[String].getOrElse("architecture-report.json")
+    if (!outputJson.toLowerCase.endsWith(".json")) outputJson += ".json"
+
+
+    // completelyLoadLibraries: Boolean
+    // - Optional, defaults to false
     val completelyLoadLibraries = (json \ "completelyLoadLibraries").asOpt[Boolean].getOrElse(false)
 
     ArchitectureConfig(
