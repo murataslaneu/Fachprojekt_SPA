@@ -35,9 +35,9 @@ object ArchitectureValidation {
           val jarName = jarPath.substring(0, jarPath.indexOf("!"))
           new File(jarName).getName
         } else {
-          "Unknown.jar"
+          "[Unknown]"
         }
-      case None => "Unknown.jar"
+      case None => "[Unknown]"
     }
   }
 
@@ -50,7 +50,7 @@ object ArchitectureValidation {
    */
   private def getPackageName(refType: ReferenceType): String = {
     refType match {
-      case objType: ObjectType => objType.packageName
+      case objType: ObjectType => objType.packageName.replace("/", ".")
       case _ => ""
     }
   }
@@ -60,7 +60,7 @@ object ArchitectureValidation {
    */
   private def getJavaClassName(refType: ReferenceType): String = {
     refType match {
-      case objType: ObjectType => objType.toJava
+      case objType: ObjectType => objType.simpleName
       case _ => refType.toJava
     }
   }
@@ -73,9 +73,9 @@ object ArchitectureValidation {
       case objType: ObjectType =>
         project.classFile(objType) match {
           case Some(classFile) => getJarName(classFile, project)
-          case None => "Unknown.jar"
+          case None => "[Unknown]"
         }
-      case _ => "Unknown.jar"
+      case _ => "[Unknown]"
     }
   }
 
@@ -260,8 +260,8 @@ object ArchitectureValidation {
     }
 
     project.allClassFiles.foreach { classFile =>
-      val fromClass = classFile.thisType.toJava
-      val fromPackage = classFile.thisType.packageName
+      val fromClass = classFile.thisType.simpleName
+      val fromPackage = classFile.thisType.packageName.replace("/", ".")
       val fromJar = getJarName(classFile, project)
 
       // Check superclass dependencies
