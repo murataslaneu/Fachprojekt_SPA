@@ -242,11 +242,21 @@ object ArchitectureValidation {
   private def findAllDependencies(project: Project[URL]): Set[Dependency] = {
     val dependencies = mutable.Set.empty[Dependency]
 
+    /**
+     * Adds dependency to the dependencies set.
+     *
+     * Dependencies to the exact same class are ignored as they are not interesting.
+     */
     def addDependency(fromClass: String, fromPackage: String, fromJar: String, refType: ReferenceType, accessType: AccessType): Unit = {
       val targetClass = getJavaClassName(refType)
       val targetPackage = getPackageName(refType)
       val targetJar = getJarNameFromRefType(refType, project)
-      dependencies += Dependency(fromClass, targetClass, fromPackage, targetPackage, fromJar, targetJar, accessType)
+
+      // Only add dependency if it isn't the exact same class
+      val isSameClass = fromClass == targetClass && fromPackage == targetPackage && fromJar == targetJar
+      if (!isSameClass) {
+        dependencies += Dependency(fromClass, targetClass, fromPackage, targetPackage, fromJar, targetJar, accessType)
+      }
     }
 
     project.allClassFiles.foreach { classFile =>
