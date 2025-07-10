@@ -1,5 +1,6 @@
 package helpers
 
+import data.AccessType._
 import data._
 import org.opalj.br.analyses.Project
 import org.opalj.br.instructions.{GETFIELD, GETSTATIC, INVOKEINTERFACE, INVOKESPECIAL, INVOKESTATIC, INVOKEVIRTUAL, PUTFIELD, PUTSTATIC}
@@ -102,22 +103,20 @@ object ArchitectureValidation {
    * Evaluates if a dependency is allowed based on the specification
    * Improved logic for handling all combinations
    */
-  private def isAllowed(spec: ArchitectureSpec, fromClass: String, toClass: String,
-                        fromPackage: String, toPackage: String,
-                        fromJar: String, toJar: String): Boolean = {
+  private def isAllowed(spec: ArchitectureSpec, dependency: Dependency): Boolean = {
 
     def evaluateRule(rule: Rule): Option[Boolean] = {
       // Check all possible matching combinations
       val matchingCombinations = List(
-        (fromClass, toClass),      // Class to Class
-        (fromClass, toPackage),    // Class to Package
-        (fromClass, toJar),        // Class to JAR
-        (fromPackage, toClass),    // Package to Class
-        (fromPackage, toPackage),  // Package to Package
-        (fromPackage, toJar),      // Package to JAR
-        (fromJar, toClass),        // JAR to Class
-        (fromJar, toPackage),      // JAR to Package
-        (fromJar, toJar)           // JAR to JAR
+        (dependency.fromClass, dependency.toClass),     // Class to Class
+        (dependency.fromClass, dependency.toPackage),   // Class to Package
+        (dependency.fromClass, dependency.toJar),       // Class to JAR
+        (dependency.fromPackage, dependency.toClass),   // Package to Class
+        (dependency.fromPackage, dependency.toPackage), // Package to Package
+        (dependency.fromPackage, dependency.toJar),     // Package to JAR
+        (dependency.fromJar, dependency.toClass),       // JAR to Class
+        (dependency.fromJar, dependency.toPackage),     // JAR to Package
+        (dependency.fromJar, dependency.toJar)          // JAR to JAR
       )
 
       // Check if any combination matches the rule
@@ -240,8 +239,15 @@ object ArchitectureValidation {
   /**
    * Enhanced dependency detection including potential calls
    */
-  private def findAllDependencies(project: Project[URL]): Set[(String, String, String, String, String, String, String)] = {
-    val dependencies = mutable.Set.empty[(String, String, String, String, String, String, String)]
+  private def findAllDependencies(project: Project[URL]): Set[Dependency] = {
+    val dependencies = mutable.Set.empty[Dependency]
+
+    def addDependency(fromClass: String, fromPackage: String, fromJar: String, refType: ReferenceType, accessType: AccessType): Unit = {
+      val targetClass = getJavaClassName(refType)
+      val targetPackage = getPackageName(refType)
+      val targetJar = getJarNameFromRefType(refType, project)
+      dependencies += Dependency(fromClass, targetClass, fromPackage, targetPackage, fromJar, targetJar, accessType)
+    }
 
     project.allClassFiles.foreach { classFile =>
       val fromClass = classFile.thisType.toJava
@@ -250,28 +256,18 @@ object ArchitectureValidation {
 
       // Check superclass dependencies
       classFile.superclassType.foreach { superType =>
-        val targetClass = getJavaClassName(superType)
-        val targetPackage = getPackageName(superType)
-        val targetJar = getJarNameFromRefType(superType, project)
-        dependencies += ((fromClass, targetClass, fromPackage, targetPackage, fromJar, targetJar, "INHERITANCE"))
+        addDependency(fromClass, fromPackage, fromJar, superType, INHERITANCE)
       }
 
       // Check interface dependencies
       classFile.interfaceTypes.foreach { interfaceType =>
-        val targetClass = getJavaClassName(interfaceType)
-        val targetPackage = getPackageName(interfaceType)
-        val targetJar = getJarNameFromRefType(interfaceType, project)
-        dependencies += ((fromClass, targetClass, fromPackage, targetPackage, fromJar, targetJar, "INTERFACE_IMPLEMENTATION"))
+        addDependency(fromClass, fromPackage, fromJar, interfaceType, INTERFACE_IMPLEMENTATION)
       }
 
       // Check field type dependencies
       classFile.fields.foreach { field =>
         field.fieldType match {
-          case refType: ReferenceType =>
-            val targetClass = getJavaClassName(refType)
-            val targetPackage = getPackageName(refType)
-            val targetJar = getJarNameFromRefType(refType, project)
-            dependencies += ((fromClass, targetClass, fromPackage, targetPackage, fromJar, targetJar, "FIELD_TYPE"))
+          case refType: ReferenceType => addDependency(fromClass, fromPackage, fromJar, refType, FIELD_TYPE)
           case _ => // Ignore primitive types
         }
       }
@@ -280,21 +276,13 @@ object ArchitectureValidation {
       classFile.methods.foreach { method =>
         // Return type dependencies
         method.returnType match {
-          case refType: ReferenceType =>
-            val targetClass = getJavaClassName(refType)
-            val targetPackage = getPackageName(refType)
-            val targetJar = getJarNameFromRefType(refType, project)
-            dependencies += ((fromClass, targetClass, fromPackage, targetPackage, fromJar, targetJar, "RETURN_TYPE"))
+          case refType: ReferenceType => addDependency(fromClass, fromPackage, fromJar, refType, RETURN_TYPE)
           case _ => // Ignore primitive types
         }
 
         // Parameter type dependencies
         method.parameterTypes.foreach {
-          case refType: ReferenceType =>
-            val targetClass = getJavaClassName(refType)
-            val targetPackage = getPackageName(refType)
-            val targetJar = getJarNameFromRefType(refType, project)
-            dependencies += ((fromClass, targetClass, fromPackage, targetPackage, fromJar, targetJar, "PARAMETER_TYPE"))
+          case refType: ReferenceType => addDependency(fromClass, fromPackage, fromJar, refType, PARAMETER_TYPE)
           case _ => // Ignore primitive types
         }
 
@@ -306,54 +294,14 @@ object ArchitectureValidation {
             val instruction = pcInstruction.instruction
 
             instruction match {
-              case invoke: INVOKEVIRTUAL =>
-                val targetClass = getJavaClassName(invoke.declaringClass)
-                val targetPackage = getPackageName(invoke.declaringClass)
-                val targetJar = getJarNameFromRefType(invoke.declaringClass, project)
-                dependencies += ((fromClass, targetClass, fromPackage, targetPackage, fromJar, targetJar, "METHOD_CALL"))
-
-              case invoke: INVOKESPECIAL =>
-                val targetClass = getJavaClassName(invoke.declaringClass)
-                val targetPackage = getPackageName(invoke.declaringClass)
-                val targetJar = getJarNameFromRefType(invoke.declaringClass, project)
-                dependencies += ((fromClass, targetClass, fromPackage, targetPackage, fromJar, targetJar, "METHOD_CALL"))
-
-              case invoke: INVOKESTATIC =>
-                val targetClass = getJavaClassName(invoke.declaringClass)
-                val targetPackage = getPackageName(invoke.declaringClass)
-                val targetJar = getJarNameFromRefType(invoke.declaringClass, project)
-                dependencies += ((fromClass, targetClass, fromPackage, targetPackage, fromJar, targetJar, "METHOD_CALL"))
-
-              case invoke: INVOKEINTERFACE =>
-                val targetClass = getJavaClassName(invoke.declaringClass)
-                val targetPackage = getPackageName(invoke.declaringClass)
-                val targetJar = getJarNameFromRefType(invoke.declaringClass, project)
-                dependencies += ((fromClass, targetClass, fromPackage, targetPackage, fromJar, targetJar, "METHOD_CALL"))
-
-              case field: GETFIELD =>
-                val targetClass = getJavaClassName(field.declaringClass)
-                val targetPackage = getPackageName(field.declaringClass)
-                val targetJar = getJarNameFromRefType(field.declaringClass, project)
-                dependencies += ((fromClass, targetClass, fromPackage, targetPackage, fromJar, targetJar, "FIELD_ACCESS"))
-
-              case field: GETSTATIC =>
-                val targetClass = getJavaClassName(field.declaringClass)
-                val targetPackage = getPackageName(field.declaringClass)
-                val targetJar = getJarNameFromRefType(field.declaringClass, project)
-                dependencies += ((fromClass, targetClass, fromPackage, targetPackage, fromJar, targetJar, "FIELD_ACCESS"))
-
-              case field: PUTFIELD =>
-                val targetClass = getJavaClassName(field.declaringClass)
-                val targetPackage = getPackageName(field.declaringClass)
-                val targetJar = getJarNameFromRefType(field.declaringClass, project)
-                dependencies += ((fromClass, targetClass, fromPackage, targetPackage, fromJar, targetJar, "FIELD_ACCESS"))
-
-              case field: PUTSTATIC =>
-                val targetClass = getJavaClassName(field.declaringClass)
-                val targetPackage = getPackageName(field.declaringClass)
-                val targetJar = getJarNameFromRefType(field.declaringClass, project)
-                dependencies += ((fromClass, targetClass, fromPackage, targetPackage, fromJar, targetJar, "FIELD_ACCESS"))
-
+              case invoke: INVOKEVIRTUAL => addDependency(fromClass, fromPackage, fromJar, invoke.declaringClass, METHOD_CALL)
+              case invoke: INVOKESPECIAL => addDependency(fromClass, fromPackage, fromJar, invoke.declaringClass, METHOD_CALL)
+              case invoke: INVOKESTATIC => addDependency(fromClass, fromPackage, fromJar, invoke.declaringClass, METHOD_CALL)
+              case invoke: INVOKEINTERFACE => addDependency(fromClass, fromPackage, fromJar, invoke.declaringClass, METHOD_CALL)
+              case field: GETFIELD => addDependency(fromClass, fromPackage, fromJar, field.declaringClass, FIELD_ACCESS)
+              case field: GETSTATIC => addDependency(fromClass, fromPackage, fromJar, field.declaringClass, FIELD_ACCESS)
+              case field: PUTFIELD => addDependency(fromClass, fromPackage, fromJar, field.declaringClass, FIELD_ACCESS)
+              case field: PUTSTATIC => addDependency(fromClass, fromPackage, fromJar, field.declaringClass, FIELD_ACCESS)
               case _ => // Ignore other instructions
             }
           }
@@ -405,15 +353,12 @@ object ArchitectureValidation {
     val allDependencies = findAllDependencies(project)
     println(s"Found ${allDependencies.size} total dependencies")
 
-    val violations = mutable.ListBuffer.empty[ArchitectureViolation]
+    val violations = mutable.ListBuffer.empty[Dependency]
 
     // Check each dependency against the specification
-    allDependencies.foreach { case (fromClass, toClass, fromPackage, toPackage, fromJar, toJar, depType) =>
-      if (!isAllowed(spec, fromClass, toClass, fromPackage, toPackage, fromJar, toJar)) {
-        violations += ArchitectureViolation(
-          fromClass, toClass, fromPackage, toPackage, fromJar, toJar,
-          depType, None, None, None
-        )
+    allDependencies.foreach { dependency =>
+      if (!isAllowed(spec, dependency)) {
+        violations += dependency
       }
     }
 

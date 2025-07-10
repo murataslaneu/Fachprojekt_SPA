@@ -94,7 +94,7 @@ object ArchitectureValidator extends Analysis[URL, BasicReport] with AnalysisApp
     if (report.violations.nonEmpty) {
       println("\nViolations found:")
       report.violations.take(5).foreach { violation =>
-        println(s"  ${violation.fromClass} -> ${violation.toClass} (${violation.violationType})")
+        println(s"  ${violation.fromClass} -> ${violation.toClass} (${violation.accessType})")
       }
       if (report.violations.size > 5) {
         println(s"  ... and ${report.violations.size - 5} more violations")
