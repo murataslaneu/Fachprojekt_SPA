@@ -13,7 +13,18 @@ case class Dependency(
                        fromJar: String,
                        toJar: String,
                        accessType: AccessType
-                     )
+                     ) {
+
+  /** Fully qualified name of fromClass */
+  def fromClassFqn: String = {
+    fromPackage + "." + fromClass
+  }
+
+  /** Fully qualified name of toClass */
+  def toClassFqn: String = {
+    toPackage + "." + toClass
+  }
+}
 
 object Dependency {
   implicit val format: OFormat[Dependency] = Json.format[Dependency]

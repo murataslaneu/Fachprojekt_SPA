@@ -108,15 +108,15 @@ object ArchitectureValidation {
     def evaluateRule(rule: Rule): Option[Boolean] = {
       // Check all possible matching combinations
       val matchingCombinations = List(
-        (dependency.fromClass, dependency.toClass),     // Class to Class
-        (dependency.fromClass, dependency.toPackage),   // Class to Package
-        (dependency.fromClass, dependency.toJar),       // Class to JAR
-        (dependency.fromPackage, dependency.toClass),   // Package to Class
-        (dependency.fromPackage, dependency.toPackage), // Package to Package
-        (dependency.fromPackage, dependency.toJar),     // Package to JAR
-        (dependency.fromJar, dependency.toClass),       // JAR to Class
-        (dependency.fromJar, dependency.toPackage),     // JAR to Package
-        (dependency.fromJar, dependency.toJar)          // JAR to JAR
+        (dependency.fromClassFqn, dependency.toClassFqn), // Class to Class
+        (dependency.fromClassFqn, dependency.toPackage),  // Class to Package
+        (dependency.fromClassFqn, dependency.toJar),      // Class to JAR
+        (dependency.fromPackage, dependency.toClassFqn),  // Package to Class
+        (dependency.fromPackage, dependency.toPackage),   // Package to Package
+        (dependency.fromPackage, dependency.toJar),       // Package to JAR
+        (dependency.fromJar, dependency.toClassFqn),      // JAR to Class
+        (dependency.fromJar, dependency.toPackage),       // JAR to Package
+        (dependency.fromJar, dependency.toJar)            // JAR to JAR
       )
 
       // Check if any combination matches the rule
@@ -164,7 +164,7 @@ object ArchitectureValidation {
 
     // Get all available entities from the project
     val allClasses = project.allClassFiles.map(_.thisType.toJava).toSet
-    val allPackages = project.allClassFiles.map(_.thisType.packageName).toSet
+    val allPackages = project.allClassFiles.map(_.thisType.packageName.replace('/','.')).toSet
     val allJars = project.allClassFiles.map(cf => getJarName(cf, project)).toSet
 
     def validateEntity(entity: String, entityType: String): Unit = {
