@@ -16,14 +16,10 @@ case class Dependency(
                      ) {
 
   /** Fully qualified name of fromClass */
-  def fromClassFqn: String = {
-    fromPackage + "." + fromClass
-  }
+  def fromClassFqn: String = fromPackage + "." + fromClass
 
   /** Fully qualified name of toClass */
-  def toClassFqn: String = {
-    toPackage + "." + toClass
-  }
+  def toClassFqn: String = toPackage + "." + toClass
 }
 
 object Dependency {

@@ -7,6 +7,7 @@ case class ArchitectureReport(
                                specificationFile: String,
                                timeFinished: java.time.LocalDateTime,
                                totalRuntimeMs: Long,
+                               checkedOnlyMethodAndFieldAccesses: Boolean,
                                violations: List[Dependency],
                                warnings: List[String]
                              )

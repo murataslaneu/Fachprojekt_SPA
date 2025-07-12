@@ -1,9 +1,10 @@
 package helpers
 
-import data.{ArchitectureConfig, ArchitectureReport}
+import data.{ArchitectureConfig, ArchitectureReport, ArchitectureSpec}
 import play.api.libs.json._
 
 import java.io.{File, PrintWriter}
+import scala.io.Source
 
 object ArchitectureJsonIO {
   /**
@@ -81,5 +82,14 @@ object ArchitectureJsonIO {
     val writer = new PrintWriter(new File(path))
     writer.write(json)
     writer.close()
+  }
+
+  /**
+   * Reads architecture specification from JSON file
+   */
+  def readSpecification(specFile: String): ArchitectureSpec = {
+    val source = Source.fromFile(specFile)
+    val json = try Json.parse(source.mkString) finally source.close()
+    json.as[ArchitectureSpec]
   }
 }

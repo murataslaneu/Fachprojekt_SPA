@@ -10,11 +10,11 @@ import scala.collection.mutable.ListBuffer
 
 object ArchitectureValidator extends Analysis[URL, BasicReport] with AnalysisApplication {
 
-  private var configFile: Option[String] = None
-  private var specFile: Option[String] = None
-  private var outputPath: String = "architecture-report.json"
-  private var onlyMethodAndFieldAccesses: Boolean = false
-  private var config: Option[ArchitectureConfig] = None
+  var configFile: Option[String] = None
+  var specFile: Option[String] = None
+  var outputPath: String = "architecture-report.json"
+  var onlyMethodAndFieldAccesses: Boolean = false
+  var config: Option[ArchitectureConfig] = None
 
   override def title: String = "Architecture Validator"
 
@@ -85,9 +85,12 @@ object ArchitectureValidator extends Analysis[URL, BasicReport] with AnalysisApp
     else "Considering all dependencies inside the project"}.")
     println("================================================================\n")
 
+    println("Reading architecture specification...")
+    val spec = ArchitectureJsonIO.readSpecification(actualSpecFile)
+
     println("Starting architecture validation...")
 
-    val report = ArchitectureValidation.analyze(project, actualSpecFile,
+    val report = ArchitectureValidation.analyze(project, spec,
       config.getOrElse(ArchitectureConfig(List.empty, List.empty, actualSpecFile, actualOutputPath, actualOnlyMethodAndFieldAccesses)))
 
     println("Architecture validation finished.")

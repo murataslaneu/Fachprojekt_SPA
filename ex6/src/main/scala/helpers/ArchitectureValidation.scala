@@ -3,25 +3,14 @@ package helpers
 import data.AccessType._
 import data._
 import org.opalj.br.analyses.Project
-import org.opalj.br.instructions.{GETFIELD, GETSTATIC, INVOKEINTERFACE, INVOKESPECIAL, INVOKESTATIC, INVOKEVIRTUAL, PUTFIELD, PUTSTATIC}
+import org.opalj.br.instructions._
 import org.opalj.br.{ClassFile, ObjectType, ReferenceType}
-import play.api.libs.json.Json
 
 import java.io.File
 import java.net.URL
 import scala.collection.mutable
-import scala.io.Source
 
 object ArchitectureValidation {
-
-  /**
-   * Reads architecture specification from JSON file
-   */
-  private def readSpecification(specFile: String): ArchitectureSpec = {
-    val source = Source.fromFile(specFile)
-    val json = try Json.parse(source.mkString) finally source.close()
-    json.as[ArchitectureSpec]
-  }
 
   /**
    * Extracts JAR name from a class file path
@@ -348,17 +337,14 @@ object ArchitectureValidation {
   /**
    * Main analysis method - Enhanced version
    */
-  def analyze(project: Project[URL], specFile: String, config: ArchitectureConfig): ArchitectureReport = {
+  def analyze(project: Project[URL], specification: ArchitectureSpec, config: ArchitectureConfig): ArchitectureReport = {
     val startTime = System.currentTimeMillis()
-
-    // Read specification
-    val spec = readSpecification(specFile)
 
     // DEBUG: Show all packages and classes
     debugPackageNames(project)
 
     // Validate specification
-    val warnings = validateSpecification(spec, project)
+    val warnings = validateSpecification(specification, project)
 
     // Find all dependencies
     println("Finding all dependencies...")
@@ -369,7 +355,7 @@ object ArchitectureValidation {
 
     // Check each dependency against the specification
     allDependencies.foreach { dependency =>
-      if (!isAllowed(spec, dependency)) {
+      if (!isAllowed(specification, dependency)) {
         violations += dependency
       }
     }
@@ -383,9 +369,10 @@ object ArchitectureValidation {
 
     ArchitectureReport(
       config.projectJars.map(_.getPath.replace('\\', '/')),
-      specFile,
+      config.specificationFile,
       java.time.LocalDateTime.now(),
       runtime,
+      config.onlyMethodAndFieldAccesses,
       violations.toList,
       warnings
     )
