@@ -200,7 +200,7 @@ object ArchitectureValidation {
 
           // Exception should be within the scope of parent rule
           if (!isEntitySubsetOf(rule.from, parent.from) || !isEntitySubsetOf(rule.to, parent.to)) {
-            warnings += s"${indent}Warning: Exception rule '${rule.from}' -> '${rule.to}' may not be within parent rule scope"
+            warnings += s"${indent}Warning: Exception rule '${rule.from}' -> '${rule.to}' may not be within parent rule scope ('${parent.from} -> ${parent.to}')"
           }
         case None => // Top-level rule, no parent validation needed
       }
@@ -239,7 +239,7 @@ object ArchitectureValidation {
   /**
    * Enhanced dependency detection including potential calls
    */
-  private def findAllDependencies(project: Project[URL]): Set[Dependency] = {
+  private def findAllDependencies(project: Project[URL], config: ArchitectureConfig): Set[Dependency] = {
     val dependencies = mutable.Set.empty[Dependency]
 
     /**
@@ -254,7 +254,9 @@ object ArchitectureValidation {
 
       // Only add dependency if it isn't the exact same class
       val isSameClass = fromClass == targetClass && fromPackage == targetPackage && fromJar == targetJar
-      if (!isSameClass) {
+      // Add dependency depending on whether all access types are relevant or only method and field accesses
+      val relevantAccessType = !config.onlyMethodAndFieldAccesses || accessType == METHOD_CALL || accessType == FIELD_ACCESS
+      if (!isSameClass && relevantAccessType) {
         dependencies += Dependency(fromClass, targetClass, fromPackage, targetPackage, fromJar, targetJar, accessType)
       }
     }
@@ -360,7 +362,7 @@ object ArchitectureValidation {
 
     // Find all dependencies
     println("Finding all dependencies...")
-    val allDependencies = findAllDependencies(project)
+    val allDependencies = findAllDependencies(project, config)
     println(s"Found ${allDependencies.size} total dependencies")
 
     val violations = mutable.ListBuffer.empty[Dependency]

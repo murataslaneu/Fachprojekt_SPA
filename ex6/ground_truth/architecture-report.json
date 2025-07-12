@@ -1,0 +1,40 @@
+{
+  "filesAnalyzed" : [ "ground_truth/ExampleMain.jar", "ground_truth/ExampleHelper.jar", "ground_truth/ExampleDBAdapter.jar" ],
+  "specificationFile" : "ground_truth/spec.json",
+  "timeFinished" : "2025-07-12T16:45:46.3524571",
+  "totalRuntimeMs" : 38,
+  "violations" : [ {
+    "fromClass" : "DBTaskRepository",
+    "toClass" : "Logger",
+    "fromPackage" : "com.example.db",
+    "toPackage" : "com.example.helper",
+    "fromJar" : "ExampleDBAdapter.jar",
+    "toJar" : "ExampleHelper.jar",
+    "accessType" : "METHOD_CALL"
+  }, {
+    "fromClass" : "Application",
+    "toClass" : "InMemoryDB",
+    "fromPackage" : "com.example.main",
+    "toPackage" : "com.example.db",
+    "fromJar" : "ExampleMain.jar",
+    "toJar" : "ExampleDBAdapter.jar",
+    "accessType" : "METHOD_CALL"
+  }, {
+    "fromClass" : "Application",
+    "toClass" : "DBLogger",
+    "fromPackage" : "com.example.main",
+    "toPackage" : "com.example.db.utils",
+    "fromJar" : "ExampleMain.jar",
+    "toJar" : "ExampleDBAdapter.jar",
+    "accessType" : "METHOD_CALL"
+  }, {
+    "fromClass" : "InMemoryDB",
+    "toClass" : "StringUtils",
+    "fromPackage" : "com.example.db",
+    "toPackage" : "com.example.helper",
+    "fromJar" : "ExampleDBAdapter.jar",
+    "toJar" : "ExampleHelper.jar",
+    "accessType" : "FIELD_ACCESS"
+  } ],
+  "warnings" : [ "  Warning: Exception rule 'com.example.main' -> 'com.example.db.DBConnection' may not be within parent rule scope ('ExampleMain.jar -> ExampleDBAdapter.jar')", "  Warning: Exception rule 'com.example.main' -> 'com.example.db.DBTaskRepository' may not be within parent rule scope ('ExampleMain.jar -> ExampleDBAdapter.jar')", "  Warning: Exception rule 'com.example.main' -> 'com.example.db.QueryBuilder' may not be within parent rule scope ('ExampleMain.jar -> ExampleDBAdapter.jar')", "  Warning: Exception rule 'com.example.main' -> 'com.example.db.adapters.PersistentTask' may not be within parent rule scope ('ExampleMain.jar -> ExampleDBAdapter.jar')" ]
+}

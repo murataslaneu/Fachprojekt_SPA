@@ -13,6 +13,7 @@ object ArchitectureValidator extends Analysis[URL, BasicReport] with AnalysisApp
   private var configFile: Option[String] = None
   private var specFile: Option[String] = None
   private var outputPath: String = "architecture-report.json"
+  private var onlyMethodAndFieldAccesses: Boolean = false
   private var config: Option[ArchitectureConfig] = None
 
   override def title: String = "Architecture Validator"
@@ -35,6 +36,7 @@ object ArchitectureValidator extends Analysis[URL, BasicReport] with AnalysisApp
         specFile = Some(getValue(arg))
       case arg if arg.startsWith("-output=") =>
         outputPath = getValue(arg)
+      case arg if arg.equals("-onlyMethodAndFieldAccesses") => onlyMethodAndFieldAccesses = true
       case unknown => issues += s"Unknown parameter: $unknown"
     }
 
@@ -51,8 +53,10 @@ object ArchitectureValidator extends Analysis[URL, BasicReport] with AnalysisApp
       | [-config=<config.json> (Configuration file containing all analysis parameters)]
       | [-spec=<spec.json> (Architecture specification file)]
       | [-output=<output.json> (Output file for the analysis report)]
+      | [-onlyMethodAndFieldAccesses (Only consider dependencies resulting from method and field accesses)]
       |
       | Either -config or -spec must be provided.
+      | -config gets prioritized over all other options!
       | """.stripMargin
 
   override def setupProject(cpFiles: Iterable[File], libcpFiles: Iterable[File],
@@ -71,17 +75,20 @@ object ArchitectureValidator extends Analysis[URL, BasicReport] with AnalysisApp
 
     val actualSpecFile = config.map(_.specificationFile).orElse(specFile).get
     val actualOutputPath = config.map(_.outputJson).getOrElse(outputPath)
+    val actualOnlyMethodAndFieldAccesses = config.map(_.onlyMethodAndFieldAccesses).getOrElse(onlyMethodAndFieldAccesses)
 
     println(s"\n==================== Architecture Validation ====================")
     println(s"* Specification file: $actualSpecFile")
     println(s"* Output file: $actualOutputPath")
     println(s"* Project JARs: ${project.allClassFiles.size} classes loaded")
+    println(s"* ${if (actualOnlyMethodAndFieldAccesses) "Only considering dependencies resulting from method and field accesses"
+    else "Considering all dependencies inside the project"}.")
     println("================================================================\n")
 
     println("Starting architecture validation...")
 
     val report = ArchitectureValidation.analyze(project, actualSpecFile,
-      config.getOrElse(ArchitectureConfig(List.empty, List.empty, actualSpecFile, actualOutputPath)))
+      config.getOrElse(ArchitectureConfig(List.empty, List.empty, actualSpecFile, actualOutputPath, actualOnlyMethodAndFieldAccesses)))
 
     println("Architecture validation finished.")
     println(s"Found ${report.violations.size} violations")

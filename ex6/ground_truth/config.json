@@ -5,5 +5,6 @@
     "ground_truth/ExampleDBAdapter.jar"
   ],
   "specificationFile": "ground_truth/spec.json",
-  "outputJson": "ground_truth/architecture-report.json"
+  "outputJson": "ground_truth/architecture-report.json",
+  "onlyMethodAndFieldAccesses": true
 }

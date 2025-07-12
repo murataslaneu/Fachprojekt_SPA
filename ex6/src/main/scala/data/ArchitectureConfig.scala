@@ -8,5 +8,6 @@ case class ArchitectureConfig(
                                libraryJars: List[java.io.File],
                                specificationFile: String,
                                outputJson: String,
-                               completelyLoadLibraries: Boolean = false
+                               completelyLoadLibraries: Boolean = false,
+                               onlyMethodAndFieldAccesses: Boolean = false
                              )

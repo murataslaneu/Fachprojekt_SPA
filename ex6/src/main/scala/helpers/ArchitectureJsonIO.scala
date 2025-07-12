@@ -15,6 +15,7 @@ object ArchitectureJsonIO {
    * - specificationsFile
    * - outputJson
    * - completelyLoadLibraries
+   * - onlyMethodAndFieldAccesses
    */
   def readConfig(path: String): ArchitectureConfig = {
     val source = scala.io.Source.fromFile(path)
@@ -58,12 +59,17 @@ object ArchitectureJsonIO {
     // - Optional, defaults to false
     val completelyLoadLibraries = (json \ "completelyLoadLibraries").asOpt[Boolean].getOrElse(false)
 
+    // onlyMethodAndFieldAccesses: Boolean
+    // - Optional, defaults to false
+    val onlyMethodAndFieldAccesses = (json \ "onlyMethodAndFieldAccesses").asOpt[Boolean].getOrElse(false)
+
     ArchitectureConfig(
       projectJarFiles,
       libraryJarFiles,
       specificationFile,
       outputJson,
-      completelyLoadLibraries
+      completelyLoadLibraries,
+      onlyMethodAndFieldAccesses
     )
   }
 
