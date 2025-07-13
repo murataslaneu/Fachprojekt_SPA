@@ -11,6 +11,16 @@ und so weiter.
 Es ist auch eine "Ground Truth" enthalten, die als Referenz dient, welche Ausgabe diese Analyse geben
 sollte. Diese befindet sich im Ordner `ground_truth`.
 
+## Inhalt
+
+- [Anleitung: Benutzung der Analyse](#anleitung-benutzung-der-analyse)
+- [Beispielszenarien](#beispielszenarien)
+- [Terminal-Argumente](#terminal-argumente)
+- [Config-Optionen](#config-optionen)
+- [Architektur-Spezifikations-Json](#architektur-spezifikations-json)
+  - [Regeln](#regeln)
+- [Tests und Coverage](#tests-und-coverage)
+
 ## Anleitung: Benutzung der Analyse
 1. Öffne das Terminal und stelle sicher, im richtigen Verzeichnis zu sein (`TUDO-FP-VulnSPA-25-3/ex6`).
 2. Starte sbt mit `sbt`.
@@ -54,7 +64,7 @@ Analyse ausprobieren kann. Liste von Beispiel-Befehlen (wobei die ersten beiden 
 
 ## Terminal-Argumente
 
-Wird keine Config-Datei mit angegeben, kann die Parameter für die Analyse auf komplett über das
+Wird keine Config-Datei mit angegeben, kann man die Parameter für die Analyse komplett über das
 Terminal eingeben.
 
 **Verfügbare Argumente/Optionen:**
@@ -87,7 +97,7 @@ Möchte man die Analyse über eine Config-Datei konfigurieren, kann man beim Sta
 - `"libraryJars"`: Optional, Liste von Strings. Pfad(e) zur Jar-Datei / zu den Jar-Dateien, die vom Projekt als
   Bibliothek genutzt werden. *Könnte* den Report verbessern, indem Packages und Klassen zu vorher
   unbekannten Jar-Dateien zugeordnet werden können, **muss es aber nicht!** *Ersetzt `-libcp` im Terminal.*
-- `"specificationsFile:"` **Notwendig**, String. Pfad zur Json-Datei, die die Architektur-Spezifikation enthält. Was diese
+- `"specificationsFile"`: **Notwendig**, String. Pfad zur Json-Datei, die die Architektur-Spezifikation enthält. Was diese
   enthalten kann/muss wird im jeweiligen Abschnitt erklärt. *Ersetzt `-spec` im Terminal.*
 - `"outputJson"`: Optional, String. Pfad, zu der der Json-Report für die Analyse ausgegeben werden soll.
   Standardmäßig wird der Analysereport in `architecture-report.json` im aktuellen Verzeichnis abgelegt, wenn nicht angegeben.
@@ -106,9 +116,9 @@ wie es auf dem Aufgabenblatt gefordert wird.**
 > Abhängigkeiten absolut uninteressant sind...
 
 Es müssen zwei "Grund-Optionen" angegeben werden **müssen**:
-- `defaultRule`: Entweder `"FORBIDDEN"` oder `"ALLOWED"`. Bei `"FORBIDDEN"` wird standardmäßig keine einzige Abhängigkeit
+- `"defaultRule"`: Entweder `"FORBIDDEN"` oder `"ALLOWED"`. Bei `"FORBIDDEN"` wird standardmäßig keine einzige Abhängigkeit
   erlaubt, bei `"ALLOWED"` wird hingegen standardmäßig alles erlaubt.
-- `rules`: Liste von **Regeln**.
+- `"rules"`: Liste von **Regeln**.
 
 ### Regeln
 
