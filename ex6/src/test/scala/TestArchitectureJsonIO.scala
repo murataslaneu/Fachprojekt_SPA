@@ -50,4 +50,15 @@ class TestArchitectureJsonIO extends AnyFunSuite {
     val actualSpec = ArchitectureJsonIO.readSpecification("ground_truth/spec.json")
     assert(expectedSpec == actualSpec)
   }
+
+  test("JsonIO rejects invalid configs") {
+    assertThrows[java.io.IOException](ArchitectureJsonIO.readConfig("src/test/invalidConfigsAndSpecs/invalid_project_file.json"))
+    assertThrows[java.io.IOException](ArchitectureJsonIO.readConfig("src/test/invalidConfigsAndSpecs/invalid_library_file.json"))
+    assertThrows[java.io.IOException](ArchitectureJsonIO.readConfig("src/test/invalidConfigsAndSpecs/invalid_spec_file.json"))
+    assertThrows[IllegalArgumentException](ArchitectureJsonIO.readConfig("src/test/invalidConfigsAndSpecs/invalid_spec_file2.json"))
+    val config = ArchitectureJsonIO.readConfig("src/test/invalidConfigsAndSpecs/config_should_autoadd.json")
+    assert(config.outputJson == "ground_truth/architecture-report.txt.json")
+    // Final test: Valid config should be read properly
+    ArchitectureJsonIO.readConfig("src/test/invalidConfigsAndSpecs/valid_config.json")
+  }
 }

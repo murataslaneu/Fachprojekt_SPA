@@ -1,0 +1,10 @@
+{
+  "projectJars": [
+    "ground_truth/ExampleMain.jar",
+    "ground_truth/ExampleHelper.jar",
+    "ground_truth/ExampleDBAdapter.jar"
+  ],
+  "specificationFile": "ground_truth/ExampleMain.jar",
+  "outputJson": "ground_truth/architecture-report.json",
+  "onlyMethodAndFieldAccesses": true
+}

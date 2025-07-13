@@ -1,0 +1,10 @@
+{
+  "projectJars":[
+    "ground_truth/ExampleMain.jar"
+  ],
+  "libraryJars": [
+    "not/a/real/path/to/a/jar/file/Invalid.jar"
+  ],
+  "specificationFile": "ground_truth/spec.json",
+  "outputJson": "src/test/invalidConfigsAndSpecs/irrelevantReport.json"
+}

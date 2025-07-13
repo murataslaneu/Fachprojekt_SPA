@@ -156,6 +156,28 @@ object ArchitectureValidation {
     val allPackages = project.allClassFiles.map(_.thisType.packageName.replace('/','.')).toSet
     val allJars = project.allClassFiles.map(cf => getJarName(cf, project)).toSet
 
+    // Maybe useful to improve warnings regarding "Exception rule ... may not be within parent rule scope ...".
+    // Example: In the ground truth example, there are 4 warnings of this type, although the rules are actually within
+    // the parents scope.
+    // However, I couldn't get it to work
+
+//    val allClassesWithJars = project.allClassFiles.map(cf => {
+//      val source = project.source(cf)
+//      if (source.isDefined) {
+//        val pathSplit = source.get.toString.split('!')
+//        val classFilePath = {
+//          val path = pathSplit.last
+//          // Remove .class at the end of the class file path (if present)
+//          if (path.endsWith(".class")) path.substring(0, path.length - 6)
+//          else path
+//        }
+//        val jarFileName = pathSplit(pathSplit.length - 2).split('/').last
+//        (jarFileName, classFilePath.substring(1).replace('/', '.'))
+//      }
+//      else ("[Unknown]", cf.thisType.toJava)
+//    }).toSet
+//    println(allClassesWithJars.mkString("", "\n", ""))
+
     def validateEntity(entity: String, entityType: String): Unit = {
       if (entity.endsWith(".jar")) {
         if (!allJars.contains(entity)) {
@@ -313,26 +335,26 @@ object ArchitectureValidation {
     dependencies.toSet
   }
 
-  /**
-   * Debug method to show all packages and classes in the project
-   */
-  private def debugPackageNames(project: Project[URL]): Unit = {
-    println("=== DEBUG: All packages in project ===")
-    val allPackages = project.allClassFiles.map(_.thisType.packageName).toSet.toList.sorted
-    allPackages.foreach(pkg => println(s"  Package: $pkg"))
-
-    println(s"\nTotal packages: ${allPackages.size}")
-    println(s"Total classes: ${project.allClassFiles.size}")
-
-    // Find util packages specifically
-    val utilClasses = project.allClassFiles.filter(_.thisType.packageName.contains("util"))
-    println(s"\nClasses containing 'util': ${utilClasses.size}")
-    utilClasses.take(10).foreach(cls =>
-      println(s"  ${cls.thisType.toJava} (package: ${cls.thisType.packageName})")
-    )
-
-    println("=" * 50)
-  }
+//  /**
+//   * Debug method to show all packages and classes in the project
+//   */
+//  private def debugPackageNames(project: Project[URL]): Unit = {
+//    println("=== DEBUG: All packages in project ===")
+//    val allPackages = project.allClassFiles.map(_.thisType.packageName).toSet.toList.sorted
+//    allPackages.foreach(pkg => println(s"  Package: $pkg"))
+//
+//    println(s"\nTotal packages: ${allPackages.size}")
+//    println(s"Total classes: ${project.allClassFiles.size}")
+//
+//    // Find util packages specifically
+//    val utilClasses = project.allClassFiles.filter(_.thisType.packageName.contains("util"))
+//    println(s"\nClasses containing 'util': ${utilClasses.size}")
+//    utilClasses.take(10).foreach(cls =>
+//      println(s"  ${cls.thisType.toJava} (package: ${cls.thisType.packageName})")
+//    )
+//
+//    println("=" * 50)
+//  }
 
   /**
    * Main analysis method - Enhanced version
@@ -341,7 +363,7 @@ object ArchitectureValidation {
     val startTime = System.currentTimeMillis()
 
     // DEBUG: Show all packages and classes
-    debugPackageNames(project)
+    //debugPackageNames(project)
 
     // Validate specification
     val warnings = validateSpecification(specification, project)

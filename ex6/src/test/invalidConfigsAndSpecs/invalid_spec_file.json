@@ -1,0 +1,7 @@
+{
+  "projectJars":[
+    "ground_truth/ExampleMain.jar"
+  ],
+  "specificationFile": "not/a/real/path/to/a/json/file/Invalid.json",
+  "outputJson": "src/test/invalidConfigsAndSpecs/irrelevantReport.json"
+}
