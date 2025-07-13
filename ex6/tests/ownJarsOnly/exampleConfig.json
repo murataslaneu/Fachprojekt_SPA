@@ -4,8 +4,6 @@
     "tests/testproject.jar",
     "tests/pdfbox-3.0.5.jar"
   ],
-  "libraryJars": [],
   "specificationFile": "tests/ownJarsOnly/architecture-spec.json",
-  "outputJson": "tests/ownJarsOnly/output-own-jars-only.json",
-  "completelyLoadLibraries": false
+  "outputJson": "tests/ownJarsOnly/output-own-jars-only.json"
 }

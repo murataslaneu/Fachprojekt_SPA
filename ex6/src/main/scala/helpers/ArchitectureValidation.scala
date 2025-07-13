@@ -272,7 +272,7 @@ object ArchitectureValidation {
       }
     }
 
-    project.allClassFiles.foreach { classFile =>
+    project.allProjectClassFiles.foreach { classFile =>
       val fromClass = classFile.thisType.simpleName
       val fromPackage = classFile.thisType.packageName.replace("/", ".")
       val fromJar = getJarName(classFile, project)

@@ -1,11 +1,11 @@
 {
   "projectJars": [
     "tests/exampleproject.jar",
-    "tests/testproject.jar",
+    "tests/testproject.jar"
+  ],
+  "libraryJars": [
     "tests/pdfbox-3.0.5.jar"
   ],
-  "libraryJars": [],
   "specificationFile": "tests/pdfboxAllowed/architecture-spec.json",
-  "outputJson": "tests/pdfboxAllowed/output-pdfbox-allowed.json",
-  "completelyLoadLibraries": false
+  "outputJson": "tests/pdfboxAllowed/output-pdfbox-allowed.json"
 }

@@ -2,8 +2,6 @@
   "projectJars": [
     "tests/testproject.jar"
   ],
-  "libraryJars": [],
   "specificationFile": "tests/deepNestedException/architecture-spec.json",
-  "outputJson": "tests/deepNestedException/output-deep-nested-exception.json",
-  "completelyLoadLibraries": false
+  "outputJson": "tests/deepNestedException/output-deep-nested-exception.json"
 }

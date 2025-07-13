@@ -2,8 +2,6 @@
   "projectJars": [
     "tests/testproject.jar"
   ],
-  "libraryJars": [],
   "specificationFile": "tests/simpleRecursive/architecture-spec.json",
-  "outputJson": "tests/simpleRecursive/output-recursive.json",
-  "completelyLoadLibraries": false
+  "outputJson": "tests/simpleRecursive/output-recursive.json"
 }
