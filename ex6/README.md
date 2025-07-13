@@ -114,7 +114,7 @@ Es müssen zwei "Grund-Optionen" angegeben werden **müssen**:
 
 Regeln geben weitere Vorgaben/Ausnahmen an, was erlaubt oder verboten sein soll. Diese folgen in der Json-Datei
 immer demselben Schema:
-```json
+```
 {
     "from": "...",
     "to": "...",
