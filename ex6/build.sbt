@@ -17,3 +17,9 @@ libraryDependencies ++= Seq(
   "com.typesafe.play" %% "play-json" % "2.10.7",
   "org.scalatest" %% "scalatest" % "3.2.19" % "test"
 )
+
+// Parallel execution is not possible as multiple tests are accessing the global variables
+// of ArchitectureValidator.
+// This structure gets forced by the AnalysisApplication of OPAL and as a result cannot be fixed easily.
+// Therefore, disable parallel execution entirely (tests get executed fast anyway...)
+Test / parallelExecution := false

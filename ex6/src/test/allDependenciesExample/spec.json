@@ -1,0 +1,20 @@
+{
+  "defaultRule": "ALLOWED",
+  "rules": [
+    {
+      "from": "org.example.Main",
+      "to": "org.example.SomeClass",
+      "type": "FORBIDDEN"
+    },
+    {
+      "from": "org.example.AbstractClass",
+      "to": "org.example.Interface",
+      "type": "FORBIDDEN"
+    },
+    {
+      "from": "org.example.InheritingClass",
+      "to": "org.example.AbstractClass",
+      "type": "FORBIDDEN"
+    }
+  ]
+}

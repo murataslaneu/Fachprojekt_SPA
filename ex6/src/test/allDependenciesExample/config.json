@@ -1,0 +1,7 @@
+{
+  "projectJars": [
+    "src/test/allDependenciesExample/AllDependenciesExample-1.0-SNAPSHOT.jar"
+  ],
+  "specificationFile": "src/test/allDependenciesExample/spec.json",
+  "outputJson": "src/test/allDependenciesExample/architecture-report.json"
+}
