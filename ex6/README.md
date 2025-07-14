@@ -144,7 +144,7 @@ immer demselben Schema:
 > Regeln, die gar nichts mit der ursprünglichen Regel zu tun haben. **Das wird allerdings nicht empfohlen** und
 > resultiert auch in einer Warnung von der Analyse, da es die Lesbarkeit der Spezifikation stark beeinträchtigt.
 
-### Tests und Coverage
+## Tests und Coverage
 Ebenfalls wird dieses Projekt mit ScalaTest getestet und die Test Coverage mithilfe von sbt-scoverage gemessen.
 
 **Ausführung der Tests:**
