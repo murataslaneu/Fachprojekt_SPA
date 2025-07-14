@@ -136,8 +136,8 @@ immer demselben Schema:
 - `"from"`: Klasse/Package/Jar-Datei, die auf etwas zugreift bzw. zugreifen könnte und dafür eine Regel
   festgelegt werden soll.
 - `"to"`: Klasse/Package/Jar-Datei, auf die von irgendwo zugegriffen werden könnte und dafür eine Regel festgelegt werden sollte.
-- `type`: `"FORBIDDEN"` oder `"ALLOWED"`. Gibt an, ob der Zugriff von `from` auf `to` verboten bzw. erlaubt werden soll.
-- `except`: Liste weiterer **Regeln**, die diese Regel weiter spezifizieren/einschränken. Regeln können also beliebig
+- `"type"`: `"FORBIDDEN"` oder `"ALLOWED"`. Gibt an, ob der Zugriff von `from` auf `to` verboten bzw. erlaubt werden soll.
+- `"except"`: Liste weiterer **Regeln**, die diese Regel weiter spezifizieren/einschränken. Regeln können also beliebig
   tief ineinander verschachtelt werden.
 
 > **Anmerkung:** Es ist theoretisch möglich, bei `except` beliebige Regeln hinzuzufügen. Dazu gehören auch
