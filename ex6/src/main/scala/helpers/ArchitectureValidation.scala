@@ -239,7 +239,10 @@ object ArchitectureValidation {
             currentWarnings += "Exception rule may not be within parent rule scope"
             warningsCount += 1
           }
-        case None => // Top-level rule, no parent validation needed
+        case None => if (rule.`type` == spec.defaultRule) {
+          currentWarnings += "Base rule has same type as default rule"
+          warningsCount += 1
+        }
       }
 
       // Validate exceptions recursively
@@ -258,12 +261,12 @@ object ArchitectureValidation {
 
     // Validate all rules
     val warnings = spec.rules.map { rule: Rule =>
-      val ruleWarnings = cleanWarnings(validateRule(rule))
-      if (ruleWarnings.isDefined) {
-        Some(s"${rule.from} -> ${rule.to}" -> ruleWarnings.get)
-      }
-      else None
-    }.filter(element => element.isDefined)
+        val ruleWarnings = cleanWarnings(validateRule(rule))
+        if (ruleWarnings.isDefined) {
+          Some(s"${rule.from} -> ${rule.to}" -> ruleWarnings.get)
+        }
+        else None
+      }.filter(element => element.isDefined)
       .map(element => element.get)
       .toMap
 
