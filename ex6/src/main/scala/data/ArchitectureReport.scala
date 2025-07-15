@@ -9,7 +9,8 @@ case class ArchitectureReport(
                                totalRuntimeMs: Long,
                                checkedOnlyMethodAndFieldAccesses: Boolean,
                                violations: List[Dependency],
-                               warnings: List[String]
+                               warningsCount: Int,
+                               warnings: RecursiveWarnings
                              )
 
 object ArchitectureReport {

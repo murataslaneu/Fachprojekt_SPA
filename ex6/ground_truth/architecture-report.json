@@ -1,8 +1,8 @@
 {
   "filesAnalyzed" : [ "ground_truth/ExampleMain.jar", "ground_truth/ExampleHelper.jar", "ground_truth/ExampleDBAdapter.jar" ],
   "specificationFile" : "ground_truth/spec.json",
-  "timeFinished" : "2025-07-15T12:42:07.7072116",
-  "totalRuntimeMs" : 29,
+  "timeFinished" : "2025-07-15T14:59:58.1094179",
+  "totalRuntimeMs" : 23,
   "checkedOnlyMethodAndFieldAccesses" : true,
   "violations" : [ {
     "fromClass" : "DBTaskRepository",
@@ -37,5 +37,21 @@
     "toJar" : "ExampleHelper.jar",
     "accessType" : "FIELD_ACCESS"
   } ],
-  "warnings" : [ "  Warning: Exception rule 'com.example.main' -> 'com.example.db.DBConnection' may not be within parent rule scope ('ExampleMain.jar -> ExampleDBAdapter.jar')", "  Warning: Exception rule 'com.example.main' -> 'com.example.db.DBTaskRepository' may not be within parent rule scope ('ExampleMain.jar -> ExampleDBAdapter.jar')", "  Warning: Exception rule 'com.example.main' -> 'com.example.db.QueryBuilder' may not be within parent rule scope ('ExampleMain.jar -> ExampleDBAdapter.jar')", "  Warning: Exception rule 'com.example.main' -> 'com.example.db.adapters.PersistentTask' may not be within parent rule scope ('ExampleMain.jar -> ExampleDBAdapter.jar')" ]
+  "warningsCount" : 4,
+  "warnings" : {
+    "ExampleMain.jar -> ExampleDBAdapter.jar" : {
+      "com.example.main -> com.example.db.DBTaskRepository" : {
+        "messages" : [ "Exception rule may not be within parent rule scope" ]
+      },
+      "com.example.main -> com.example.db.DBConnection" : {
+        "messages" : [ "Exception rule may not be within parent rule scope" ]
+      },
+      "com.example.main -> com.example.db.QueryBuilder" : {
+        "messages" : [ "Exception rule may not be within parent rule scope" ]
+      },
+      "com.example.main -> com.example.db.adapters.PersistentTask" : {
+        "messages" : [ "Exception rule may not be within parent rule scope" ]
+      }
+    }
+  }
 }

@@ -1,5 +1,5 @@
 import com.typesafe.config.Config
-import data.ArchitectureConfig
+import data.{ArchitectureConfig, RecursiveWarnings}
 import helpers.{ArchitectureJsonIO, ArchitectureValidation}
 import org.opalj.br.analyses.{Analysis, AnalysisApplication, BasicReport, ProgressManagement, Project, ReportableAnalysisResult}
 import org.opalj.log.LogContext
@@ -95,7 +95,7 @@ object ArchitectureValidator extends Analysis[URL, BasicReport] with AnalysisApp
 
     println("Architecture validation finished.")
     println(s"Found ${report.violations.size} violations")
-    println(s"Generated ${report.warnings.size} warnings")
+    println(s"Generated ${report.warningsCount} warnings")
 
     ArchitectureJsonIO.writeReport(report, actualOutputPath)
     println(s"Report written to $actualOutputPath")
@@ -111,13 +111,21 @@ object ArchitectureValidator extends Analysis[URL, BasicReport] with AnalysisApp
       }
     }
 
-    if (report.warnings.nonEmpty) {
+    if (report.warnings.warnings.nonEmpty || report.warnings.innerWarnings.nonEmpty) {
       println("\nWarnings:")
-      report.warnings.foreach(println)
+      prettyPrintWarnings(report.warnings)
     }
 
     BasicReport("")
   }
 
   override val analysis: Analysis[URL, ReportableAnalysisResult] = this
+
+  private def prettyPrintWarnings(warnings: RecursiveWarnings, indent: String = ""): Unit = {
+    warnings.warnings.foreach { message => println(s"$indent- $message")}
+    warnings.innerWarnings.foreach {case (rule, nestedWarnings) =>
+      println(s"$indent$rule:")
+      prettyPrintWarnings(nestedWarnings, indent + "  ")
+    }
+  }
 }

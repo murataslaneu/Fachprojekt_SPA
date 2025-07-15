@@ -9,6 +9,7 @@ import org.opalj.br.{ClassFile, ObjectType, ReferenceType}
 import java.io.File
 import java.net.URL
 import scala.collection.mutable
+import scala.collection.mutable.ListBuffer
 
 object ArchitectureValidation {
 
@@ -98,14 +99,14 @@ object ArchitectureValidation {
       // Check all possible matching combinations
       val matchingCombinations = List(
         (dependency.fromClassFqn, dependency.toClassFqn), // Class to Class
-        (dependency.fromClassFqn, dependency.toPackage),  // Class to Package
-        (dependency.fromClassFqn, dependency.toJar),      // Class to JAR
-        (dependency.fromPackage, dependency.toClassFqn),  // Package to Class
-        (dependency.fromPackage, dependency.toPackage),   // Package to Package
-        (dependency.fromPackage, dependency.toJar),       // Package to JAR
-        (dependency.fromJar, dependency.toClassFqn),      // JAR to Class
-        (dependency.fromJar, dependency.toPackage),       // JAR to Package
-        (dependency.fromJar, dependency.toJar)            // JAR to JAR
+        (dependency.fromClassFqn, dependency.toPackage), // Class to Package
+        (dependency.fromClassFqn, dependency.toJar), // Class to JAR
+        (dependency.fromPackage, dependency.toClassFqn), // Package to Class
+        (dependency.fromPackage, dependency.toPackage), // Package to Package
+        (dependency.fromPackage, dependency.toJar), // Package to JAR
+        (dependency.fromJar, dependency.toClassFqn), // JAR to Class
+        (dependency.fromJar, dependency.toPackage), // JAR to Package
+        (dependency.fromJar, dependency.toJar) // JAR to JAR
       )
 
       // Check if any combination matches the rule
@@ -148,12 +149,13 @@ object ArchitectureValidation {
   /**
    * Enhanced specification validation with semantic error checking
    */
-  private def validateSpecification(spec: ArchitectureSpec, project: Project[URL]): List[String] = {
-    val warnings = mutable.ListBuffer.empty[String]
+  private def validateSpecification(spec: ArchitectureSpec, project: Project[URL]): (Int, RecursiveWarnings) = {
+    var warningsCount = 0
 
     // Get all available entities from the project
     val allClasses = project.allClassFiles.map(_.thisType.toJava).toSet
-    val allPackages = project.allClassFiles.map(_.thisType.packageName.replace('/','.')).toSet
+    val allPackages = project.allClassFiles.map(_.thisType.packageName.replace('/', '.')).toSet
+    println(allPackages)
     val allJars = project.allClassFiles.map(cf => getJarName(cf, project)).toSet
 
     // Maybe useful to improve warnings regarding "Exception rule ... may not be within parent rule scope ...".
@@ -161,76 +163,115 @@ object ArchitectureValidation {
     // the parents scope.
     // However, I couldn't get it to work
 
-//    val allClassesWithJars = project.allClassFiles.map(cf => {
-//      val source = project.source(cf)
-//      if (source.isDefined) {
-//        val pathSplit = source.get.toString.split('!')
-//        val classFilePath = {
-//          val path = pathSplit.last
-//          // Remove .class at the end of the class file path (if present)
-//          if (path.endsWith(".class")) path.substring(0, path.length - 6)
-//          else path
-//        }
-//        val jarFileName = pathSplit(pathSplit.length - 2).split('/').last
-//        (jarFileName, classFilePath.substring(1).replace('/', '.'))
-//      }
-//      else ("[Unknown]", cf.thisType.toJava)
-//    }).toSet
-//    println(allClassesWithJars.mkString("", "\n", ""))
+    //    val allClassesWithJars = project.allClassFiles.map(cf => {
+    //      val source = project.source(cf)
+    //      if (source.isDefined) {
+    //        val pathSplit = source.get.toString.split('!')
+    //        val classFilePath = {
+    //          val path = pathSplit.last
+    //          // Remove .class at the end of the class file path (if present)
+    //          if (path.endsWith(".class")) path.substring(0, path.length - 6)
+    //          else path
+    //        }
+    //        val jarFileName = pathSplit(pathSplit.length - 2).split('/').last
+    //        (jarFileName, classFilePath.substring(1).replace('/', '.'))
+    //      }
+    //      else ("[Unknown]", cf.thisType.toJava)
+    //    }).toSet
+    //    println(allClassesWithJars.mkString("", "\n", ""))
 
-    def validateEntity(entity: String, entityType: String): Unit = {
+    def cleanWarnings(rw: RecursiveWarnings): Option[RecursiveWarnings] = {
+      val cleanedInner = rw.innerWarnings.flatMap {
+        case (k, v) => cleanWarnings(v).map(k -> _)
+      }
+
+      if (rw.warnings.nonEmpty || cleanedInner.nonEmpty)
+        Some(RecursiveWarnings(rw.warnings, cleanedInner))
+      else
+        None
+    }
+
+    def validateEntity(entity: String): Option[String] = {
       if (entity.endsWith(".jar")) {
         if (!allJars.contains(entity)) {
-          warnings += s"JAR '$entity' not found in project"
+          return Some(s"JAR '$entity' not found in project")
         }
       } else if (entity.contains(".") && entity.split("\\.").last.matches("^[A-Z].*")) {
         if (!allClasses.contains(entity)) {
-          warnings += s"Class '$entity' not found in project"
+          return Some(s"Class '$entity' not found in project")
         }
       } else {
         if (!allPackages.contains(entity)) {
-          warnings += s"Package '$entity' not found in project"
+          return Some(s"Package '$entity' not found in project")
         }
       }
+      None
     }
 
-    def validateRule(rule: Rule, parentRule: Option[Rule] = None, depth: Int = 0): Unit = {
-      val indent = "  " * depth
+    def validateRule(rule: Rule, parentRule: Option[Rule] = None, depth: Int = 0): RecursiveWarnings = {
+      val currentWarnings = ListBuffer.empty[String]
+      //val indent = "  " * depth
 
       // Validate entities exist
-      validateEntity(rule.from, "from")
-      validateEntity(rule.to, "to")
+      val entityFromWarning = validateEntity(rule.from)
+      if (entityFromWarning.isDefined) {
+        currentWarnings += entityFromWarning.get
+        warningsCount += 1
+      }
+      val entityToWarning = validateEntity(rule.to)
+      if (entityToWarning.isDefined) {
+        currentWarnings += entityToWarning.get
+        warningsCount += 1
+      }
 
       // Semantic validation: check if exception makes sense with parent rule
       parentRule match {
         case Some(parent) =>
           // Exception should be more specific than parent rule
           if (rule.`type` == parent.`type`) {
-            warnings += s"${indent}Exception rule has same type as parent rule"
+            //addWarning(currentPath, s"${indent}Exception rule has same type as parent rule")
+            currentWarnings += "Exception rule has same type as parent rule"
+            warningsCount += 1
           }
 
           // Exception should be within the scope of parent rule
           if (!isEntitySubsetOf(rule.from, parent.from) || !isEntitySubsetOf(rule.to, parent.to)) {
-            warnings += s"${indent}Exception rule '${rule.from}' -> '${rule.to}' may not be within parent rule scope ('${parent.from} -> ${parent.to}')"
+            //addWarning(currentPath, s"${indent}Exception rule may not be within parent rule scope")
+            currentWarnings += "Exception rule may not be within parent rule scope"
+            warningsCount += 1
           }
         case None => // Top-level rule, no parent validation needed
       }
 
       // Validate exceptions recursively
-      rule.except.foreach { exceptions =>
-        exceptions.foreach(validateRule(_, Some(rule), depth + 1))
-      }
+      val innerWarnings = rule.except.getOrElse(Nil).map { child =>
+        val key = s"${child.from} -> ${child.to}"
+        key -> validateRule(child, Some(rule), depth + 1)
+      }.toMap
+      RecursiveWarnings(currentWarnings.toList, innerWarnings)
     }
 
+    var defaultRuleWarning: Option[String] = None
     // Validate default rule
     if (spec.defaultRule != "ALLOWED" && spec.defaultRule != "FORBIDDEN") {
-      warnings += s"Invalid defaultRule '${spec.defaultRule}'. Should be 'ALLOWED' or 'FORBIDDEN'"
+      defaultRuleWarning = Some(s"Invalid defaultRule '${spec.defaultRule}'. Should be 'ALLOWED' or 'FORBIDDEN'")
     }
 
     // Validate all rules
-    spec.rules.foreach(validateRule(_))
+    val warnings = spec.rules.map { rule: Rule =>
+      val ruleWarnings = cleanWarnings(validateRule(rule))
+      if (ruleWarnings.isDefined) {
+        Some(s"${rule.from} -> ${rule.to}" -> ruleWarnings.get)
+      }
+      else None
+    }.filter(element => element.isDefined)
+      .map(element => element.get)
+      .toMap
 
-    warnings.toList
+    (warningsCount, RecursiveWarnings(
+      if (defaultRuleWarning.isDefined) List(defaultRuleWarning.get) else Nil,
+      warnings
+    ))
   }
 
   /**
@@ -335,26 +376,26 @@ object ArchitectureValidation {
     dependencies.toSet
   }
 
-//  /**
-//   * Debug method to show all packages and classes in the project
-//   */
-//  private def debugPackageNames(project: Project[URL]): Unit = {
-//    println("=== DEBUG: All packages in project ===")
-//    val allPackages = project.allClassFiles.map(_.thisType.packageName).toSet.toList.sorted
-//    allPackages.foreach(pkg => println(s"  Package: $pkg"))
-//
-//    println(s"\nTotal packages: ${allPackages.size}")
-//    println(s"Total classes: ${project.allClassFiles.size}")
-//
-//    // Find util packages specifically
-//    val utilClasses = project.allClassFiles.filter(_.thisType.packageName.contains("util"))
-//    println(s"\nClasses containing 'util': ${utilClasses.size}")
-//    utilClasses.take(10).foreach(cls =>
-//      println(s"  ${cls.thisType.toJava} (package: ${cls.thisType.packageName})")
-//    )
-//
-//    println("=" * 50)
-//  }
+  //  /**
+  //   * Debug method to show all packages and classes in the project
+  //   */
+  //  private def debugPackageNames(project: Project[URL]): Unit = {
+  //    println("=== DEBUG: All packages in project ===")
+  //    val allPackages = project.allClassFiles.map(_.thisType.packageName).toSet.toList.sorted
+  //    allPackages.foreach(pkg => println(s"  Package: $pkg"))
+  //
+  //    println(s"\nTotal packages: ${allPackages.size}")
+  //    println(s"Total classes: ${project.allClassFiles.size}")
+  //
+  //    // Find util packages specifically
+  //    val utilClasses = project.allClassFiles.filter(_.thisType.packageName.contains("util"))
+  //    println(s"\nClasses containing 'util': ${utilClasses.size}")
+  //    utilClasses.take(10).foreach(cls =>
+  //      println(s"  ${cls.thisType.toJava} (package: ${cls.thisType.packageName})")
+  //    )
+  //
+  //    println("=" * 50)
+  //  }
 
   /**
    * Main analysis method - Enhanced version
@@ -366,7 +407,7 @@ object ArchitectureValidation {
     //debugPackageNames(project)
 
     // Validate specification
-    val warnings = validateSpecification(specification, project)
+    val (warningsCount, warnings) = validateSpecification(specification, project)
 
     // Find all dependencies
     println("Finding all dependencies...")
@@ -396,6 +437,7 @@ object ArchitectureValidation {
       runtime,
       config.onlyMethodAndFieldAccesses,
       violations.toList,
+      warningsCount,
       warnings
     )
   }

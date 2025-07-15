@@ -94,7 +94,6 @@ class TestAnalysisWithGroundTruth extends AnyFunSuite {
     val source = scala.io.Source.fromFile(reportFile)
     val json = try Json.parse(source.mkString) finally source.close()
     val report = json.as[ArchitectureReport]
-    reportFile.delete()
 
     // Check if results are as expected
     assert(report.filesAnalyzed.size == 3)
