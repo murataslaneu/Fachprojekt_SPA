@@ -1,9 +1,11 @@
 import com.typesafe.config.ConfigFactory
-import data.Dependency
+import data.{ArchitectureConfig, ArchitectureSpec, Dependency, Rule}
 import helpers.{ArchitectureJsonIO, ArchitectureValidation}
 import data.AccessType._
 import org.opalj.log.GlobalLogContext
 import org.scalatest.funsuite.AnyFunSuite
+
+import java.io.File
 
 class TestArchitectureValidation extends AnyFunSuite {
 
@@ -101,5 +103,49 @@ class TestArchitectureValidation extends AnyFunSuite {
       toJar = "AllDependenciesExample-1.0-SNAPSHOT.jar",
       accessType = METHOD_CALL
     )))
+  }
+
+  test("Analysis run with specification regarding Java Standard Library should give expected results") {
+    // Configuration and setup
+    val config = ArchitectureConfig(
+      projectJars = List(
+        //new File("ground_truth/ExampleMain.jar"),
+        new File("ground_truth/ExampleHelper.jar"),
+        //new File("ground_truth/ExampleDBAdapter.jar"),
+      ),
+      libraryJars = List(),
+      specificationFile = "",
+      outputJson = "",
+      onlyMethodAndFieldAccesses = true
+    )
+
+    ArchitectureValidator.config = Some(config)
+    val project = ArchitectureValidator.setupProject(List(), List(), completelyLoadLibraries = false, ConfigFactory.load)(GlobalLogContext)
+    val spec = ArchitectureSpec(
+      defaultRule = "ALLOWED",
+      rules = List(
+        Rule("ExampleMain.jar", "java.lang.System", "FORBIDDEN"),
+        Rule("ExampleHelper.jar", "java.lang.System", "FORBIDDEN"),
+        Rule("ExampleDBAdapter.jar", "java.lang.System", "FORBIDDEN")
+      )
+    )
+
+    // Executing analysis
+    val report = ArchitectureValidation.analyze(project, spec, config)
+    // Report will give warnings regarding that java.lang.System is not found in the project files.
+    // However, the analysis should still be able to detect calls to it (e.g. System.out.println).
+    // Ground truth only makes use of System.out.println in com.example.helper.Logger, all other classes use a Logger
+    // to print.
+    assert(report.violations.size == 1)
+    // Why field access? --> System.out is a static PrintStream field of java.lang.System
+    assert(report.violations.head == Dependency(
+      fromClass = "Logger",
+      toClass = "System",
+      fromPackage = "com.example.helper",
+      toPackage = "java.lang",
+      fromJar = "ExampleHelper.jar",
+      toJar = "[Unknown]",
+      accessType = FIELD_ACCESS
+    ))
   }
 }

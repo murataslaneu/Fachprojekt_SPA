@@ -181,15 +181,15 @@ object ArchitectureValidation {
     def validateEntity(entity: String, entityType: String): Unit = {
       if (entity.endsWith(".jar")) {
         if (!allJars.contains(entity)) {
-          warnings += s"Warning: JAR '$entity' not found in project"
+          warnings += s"JAR '$entity' not found in project"
         }
       } else if (entity.contains(".") && entity.split("\\.").last.matches("^[A-Z].*")) {
         if (!allClasses.contains(entity)) {
-          warnings += s"Warning: Class '$entity' not found in project"
+          warnings += s"Class '$entity' not found in project"
         }
       } else {
         if (!allPackages.contains(entity)) {
-          warnings += s"Warning: Package '$entity' not found in project"
+          warnings += s"Package '$entity' not found in project"
         }
       }
     }
@@ -206,12 +206,12 @@ object ArchitectureValidation {
         case Some(parent) =>
           // Exception should be more specific than parent rule
           if (rule.`type` == parent.`type`) {
-            warnings += s"${indent}Warning: Exception rule has same type as parent rule"
+            warnings += s"${indent}Exception rule has same type as parent rule"
           }
 
           // Exception should be within the scope of parent rule
           if (!isEntitySubsetOf(rule.from, parent.from) || !isEntitySubsetOf(rule.to, parent.to)) {
-            warnings += s"${indent}Warning: Exception rule '${rule.from}' -> '${rule.to}' may not be within parent rule scope ('${parent.from} -> ${parent.to}')"
+            warnings += s"${indent}Exception rule '${rule.from}' -> '${rule.to}' may not be within parent rule scope ('${parent.from} -> ${parent.to}')"
           }
         case None => // Top-level rule, no parent validation needed
       }
@@ -224,7 +224,7 @@ object ArchitectureValidation {
 
     // Validate default rule
     if (spec.defaultRule != "ALLOWED" && spec.defaultRule != "FORBIDDEN") {
-      warnings += s"Warning: Invalid defaultRule '${spec.defaultRule}'. Should be 'ALLOWED' or 'FORBIDDEN'"
+      warnings += s"Invalid defaultRule '${spec.defaultRule}'. Should be 'ALLOWED' or 'FORBIDDEN'"
     }
 
     // Validate all rules
