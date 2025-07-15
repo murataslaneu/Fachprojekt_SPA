@@ -1,76 +1,74 @@
 {
-    "defaultRule": "ALLOWED",
-    "rules": [
+  "defaultRule": "ALLOWED",
+  "rules": [
+    {
+      "from": "ExampleMain.jar",
+      "to": "ExampleDBAdapter.jar",
+      "type": "FORBIDDEN",
+      "except": [
         {
-            "from": "ExampleMain.jar",
-            "to": "ExampleDBAdapter.jar",
-            "type": "FORBIDDEN",
-            "except": [
-                {
-                    "from": "com.example.main",
-                    "to": "com.example.db.DBConnection",
-                    "type": "ALLOWED"
-                },
-                {
-                    "from": "com.example.main",
-                    "to": "com.example.db.DBTaskRepository",
-                    "type": "ALLOWED"
-                },
-                {
-                    "from": "com.example.main",
-                    "to": "com.example.db.QueryBuilder",
-                    "type": "ALLOWED"
-                },
-                {
-                    "from": "com.example.main",
-                    "to": "com.example.db.adapters.PersistentTask",
-                    "type": "ALLOWED"
-                }
-            ]
+          "from": "com.example.main",
+          "to": "com.example.db.DBConnection",
+          "type": "ALLOWED"
         },
         {
-            "from": "com.example.main.TaskFactory",
-            "to": "com.example.db.adapters",
-            "type": "FORBIDDEN"
+          "from": "com.example.main",
+          "to": "com.example.db.DBTaskRepository",
+          "type": "ALLOWED"
         },
         {
-            "from": "com.example.main.impl.DefaultTask",
-            "to": "com.example.helper.api.Retryable",
-            "type": "FORBIDDEN"
-        },
-
-        {
-            "from": "ExampleHelper.jar",
-            "to": "ExampleDBAdapter.jar",
-            "type": "FORBIDDEN"
+          "from": "com.example.main",
+          "to": "com.example.db.QueryBuilder",
+          "type": "ALLOWED"
         },
         {
-            "from": "com.example.helper",
-            "to": "ExampleDBAdapter.jar",
-            "type": "FORBIDDEN"
-        },
-
-        {
-            "from": "com.example.db",
-            "to": "com.example.helper.Logger",
-            "type": "FORBIDDEN",
-            "except": [
-                {
-                    "from": "com.example.db.utils.DBLogger",
-                    "to": "com.example.helper.Logger",
-                    "type": "ALLOWED"
-                }
-            ]
-        },
-        {
-            "from": "com.example.db.InMemoryDB",
-            "to": "com.example.helper",
-            "type": "FORBIDDEN"
-        },
-        {
-            "from": "com.example.db.adapters.PersistentTask",
-            "to": "com.example.helper.api.Retryable",
-            "type": "FORBIDDEN"
+          "from": "com.example.main",
+          "to": "com.example.db.adapters.PersistentTask",
+          "type": "ALLOWED"
         }
-    ]
+      ]
+    },
+    {
+      "from": "com.example.main.TaskFactory",
+      "to": "com.example.db.adapters",
+      "type": "FORBIDDEN"
+    },
+    {
+      "from": "com.example.main.impl.DefaultTask",
+      "to": "com.example.helper.api.Retryable",
+      "type": "FORBIDDEN"
+    },
+    {
+      "from": "ExampleHelper.jar",
+      "to": "ExampleDBAdapter.jar",
+      "type": "FORBIDDEN"
+    },
+    {
+      "from": "com.example.helper",
+      "to": "ExampleDBAdapter.jar",
+      "type": "FORBIDDEN"
+    },
+    {
+      "from": "com.example.db",
+      "to": "com.example.helper.Logger",
+      "type": "FORBIDDEN",
+      "except": [
+        {
+          "from": "com.example.db.utils.DBLogger",
+          "to": "com.example.helper.Logger",
+          "type": "ALLOWED"
+        }
+      ]
+    },
+    {
+      "from": "com.example.db.InMemoryDB",
+      "to": "com.example.helper",
+      "type": "FORBIDDEN"
+    },
+    {
+      "from": "com.example.db.adapters.PersistentTask",
+      "to": "com.example.helper.api.Retryable",
+      "type": "FORBIDDEN"
+    }
+  ]
 }
