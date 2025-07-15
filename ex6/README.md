@@ -49,8 +49,6 @@ Analyse ausprobieren kann. Liste von Beispiel-Befehlen (wobei die ersten beiden 
   welches jede Abhängigkeit mindestens einmal enthält)
 - `run -config=tests/allJarsForbidden/exampleConfig.json` (Konfiguration,
   wo sämtliche Abhängigkeiten verboten sind.)
-- `run -config=tests/banlist/exampleConfig.json` (Konfiguration, wo grundsätzlich alles
-  erlaubt wird und eine Abhängigkeit verboten wird. *Keine Violations hier erwartet.*)
 - `run -config=tests/deepNestedException/exampleConfig.json` (Konfiguration, die starken
   Gebrauch von der Verschachtelung von Regeln/Ausnahmen macht.)
 - `run -config=tests/ownJarsOnly/exampleConfig.json` (Konfiguration, wo nur Gebrauch selbst

@@ -1,8 +1,8 @@
 {
   "filesAnalyzed" : [ "ground_truth/ExampleMain.jar", "ground_truth/ExampleHelper.jar", "ground_truth/ExampleDBAdapter.jar" ],
   "specificationFile" : "ground_truth/spec.json",
-  "timeFinished" : "2025-07-15T14:59:58.1094179",
-  "totalRuntimeMs" : 23,
+  "timeFinished" : "2025-07-15T16:35:36.6569323",
+  "totalRuntimeMs" : 36,
   "checkedOnlyMethodAndFieldAccesses" : true,
   "violations" : [ {
     "fromClass" : "DBTaskRepository",

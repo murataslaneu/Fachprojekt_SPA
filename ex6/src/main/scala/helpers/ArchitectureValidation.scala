@@ -155,7 +155,6 @@ object ArchitectureValidation {
     // Get all available entities from the project
     val allClasses = project.allClassFiles.map(_.thisType.toJava).toSet
     val allPackages = project.allClassFiles.map(_.thisType.packageName.replace('/', '.')).toSet
-    println(allPackages)
     val allJars = project.allClassFiles.map(cf => getJarName(cf, project)).toSet
 
     // Maybe useful to improve warnings regarding "Exception rule ... may not be within parent rule scope ...".
