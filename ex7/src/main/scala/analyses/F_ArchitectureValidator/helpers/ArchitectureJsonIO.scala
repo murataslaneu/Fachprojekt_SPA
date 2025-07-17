@@ -1,6 +1,6 @@
 package analyses.F_ArchitectureValidator.helpers
 
-import data.{ArchitectureConfig, ArchitectureReport, ArchitectureSpec}
+import analyses.F_ArchitectureValidator.data.{ArchitectureConfig, ArchitectureReport, ArchitectureSpec}
 import play.api.libs.json._
 
 import java.io.{File, PrintWriter}

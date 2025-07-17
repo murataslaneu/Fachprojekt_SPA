@@ -3,7 +3,7 @@ package analyses.B_CriticalMethodsDetector
 import misc._
 import analysis.CriticalMethodsAnalysis
 import com.typesafe.config.{Config, ConfigFactory}
-import data.SelectedMethodsOfClass
+import data.{SelectedMethodsOfClass, IgnoredCall}
 import org.opalj.br.analyses.{Analysis, AnalysisApplication, BasicReport, ProgressManagement, Project, ReportableAnalysisResult}
 import org.opalj.log.LogContext
 import org.opalj.tac.cg.{CHACallGraphKey, CTACallGraphKey, CallGraphKey, RTACallGraphKey, XTACallGraphKey}
@@ -49,7 +49,7 @@ object CriticalMethodsDetector extends Analysis[URL, BasicReport] with AnalysisA
   private var customEntryPoints: ListBuffer[SelectedMethodsOfClass] = ListBuffer()
 
   /** Used to suppress warnings during analysis */
-  private var suppressedCalls: ListBuffer[SuppressedCall] = ListBuffer()
+  private var suppressedCalls: ListBuffer[IgnoredCall] = ListBuffer()
 
   /** Flag set during analysis to indicate if at least one found method call has been suppressed. */
   private var suppressedAtLeastOneCall: Boolean = false

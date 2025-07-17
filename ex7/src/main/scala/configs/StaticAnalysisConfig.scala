@@ -1,5 +1,7 @@
 package configs
 
+import java.io.File
+
 /**
  * The main config for this application.
  *
@@ -8,8 +10,8 @@ package configs
  */
 case class StaticAnalysisConfig
 (
-  projectJars: List[String],
-  libraryJars: List[String],
+  projectJars: Array[File],
+  libraryJars: Array[File],
   resultsOutputPath: String,
   godClassDetector: GodClassDetectorConfig,
   criticalMethodsDetector: CriticalMethodsDetectorConfig,

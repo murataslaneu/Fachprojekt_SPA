@@ -1,6 +1,6 @@
 package analyses.B_CriticalMethodsDetector.misc
 
-import data.SelectedMethodsOfClass
+import data.{IgnoredCall, SelectedMethodsOfClass}
 
 import java.io.File
 import scala.collection.mutable.ListBuffer
@@ -115,8 +115,8 @@ object FileIO {
    * @param filePath The path to the suppression configuration file.
    * @return A list of SuppressedCall instances representing suppressed call pairs.
    */
-  def readSuppressCallsFile(filePath: String): ListBuffer[SuppressedCall] = {
-    val suppressedCalls = ListBuffer[SuppressedCall]()
+  def readSuppressCallsFile(filePath: String): ListBuffer[IgnoredCall] = {
+    val suppressedCalls = ListBuffer[IgnoredCall]()
 
     // Read the file line by line
     val source = Source.fromFile(filePath)
@@ -138,7 +138,7 @@ object FileIO {
 
               // Add the parsed suppressed call to the list
               suppressedCalls.addOne(
-                SuppressedCall(
+                IgnoredCall(
                   callerClass = callerParts(0).strip(),
                   callerMethod = callerParts(1).strip(),
                   targetClass = targetParts(0).strip(),

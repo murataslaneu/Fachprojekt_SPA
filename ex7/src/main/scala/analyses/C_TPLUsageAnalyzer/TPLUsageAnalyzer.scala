@@ -198,11 +198,6 @@ object TPLUsageAnalyzer extends Analysis[URL, BasicReport] with AnalysisApplicat
     analysisResults.append(s"Analysis on call graph: $analysisTime seconds\n")
     analysisResults.append(s"Run time of entire program: $programTime seconds\n")
 
-    // If visual output is requested, launch the TPLUsageVisualizer after analysis is complete
-    if (visual) {
-      visualization.TPLUsageVisualizer.showChart(finalResult)
-    }
-
     BasicReport(analysisResults.toString)
   }
 

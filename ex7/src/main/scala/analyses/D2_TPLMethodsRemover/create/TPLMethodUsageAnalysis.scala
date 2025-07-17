@@ -1,6 +1,6 @@
 package analyses.D2_TPLMethodsRemover.create
 
-import create.data.AnalysisConfig
+import analyses.D2_TPLMethodsRemover.create.data.AnalysisConfig
 import org.opalj.br.analyses.Project
 import org.opalj.br.instructions.{ACONST_NULL, ARETURN, DCONST_0, DRETURN, FCONST_0, FRETURN, ICONST_0, IRETURN, Instruction, LCONST_0, LRETURN, RETURN}
 import org.opalj.br.{BooleanType, ByteType, CharType, ClassFile, DoubleType, FloatType, IntegerType, LongType, Method, NoExceptionHandlers, ShortType, Type, VoidType}

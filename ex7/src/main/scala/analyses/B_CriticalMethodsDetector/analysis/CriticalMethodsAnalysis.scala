@@ -1,6 +1,6 @@
 package analyses.B_CriticalMethodsDetector.analysis
 
-import misc.{SelectedMethodsOfClass, SuppressedCall}
+import data.{SelectedMethodsOfClass, IgnoredCall}
 import org.opalj.br.DeclaredMethod
 import org.opalj.br.fpcf.properties.Context
 import org.opalj.tac.cg.CallGraph
@@ -23,7 +23,7 @@ object CriticalMethodsAnalysis {
    *         found method call has been suppressed.
    */
   def analyze(callGraph: CallGraph, criticalMethods: List[SelectedMethodsOfClass],
-              suppressedCalls: List[SuppressedCall] = List()): (List[String], Boolean) = {
+              suppressedCalls: List[IgnoredCall] = List()): (List[String], Boolean) = {
 
     var suppressedACall: Boolean = false
     val warnings = ListBuffer[String]()

@@ -1,0 +1,50 @@
+{
+  "projectJars" : [ ],
+  "libraryJars" : [ ],
+  "resultsOutputPath" : "analysis",
+  "godClassDetector" : {
+    "execute" : false,
+    "wmcThresh" : "DEFAULT",
+    "tccThresh" : "DEFAULT",
+    "atfdThresh" : "DEFAULT",
+    "nofThresh" : "DEFAULT"
+  },
+  "criticalMethodsDetector" : {
+    "execute" : false,
+    "criticalMethods" : "DEFAULT",
+    "ignore" : "DEFAULT",
+    "callGraphAlgorithm" : "DEFAULT",
+    "entryPointsFinder" : "DEFAULT",
+    "customEntryPoints" : "DEFAULT"
+  },
+  "tplUsageAnalyzer" : {
+    "execute" : false,
+    "countAllMethods" : "DEFAULT",
+    "callGraphAlgorithm" : "DEFAULT",
+    "entryPointsFinder" : "DEFAULT",
+    "customEntryPoints" : "DEFAULT"
+  },
+  "criticalMethodsRemover" : {
+    "execute" : false,
+    "criticalMethods" : "DEFAULT",
+    "ignore" : "DEFAULT"
+  },
+  "tplMethodsRemover" : {
+    "execute" : false,
+    "tplJar" : "DEFAULT",
+    "includeNonPublicMethods" : "DEFAULT",
+    "callGraphAlgorithm" : "DEFAULT",
+    "entryPointsFinder" : "DEFAULT",
+    "customEntryPoints" : "DEFAULT"
+  },
+  "deadCodeDetector" : {
+    "execute" : false,
+    "completelyLoadLibraries" : "DEFAULT"
+  },
+  "architectureValidator" : {
+    "execute" : false,
+    "onlyMethodAndFieldAccesses" : "DEFAULT",
+    "defaultRule" : "DEFAULT",
+    "rules" : "DEFAULT"
+  }
+}

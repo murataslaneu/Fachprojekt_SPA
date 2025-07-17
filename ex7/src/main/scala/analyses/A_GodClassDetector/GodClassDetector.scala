@@ -1,11 +1,12 @@
 package analyses.A_GodClassDetector
 
-import configs.GodClassDetectorConfig
+import analyses.SubAnalysis
+import configs.StaticAnalysisConfig
 import org.opalj.br.ClassFile
-import org.opalj.br.analyses.{Analysis, AnalysisApplication, BasicReport, ProgressManagement, Project, ReportableAnalysisResult}
+import org.opalj.br.analyses.BasicReport
 import org.opalj.br.instructions._
+import util.ProjectInitializer
 
-import java.net.URL
 import scala.collection.mutable
 
 /**
@@ -16,20 +17,20 @@ import scala.collection.mutable
  * - Access to Foreign Data (ATFD): Number of accesses to fields from other classes
  * - Number of Fields (NOF): Number of fields in the class
  */
-class GodClassDetector {
+class GodClassDetector extends SubAnalysis {
 
   // Title of this Analysis
   def title: String = "God Class Detector"
 
   // Configurable thresholds
   /** Weighted Methods per Class threshold */
-  private var wmcThreshold: Int = 100
+  private var wmcThreshold: Int = -1
   /** Tight Class Cohesion threshold (lower values indicate potential God Class) */
-  private var tccThreshold: Double = 0.33
+  private var tccThreshold: Double = -1
   /** Access to Foreign Data threshold */
-  private var atfdThreshold: Int = 8
+  private var atfdThreshold: Int = -1
   /** Number of Fields threshold */
-  private var nofThreshold: Int = 30
+  private var nofThreshold: Int = -1
 
   // Results storage
   /** The total amount of god classes found after analysis */
@@ -38,7 +39,12 @@ class GodClassDetector {
   private val godClassDetails = new mutable.StringBuilder()
 
 
-  def analyze(config: GodClassDetectorConfig): Unit = {
+  override def executeAnalysis(config: StaticAnalysisConfig): Unit = {
+    wmcThreshold = config.godClassDetector.wmcThresh
+    tccThreshold = config.godClassDetector.tccThresh
+    atfdThreshold = config.godClassDetector.atfdThresh
+    nofThreshold = config.godClassDetector.nofThresh
+
     println()
     println(s"Looking for God Classes with thresholds:")
     println(s"- WMC (method count): $wmcThreshold")
@@ -47,6 +53,8 @@ class GodClassDetector {
     println(s"- NOF (field count): $nofThreshold")
     println("--------------------------------------------------")
 
+    println("Initializing project...")
+    val project = ProjectInitializer.setupProject(cpFiles = config.projectJars, libcpFiles = config.libraryJars)
     val allClasses = project.allProjectClassFiles
     godClassCount = 0
     godClassDetails.clear()
@@ -66,44 +74,44 @@ class GodClassDetector {
   }
 
 
-  override def checkAnalysisSpecificParameters(parameters: Seq[String]): Iterable[String] = {
-    def getValue(arg: String): String = arg.substring(arg.indexOf("=") + 1)
-    if (parameters.isEmpty) {
-      return Nil
-    }
-    val issues: mutable.ListBuffer[String] = mutable.ListBuffer()
-    parameters.foreach {
-      case arg if arg.startsWith("-wmc=")  => getValue(arg).toIntOption match {
-        case Some(value) if value >= 0 => wmcThreshold = value
-        case Some(value) => issues += s"-wmc: Value must be non-negative, not $value"
-        case None => issues += s"-wmc: Value must be (non-negative) integer, not ${getValue(arg)}"
-      }
-      case arg if arg.startsWith("-tcc=")  => getValue(arg).toDoubleOption match {
-        case Some(value) if value >= 0 && value <= 1 => tccThreshold = value
-        case Some(value) => issues += s"-tcc: Value must be within range [0,1], not $value"
-        case None => issues += s"-tcc: Value must be decimal in range [0,1], not ${getValue(arg)}"
-      }
-      case arg if arg.startsWith("-atfd=") => getValue(arg).toIntOption match {
-        case Some(value) if value >= 0 => atfdThreshold = value
-        case Some(value) => issues += s"-atfd: Value must be non-negative, not $value"
-        case None => issues += s"-atfc: Value must be (non-negative) integer, not ${getValue(arg)}"
-      }
-      case arg if arg.startsWith("-nof=")  => getValue(arg).toIntOption match {
-        case Some(value) if value >= 0 => nofThreshold = value
-        case Some(value) => issues += s"-nof: Value must be non-negative, not $value"
-        case None => issues += s"-nof: Value must be (non-negative) integer, not ${getValue(arg)}"
-      }
-      case unknown => issues += s"unknown parameter: $unknown"
-    }
-    issues
-  }
+//  override def checkAnalysisSpecificParameters(parameters: Seq[String]): Iterable[String] = {
+//    def getValue(arg: String): String = arg.substring(arg.indexOf("=") + 1)
+//    if (parameters.isEmpty) {
+//      return Nil
+//    }
+//    val issues: mutable.ListBuffer[String] = mutable.ListBuffer()
+//    parameters.foreach {
+//      case arg if arg.startsWith("-wmc=")  => getValue(arg).toIntOption match {
+//        case Some(value) if value >= 0 => wmcThreshold = value
+//        case Some(value) => issues += s"-wmc: Value must be non-negative, not $value"
+//        case None => issues += s"-wmc: Value must be (non-negative) integer, not ${getValue(arg)}"
+//      }
+//      case arg if arg.startsWith("-tcc=")  => getValue(arg).toDoubleOption match {
+//        case Some(value) if value >= 0 && value <= 1 => tccThreshold = value
+//        case Some(value) => issues += s"-tcc: Value must be within range [0,1], not $value"
+//        case None => issues += s"-tcc: Value must be decimal in range [0,1], not ${getValue(arg)}"
+//      }
+//      case arg if arg.startsWith("-atfd=") => getValue(arg).toIntOption match {
+//        case Some(value) if value >= 0 => atfdThreshold = value
+//        case Some(value) => issues += s"-atfd: Value must be non-negative, not $value"
+//        case None => issues += s"-atfc: Value must be (non-negative) integer, not ${getValue(arg)}"
+//      }
+//      case arg if arg.startsWith("-nof=")  => getValue(arg).toIntOption match {
+//        case Some(value) if value >= 0 => nofThreshold = value
+//        case Some(value) => issues += s"-nof: Value must be non-negative, not $value"
+//        case None => issues += s"-nof: Value must be (non-negative) integer, not ${getValue(arg)}"
+//      }
+//      case unknown => issues += s"unknown parameter: $unknown"
+//    }
+//    issues
+//  }
 
 
-  override def analysisSpecificParametersDescription: String = super.analysisSpecificParametersDescription +
-    s"""[-wmc=<Integer> (Sets threshold for WMC (Weighted Methods per Class), default $wmcThreshold)]
-       |[-tcc=<Decimal in range [0,1]> (Sets threshold for TCC (Tight Class Cohesion), default $tccThreshold)]
-       |[-atfd=<Integer> (Sets threshold for ATFD (Access to Foreign Data), default $atfdThreshold)]
-       |[-nof=<Integer> (Sets threshold for NOF (Number of Fields), default $nofThreshold)]""".stripMargin
+//  override def analysisSpecificParametersDescription: String = super.analysisSpecificParametersDescription +
+//    s"""[-wmc=<Integer> (Sets threshold for WMC (Weighted Methods per Class), default $wmcThreshold)]
+//       |[-tcc=<Decimal in range [0,1]> (Sets threshold for TCC (Tight Class Cohesion), default $tccThreshold)]
+//       |[-atfd=<Integer> (Sets threshold for ATFD (Access to Foreign Data), default $atfdThreshold)]
+//       |[-nof=<Integer> (Sets threshold for NOF (Number of Fields), default $nofThreshold)]""".stripMargin
 
 
   /**

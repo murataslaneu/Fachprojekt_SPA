@@ -1,0 +1,24 @@
+<configuration>
+    <property name="LOG_DIR" value="./analysis"/>
+    <conversionRule conversionWord="clrmsg" class="util.ColoredLevelConverter"/>
+
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%clrmsg%n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="FILE" class="ch.qos.logback.core.FileAppender">
+        <file>${LOG_DIR}/analysis.log</file>
+        <append>false</append>
+        <encoder>
+            <pattern>[%d{YYYY-MM-dd HH:mm:ss.SSS}] %-5level [%logger{30}] %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="CONSOLE" />
+        <appender-ref ref="FILE" />
+    </root>
+
+</configuration>

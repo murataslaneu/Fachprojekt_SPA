@@ -1,6 +1,6 @@
 package analyses.D2_TPLMethodsRemover.create
 
-import create.data.{AnalysisConfig, SelectedMethodsOfClass}
+import analyses.D2_TPLMethodsRemover.create.data.{AnalysisConfig, SelectedMethodsOfClass}
 import org.opalj.ba.toDA
 import org.opalj.bc.Assembler
 import org.opalj.br.ClassFile

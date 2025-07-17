@@ -1,7 +1,7 @@
 package analyses.F_ArchitectureValidator.helpers
 
-import data.AccessType._
-import data._
+import analyses.F_ArchitectureValidator.data.AccessType._
+import analyses.F_ArchitectureValidator.data._
 import org.opalj.br.analyses.Project
 import org.opalj.br.instructions._
 import org.opalj.br.{ClassFile, ObjectType, ReferenceType}

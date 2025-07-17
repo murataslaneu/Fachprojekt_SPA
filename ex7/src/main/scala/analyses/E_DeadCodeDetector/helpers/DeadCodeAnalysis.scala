@@ -1,6 +1,6 @@
 package analyses.E_DeadCodeDetector.helpers
 
-import data.{AnalysisConfig, DeadCodeReport, DeadInstruction, MethodWithDeadCode}
+import analyses.E_DeadCodeDetector.data.{AnalysisConfig, DeadCodeReport, DeadInstruction, MethodWithDeadCode}
 import org.opalj.ai.{AIResult, BaseAI}
 import org.opalj.ai.common.DomainRegistry
 import org.opalj.br.analyses.Project

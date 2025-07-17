@@ -1,6 +1,6 @@
 package analyses.E_DeadCodeDetector.helpers
 
-import data.{AnalysisConfig, DeadCodeReport}
+import analyses.E_DeadCodeDetector.data.{AnalysisConfig, DeadCodeReport}
 import play.api.libs.json._
 
 import java.io.{File, PrintWriter}

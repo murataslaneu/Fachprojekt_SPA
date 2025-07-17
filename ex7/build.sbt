@@ -12,10 +12,15 @@ lazy val root = (project in file("."))
 dependencyOverrides += "org.scala-lang.modules" %% "scala-xml" % "1.3.0"
 
 libraryDependencies ++= Seq(
+  // OPAL for static analysis
   "de.opal-project" % "framework_2.13" % "5.0.0",
-  "org.scalatest" %% "scalatest" % "3.2.19" % "test",
+  // For interacting with json files
   "com.typesafe.play" %% "play-json" % "2.10.7",
-  "org.scalatest" %% "scalatest" % "3.2.19" % "test"
+  // For testing
+  "org.scalatest" %% "scalatest" % "3.2.19" % "test",
+  // For logging
+  "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5",
+  "ch.qos.logback" % "logback-classic" % "1.5.18"
 )
 
 // Parallel execution is not possible as multiple tests are accessing the global variables
