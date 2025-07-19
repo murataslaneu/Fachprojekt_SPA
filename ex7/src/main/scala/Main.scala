@@ -28,6 +28,7 @@ object Main {
 
   def main(args: Array[String]): Unit = {
     /* Checking arguments, possibly exit depending on argument(s) and current state */
+    val jsonIO = new JsonIO
 
     // Don't allow more than one argument
     if (args.length > 1) {
@@ -50,7 +51,7 @@ object Main {
           s"If you want to overwrite the file, you must delete the file before execution of this program. ${Console.RESET}")
         return
       }
-      JsonIO.writeDefaultJson()
+      jsonIO.writeDefaultJson()
       println(s"${Console.BLUE}Wrote default json config at $DEFAULT_INPUT_JSON_PATH.${Console.RESET}")
       println("Exiting...")
       return
@@ -58,7 +59,7 @@ object Main {
     // No arguments given and default config not present
     if (args.isEmpty && !new File(DEFAULT_INPUT_JSON_PATH).exists()) {
       println(s"${Console.YELLOW}No arguments given and default json does not exist, execute -initializeConfig...${Console.RESET}")
-      JsonIO.writeDefaultJson()
+      jsonIO.writeDefaultJson()
       println(s"${Console.BLUE}Wrote default json config at $DEFAULT_INPUT_JSON_PATH.${Console.RESET}")
       println("Exiting...")
       return
@@ -72,13 +73,18 @@ object Main {
       if (relevantArg.isDefined) relevantArg.get.substring(8)
       else DEFAULT_INPUT_JSON_PATH
     }
-    val outputPath = JsonIO.readAnalysisConfigInit(inputJsonPath)
-    System.setProperty("LOG_DIR", outputPath._1)
+    // Read json and retrieve output path
+    val (outputPath, json) = jsonIO.readAnalysisConfigInit(inputJsonPath)
+    System.setProperty("LOG_DIR", outputPath)
 
-
+    // Setup logger
     val logger = Logger("main")
-    logger.info("Test")
-    logger.warn("Test2")
+    logger.info(s"Writing log to console and in file $outputPath/analysis.log")
+    logger.info(s"Reading config from $inputJsonPath...")
+
+    // Retrieve config from json file
+    val config = jsonIO.readStaticAnalysisConfig(json, outputPath)
+    logger.info(s"Finished reading config.")
   }
 }
 

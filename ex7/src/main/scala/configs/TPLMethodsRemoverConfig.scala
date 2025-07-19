@@ -1,7 +1,6 @@
 package configs
 
 import data.SelectedMethodsOfClass
-import org.opalj.tac.cg.CallGraphKey
 
 /**
  * Analysis 4b: Third party library methods remover (ex4, part 2), Config
@@ -10,7 +9,8 @@ import org.opalj.tac.cg.CallGraphKey
  * @param tplJar The library jar that should be used to create a dummy that only contains the used methods.
  * @param includeNonPublicMethods Whether to only include public methods (`false`) or also non-public methods (e.g.
  *                                private methods that get called indirectly) (`true`).
- * @param callGraphAlgorithm The call graph algorithm to use for this analysis.
+ * @param callGraphAlgorithmName The call graph algorithm to use for this analysis.
+ *                               (Available: "CHA", "RTA", "XTA", "CTA", "1-1-CFA")
  * @param entryPointsFinder What entry points finder to use for this analysis. Available:
  *                          - "custom": Use only custom entry points
  *                          - "application": All main methods inside the project
@@ -25,8 +25,12 @@ case class TPLMethodsRemoverConfig
 (
   override val execute: Boolean,
   tplJar: String,
-  includeNonPublicMethods: Boolean = true,
-  callGraphAlgorithm: CallGraphKey,
+  includeNonPublicMethods: Boolean,
+  callGraphAlgorithmName: String,
   entryPointsFinder: String,
   customEntryPoints: List[SelectedMethodsOfClass]
 ) extends SubAnalysisConfig()
+
+object TPLMethodsRemoverConfig {
+  val DEFAULT_INCLUDE_PUBLIC_METHODS: Boolean = true
+}

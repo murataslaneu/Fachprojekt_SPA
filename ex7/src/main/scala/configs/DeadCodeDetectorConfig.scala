@@ -9,5 +9,9 @@ package configs
 case class DeadCodeDetectorConfig
 (
   override val execute: Boolean,
-  completelyLoadLibraries: Boolean = true
+  completelyLoadLibraries: Boolean
 ) extends SubAnalysisConfig()
+
+object DeadCodeDetectorConfig {
+  val DEFAULT_COMPLETELY_LOAD_LIBRARIES: Boolean = true
+}

@@ -13,14 +13,14 @@
     "execute" : false,
     "criticalMethods" : "DEFAULT",
     "ignore" : "DEFAULT",
-    "callGraphAlgorithm" : "DEFAULT",
+    "callGraphAlgorithmName" : "DEFAULT",
     "entryPointsFinder" : "DEFAULT",
     "customEntryPoints" : "DEFAULT"
   },
   "tplUsageAnalyzer" : {
     "execute" : false,
     "countAllMethods" : "DEFAULT",
-    "callGraphAlgorithm" : "DEFAULT",
+    "callGraphAlgorithmName" : "DEFAULT",
     "entryPointsFinder" : "DEFAULT",
     "customEntryPoints" : "DEFAULT"
   },
@@ -33,7 +33,7 @@
     "execute" : false,
     "tplJar" : "DEFAULT",
     "includeNonPublicMethods" : "DEFAULT",
-    "callGraphAlgorithm" : "DEFAULT",
+    "callGraphAlgorithmName" : "DEFAULT",
     "entryPointsFinder" : "DEFAULT",
     "customEntryPoints" : "DEFAULT"
   },

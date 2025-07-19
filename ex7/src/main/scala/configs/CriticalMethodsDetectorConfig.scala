@@ -1,7 +1,7 @@
 package configs
 
 import data.{IgnoredCall, SelectedMethodsOfClass}
-import org.opalj.tac.cg.{CallGraphKey, RTACallGraphKey}
+import org.opalj.tac.cg.CallGraphKey
 
 /**
  * Analysis 2: Critical methods detector (ex2), Config
@@ -10,7 +10,8 @@ import org.opalj.tac.cg.{CallGraphKey, RTACallGraphKey}
  * @param criticalMethods List of all methods that should be treated as critical. Methods are grouped per class.
  * @param ignore List of all calls of (potentially) critical methods that should be ignored. Each list item specifies
  *               a (possibly critical) method of a class that is allowed to be called inside a method of another class.
- * @param callGraphAlgorithm The call graph algorithm to use for this analysis.
+ * @param callGraphAlgorithmName The name of the call graph algorithm to use for this analysis.
+ *                               (Available: "CHA", "RTA", "XTA", "CTA", "1-1-CFA")
  * @param entryPointsFinder What entry points finder to use for this analysis. Available:
  *                          - "custom": Use only custom entry points
  *                          - "application": All main methods inside the project
@@ -24,12 +25,19 @@ import org.opalj.tac.cg.{CallGraphKey, RTACallGraphKey}
 case class CriticalMethodsDetectorConfig
 (
   override val execute: Boolean,
-  criticalMethods: List[SelectedMethodsOfClass] = List(
-    SelectedMethodsOfClass("java.lang.System", List("getSecurityManager", "setSecurityManager")
-    )
-  ),
-  ignore: List[IgnoredCall] = List.empty,
-  callGraphAlgorithm: CallGraphKey = RTACallGraphKey,
-  entryPointsFinder: String = "application",
+  criticalMethods: List[SelectedMethodsOfClass],
+  ignore: List[IgnoredCall],
+  callGraphAlgorithmName: String,
+  entryPointsFinder: String,
   customEntryPoints: List[SelectedMethodsOfClass]
 ) extends SubAnalysisConfig()
+
+object CriticalMethodsDetectorConfig {
+  val DEFAULT_CRITICAL_METHODS: List[SelectedMethodsOfClass] = List(
+    SelectedMethodsOfClass("java.lang.System", List("getSecurityManager", "setSecurityManager"))
+  )
+  val DEFAULT_IGNORE: List[IgnoredCall] = List.empty
+  val DEFAULT_CALL_GRAPH_ALGORITHM_NAME: String = "rta"
+  val DEFAULT_ENTRY_POINTS_FINDER: String = "application"
+  val DEFAULT_CUSTOM_ENTRY_POINTS: List[SelectedMethodsOfClass] = List.empty
+}

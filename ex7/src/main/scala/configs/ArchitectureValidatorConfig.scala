@@ -17,7 +17,13 @@ import analyses.F_ArchitectureValidator.data.Rule
 case class ArchitectureValidatorConfig
 (
   override val execute: Boolean,
-  onlyMethodAndFieldAccesses: Boolean = false,
-  defaultRule: String = "ALLOWED",
-  rules: List[Rule] = List.empty
+  onlyMethodAndFieldAccesses: Boolean,
+  defaultRule: String,
+  rules: List[Rule]
 ) extends SubAnalysisConfig()
+
+object ArchitectureValidatorConfig {
+  val DEFAULT_ONLY_METHOD_AND_FIELD_ACCESSES: Boolean = false
+  val DEFAULT_DEFAULT_RULE: String = "ALLOWED"
+  val DEFAULT_RULES: List[Rule] = List.empty
+}

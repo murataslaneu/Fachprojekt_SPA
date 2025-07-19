@@ -1,6 +1,7 @@
 package analyses.A_GodClassDetector
 
 import analyses.SubAnalysis
+import com.typesafe.scalalogging.Logger
 import configs.StaticAnalysisConfig
 import org.opalj.br.ClassFile
 import org.opalj.br.analyses.BasicReport
@@ -19,8 +20,12 @@ import scala.collection.mutable
  */
 class GodClassDetector extends SubAnalysis {
 
+  override val logger: Logger = Logger("GodClassDetector")
+
   // Title of this Analysis
-  def title: String = "God Class Detector"
+  val title: String = "God Class Detector"
+
+  val analysisNumber: String = "1"
 
   // Configurable thresholds
   /** Weighted Methods per Class threshold */

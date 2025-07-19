@@ -12,8 +12,15 @@ package configs
 case class GodClassDetectorConfig
 (
   override val execute: Boolean,
-  wmcThresh: Int = 100,
-  tccThresh: Double = 0.33,
-  atfdThresh: Int = 8,
-  nofThresh: Int = 30
+  wmcThresh: Int,
+  tccThresh: Double,
+  atfdThresh: Int,
+  nofThresh: Int
 ) extends SubAnalysisConfig()
+
+object GodClassDetectorConfig {
+  val DEFAULT_WMC_THRESH: Int = 100
+  val DEFAULT_TCC_THRESH: Double = 0.33
+  val DEFAULT_ATFD_THRESH: Int = 8
+  val DEFAULT_NOF_THRESH: Int = 30
+}
