@@ -543,13 +543,11 @@ class JsonIO {
    *                         actually missing value as a separate string.
    */
   private def handleOptionNotFound(isRequiredOption: Boolean, location: String*): Unit = {
-    val locationString = location.mkString("\"", "\"/\"", "\"")
+    val locationString = location.mkString("\"", "\" \\ \"", "\"")
     if (isRequiredOption) {
       logger.error(s"Could not retrieve option $locationString from the config json.")
-      logger.error(
-        "Tip: Use -initializeConfig to create a default config and use it as a template to create your own config.\n" +
-          "     For more information on how to configure the analyses, look into the README file for this program."
-      )
+      logger.error("Tip: Use -initializeConfig to create a default config and use it as a template to create your own config.")
+      logger.error("     For more information on how to configure the analyses, look into the README file for this program.")
       logger.error("Terminating analysis...")
       System.exit(1)
       // Should be unreachable
@@ -557,10 +555,8 @@ class JsonIO {
     }
     else {
       logger.warn(s"Could not retrieve option $locationString from the config json, ignoring as not required for this configuration.")
-      logger.warn(
-        "Tip: Use -initializeConfig to create a default config and use it as a template to create your own config.\n" +
-          "     For more information on how to configure the analyses, look into the README file for this program."
-      )
+      logger.warn("Tip: Use -initializeConfig to create a default config and use it as a template to create your own config.")
+      logger.warn("     For more information on how to configure the analyses, look into the README file for this program.")
     }
   }
 
@@ -575,7 +571,7 @@ class JsonIO {
    *                         actually missing value as a separate string.
    */
   private def handleOptionValueInvalid(isRequiredOption: Boolean, message: String, location: String*): Unit = {
-    val locationString = location.mkString("\"", "\"/\"", "\"")
+    val locationString = location.mkString("\"", "\" \\ \"", "\"")
     if (isRequiredOption) {
       logger.error(s"$locationString: $message.")
       logger.error("Terminating analysis...")

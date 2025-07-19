@@ -4,7 +4,6 @@ import analyses.SubAnalysis
 import com.typesafe.scalalogging.Logger
 import configs.StaticAnalysisConfig
 import org.opalj.br.ClassFile
-import org.opalj.br.analyses.BasicReport
 import org.opalj.br.instructions._
 import util.ProjectInitializer
 
@@ -18,14 +17,16 @@ import scala.collection.mutable
  * - Access to Foreign Data (ATFD): Number of accesses to fields from other classes
  * - Number of Fields (NOF): Number of fields in the class
  */
-class GodClassDetector extends SubAnalysis {
+class GodClassDetector(override val shouldExecute: Boolean) extends SubAnalysis {
 
+  /** Logger sued inside this sub-analysis */
   override val logger: Logger = Logger("GodClassDetector")
 
-  // Title of this Analysis
-  val title: String = "God Class Detector"
+  /** The name of the sub-analysis */
+  override val analysisName: String = "God Class Detector"
 
-  val analysisNumber: String = "1"
+  /** The number of the sub-analysis */
+  override val analysisNumber: String = "1"
 
   // Configurable thresholds
   /** Weighted Methods per Class threshold */
@@ -46,20 +47,27 @@ class GodClassDetector extends SubAnalysis {
 
   override def executeAnalysis(config: StaticAnalysisConfig): Unit = {
     wmcThreshold = config.godClassDetector.wmcThresh
+    if (wmcThreshold < 0)
+      throw new IllegalArgumentException(s"wmcThresh must be non-negative integer, received $wmcThreshold.")
     tccThreshold = config.godClassDetector.tccThresh
+    if (tccThreshold < 0 || tccThreshold > 1)
+      throw new IllegalArgumentException(s"tccThresh must be decimal number between 0 and 1, received $tccThreshold.")
     atfdThreshold = config.godClassDetector.atfdThresh
+    if (atfdThreshold < 0)
+      throw new IllegalArgumentException(s"atfdThresh must be non-negative integer, received $atfdThreshold.")
     nofThreshold = config.godClassDetector.nofThresh
+    if (nofThreshold < 0)
+      throw new IllegalArgumentException(s"nofThresh must be non-negative integer, received $nofThreshold.")
 
-    println()
-    println(s"Looking for God Classes with thresholds:")
-    println(s"- WMC (method count): $wmcThreshold")
-    println(s"- TCC (cohesion): < $tccThreshold")
-    println(s"- ATFD (foreign data access): > $atfdThreshold")
-    println(s"- NOF (field count): $nofThreshold")
-    println("--------------------------------------------------")
-
-    println("Initializing project...")
-    val project = ProjectInitializer.setupProject(cpFiles = config.projectJars, libcpFiles = config.libraryJars)
+    logger.info(
+      s"""Looking for God Classes with thresholds:
+         |  - WMC (method count) >= $wmcThreshold
+         |  - TCC (cohesion) < $tccThreshold
+         |  - ATFD (foreign data access) > $atfdThreshold
+         |  - NOF (field count) >= $nofThreshold""".stripMargin)
+    logger.info("Initializing OPAL project...")
+    val project = ProjectInitializer.setupProject(cpFiles = config.projectJars, libcpFiles = config.libraryJars, logger = logger)
+    logger.info("Project initialization finished. Starting analysis on project...")
     val allClasses = project.allProjectClassFiles
     godClassCount = 0
     godClassDetails.clear()
@@ -71,53 +79,9 @@ class GodClassDetector extends SubAnalysis {
       }
     }
 
-    println("\n==================== Results ====================")
-    println(s"Analysis completed. Found $godClassCount God Class${if (godClassCount != 1) "es" else ""}.")
-
-    // Return detailed report
-    BasicReport(godClassDetails.toString)
+    logger.info(s"Analysis completed. Found $godClassCount God Class${if (godClassCount != 1) "es" else ""}.")
+    logger.info(s"Results:\n${godClassDetails.toString}")
   }
-
-
-//  override def checkAnalysisSpecificParameters(parameters: Seq[String]): Iterable[String] = {
-//    def getValue(arg: String): String = arg.substring(arg.indexOf("=") + 1)
-//    if (parameters.isEmpty) {
-//      return Nil
-//    }
-//    val issues: mutable.ListBuffer[String] = mutable.ListBuffer()
-//    parameters.foreach {
-//      case arg if arg.startsWith("-wmc=")  => getValue(arg).toIntOption match {
-//        case Some(value) if value >= 0 => wmcThreshold = value
-//        case Some(value) => issues += s"-wmc: Value must be non-negative, not $value"
-//        case None => issues += s"-wmc: Value must be (non-negative) integer, not ${getValue(arg)}"
-//      }
-//      case arg if arg.startsWith("-tcc=")  => getValue(arg).toDoubleOption match {
-//        case Some(value) if value >= 0 && value <= 1 => tccThreshold = value
-//        case Some(value) => issues += s"-tcc: Value must be within range [0,1], not $value"
-//        case None => issues += s"-tcc: Value must be decimal in range [0,1], not ${getValue(arg)}"
-//      }
-//      case arg if arg.startsWith("-atfd=") => getValue(arg).toIntOption match {
-//        case Some(value) if value >= 0 => atfdThreshold = value
-//        case Some(value) => issues += s"-atfd: Value must be non-negative, not $value"
-//        case None => issues += s"-atfc: Value must be (non-negative) integer, not ${getValue(arg)}"
-//      }
-//      case arg if arg.startsWith("-nof=")  => getValue(arg).toIntOption match {
-//        case Some(value) if value >= 0 => nofThreshold = value
-//        case Some(value) => issues += s"-nof: Value must be non-negative, not $value"
-//        case None => issues += s"-nof: Value must be (non-negative) integer, not ${getValue(arg)}"
-//      }
-//      case unknown => issues += s"unknown parameter: $unknown"
-//    }
-//    issues
-//  }
-
-
-//  override def analysisSpecificParametersDescription: String = super.analysisSpecificParametersDescription +
-//    s"""[-wmc=<Integer> (Sets threshold for WMC (Weighted Methods per Class), default $wmcThreshold)]
-//       |[-tcc=<Decimal in range [0,1]> (Sets threshold for TCC (Tight Class Cohesion), default $tccThreshold)]
-//       |[-atfd=<Integer> (Sets threshold for ATFD (Access to Foreign Data), default $atfdThreshold)]
-//       |[-nof=<Integer> (Sets threshold for NOF (Number of Fields), default $nofThreshold)]""".stripMargin
-
 
   /**
    * Analyze a single class to determine if it's a God Class
@@ -143,15 +107,11 @@ class GodClassDetector extends SubAnalysis {
 
       // Build detailed information about this God Class
       godClassDetails.append(s"God Class: ${classFile.thisType.fqn}\n")
-      godClassDetails.append(s"  WMC (methods): $wmc (threshold: $wmcThreshold)\n")
-      godClassDetails.append(s"  NOF (fields): $nof (threshold: $nofThreshold)\n")
-      godClassDetails.append(f"  TCC (cohesion): $tcc%.2f (threshold: < $tccThreshold)\n")
-      godClassDetails.append(s"  ATFD (foreign data): $atfd (threshold: > $atfdThreshold)\n")
-      godClassDetails.append("--------------------------------------------------\n")
-
-      // Also print to console for immediate feedback
-      println(s"Found God Class: ${classFile.thisType.fqn}")
-      println(f"  WMC: $wmc, NOF: $nof, TCC: $tcc%.2f, ATFD: $atfd")
+      godClassDetails.append(s"  - WMC (methods): $wmc (threshold: $wmcThreshold)\n")
+      godClassDetails.append(s"  - NOF (fields): $nof (threshold: $nofThreshold)\n")
+      godClassDetails.append(f"  - TCC (cohesion): $tcc%.2f (threshold: < $tccThreshold)\n")
+      godClassDetails.append(s"  - ATFD (foreign data): $atfd (threshold: > $atfdThreshold)\n")
+      godClassDetails.append("--------------------------------------------------")
     }
   }
 

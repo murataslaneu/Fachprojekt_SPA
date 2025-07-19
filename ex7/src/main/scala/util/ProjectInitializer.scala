@@ -1,6 +1,7 @@
 package util
 
 import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.scalalogging.Logger
 import org.opalj.br.analyses.{Project, SomeProject}
 import org.opalj.br.{ClassFile, reader}
 import org.opalj.br.reader.Java9LibraryFramework
@@ -22,20 +23,21 @@ object ProjectInitializer {
   /**
    * Creates a OPAL project usable for analysis.
    *
-   * @param cpFiles The project class files to analyze.
-   * @param libcpFiles The library class files to analyze.
+   * @param cpFiles                 The project class files to analyze.
+   * @param libcpFiles              The library class files to analyze.
    * @param completelyLoadLibraries Boolean whether the library class files should be loaded completely (`true`) of just
    *                                as interfaces (`false`).
-   * @param configuredConfig The config to use for OPAL. Used e.g. to configure the entry points for a call graph.
+   * @param configuredConfig        The config to use for OPAL. Used e.g. to configure the entry points for a call graph.
    * @return A OPAL project ready for analysis.
    */
   def setupProject(
+                    logger: Logger,
                     cpFiles: Array[File],
                     libcpFiles: Array[File],
                     completelyLoadLibraries: Boolean = false,
                     configuredConfig: Config = ConfigFactory.load
                   ): Project[URL] = {
-    info("creating project", "reading project class files")
+    info("Creating OPAL project", "Reading project class files")
 
     // OPALs class file reader taken from the Project companion object.
     // Does... something with the project and library files.
@@ -47,13 +49,13 @@ object ProjectInitializer {
       reader.readClassFiles(
         cpFiles,
         JavaClassFileReader.ClassFiles,
-        file => info("creating project", "\tfile: " + file)
+        file => info("Creating OPAL project", "    File: " + file)
       )
 
     // Get library class files
     val (libraryClassFiles, exceptions2) = {
       if (libcpFiles.nonEmpty) {
-        info("creating project", "reading library class files")
+        info("Creating OPAL project", "Reading library class files")
         reader.readClassFiles(
           libcpFiles,
           if (completelyLoadLibraries) {
@@ -61,7 +63,7 @@ object ProjectInitializer {
           } else {
             Java9LibraryFramework.ClassFiles
           },
-          file => info("creating project", "\tfile: " + file)
+          file => info("Creating OPAL project", "    file: " + file)
         )
       } else {
         (Iterable.empty[(ClassFile, URL)], List.empty[Throwable])
@@ -78,15 +80,15 @@ object ProjectInitializer {
       )(config = configuredConfig)
 
     // Handle exceptions that were occurring while reading the project and library class files
-    handleParsingExceptions(project, exceptions1 ++ exceptions2)
+    handleParsingExceptions(project, logger, exceptions1 ++ exceptions2)
 
     // Prints out the project statistics via the OPAL logger
-    val statistics =
-      project
-        .statistics.map(kv => "- " + kv._1 + ": " + kv._2)
-        .toList.sorted.reverse
-        .mkString("project statistics:\n\t", "\n\t", "\n")
-    info("project", statistics)(project.logContext)
+    //    val statistics =
+    //      project
+    //        .statistics.map(kv => "- " + kv._1 + ": " + kv._2)
+    //        .toList.sorted.reverse
+    //        .mkString("project statistics:\n\t", "\n\t", "\n")
+    //    info("OPAL project", statistics)(project.logContext)
 
     // Return the created project
     project
@@ -95,12 +97,26 @@ object ProjectInitializer {
   /**
    * Prints out the errors that were occurring during the creation of the project via the OPAL logger.
    */
-  private def handleParsingExceptions(project: SomeProject, exceptions: Iterable[Throwable]): Unit = {
+  private def handleParsingExceptions(project: SomeProject, logger: Logger, exceptions: Iterable[Throwable]): Unit = {
     if (exceptions.isEmpty) return
 
     implicit val logContext: LogContext = project.logContext
     for (exception <- exceptions) {
-      error("creating project", "ignoring invalid class file", exception)
+      error("Creating OPAL project", "Ignoring invalid class file", exception)
+    }
+    if (exceptions.nonEmpty) {
+      logger.warn(s"${exceptions.size} errors occurred while setting up the OPAL project.")
     }
   }
+
+  /**
+   * Retrieves the statistics of a project and turns them into a string.
+   */
+  def projectStatistics(project: Project[_]): String = {
+    project
+      .statistics.map(kv => "- " + kv._1 + ": " + kv._2)
+      .toList.sorted.reverse
+      .mkString("OPAL project statistics:\n    ", "\n    ", "")
+  }
+
 }

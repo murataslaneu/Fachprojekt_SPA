@@ -1,6 +1,8 @@
 <configuration>
     <property name="LOG_DIR" value="./analysis"/>
     <conversionRule conversionWord="clrmsg" class="util.ColoredLevelConverter"/>
+    <!-- Uncomment when debugging logger -->
+    <!-- <statusListener class="ch.qos.logback.core.status.OnConsoleStatusListener" /> -->
 
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>

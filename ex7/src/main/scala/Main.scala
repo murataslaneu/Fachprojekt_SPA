@@ -1,6 +1,10 @@
+import analyses.A_GodClassDetector.GodClassDetector
+import analyses.SubAnalysis
 import com.typesafe.scalalogging.Logger
+import org.opalj.log.{ConsoleOPALLogger, GlobalLogContext, OPALLogger}
+import org.slf4j.MarkerFactory
 import util.JsonIO.DEFAULT_INPUT_JSON_PATH
-import util.JsonIO
+import util.{JsonIO, ProjectInitializer}
 
 import java.io.File
 
@@ -29,6 +33,10 @@ object Main {
   def main(args: Array[String]): Unit = {
     /* Checking arguments, possibly exit depending on argument(s) and current state */
     val jsonIO = new JsonIO
+
+    // Avoid OPAL spamming into the console and therefore hiding the analysis log messages.
+    // Only show errors from OPAL.
+    OPALLogger.updateLogger(GlobalLogContext, new ConsoleOPALLogger(minLogLevel = org.opalj.log.Error))
 
     // Don't allow more than one argument
     if (args.length > 1) {
@@ -79,12 +87,53 @@ object Main {
 
     // Setup logger
     val logger = Logger("main")
-    logger.info(s"Writing log to console and in file $outputPath/analysis.log")
+    logger.info(s"Writing log to console and in file $outputPath/analysis.log.")
     logger.info(s"Reading config from $inputJsonPath...")
 
     // Retrieve config from json file
     val config = jsonIO.readStaticAnalysisConfig(json, outputPath)
     logger.info(s"Finished reading config.")
+
+    // Print out project statistics to console
+    logger.info(s"Retrieving statistics from OPAL project...")
+    val sampleProject = ProjectInitializer.setupProject(logger, config.projectJars, config.libraryJars)
+    logger.info(ProjectInitializer.projectStatistics(sampleProject))
+
+    // Setup analyses
+    // TODO: Add missing analyses
+    val analyses: List[SubAnalysis] = List(
+      new GodClassDetector(config.godClassDetector.execute)
+    )
+
+    analyses.foreach { subAnalysis =>
+      if (subAnalysis.shouldExecute) {
+        subAnalysis.logger.info(
+          MarkerFactory.getMarker("BLUE"),
+          s"Starting analysis ${subAnalysis.analysisNumber}: ${subAnalysis.analysisName}"
+        )
+        val startTime = System.currentTimeMillis()
+
+        try {
+          subAnalysis.executeAnalysis(config)
+          val endTime = System.currentTimeMillis()
+          val duration = f"${(endTime - startTime) / 1000.0}%.3f".replace(',', '.')
+          subAnalysis.logger.info(
+            MarkerFactory.getMarker("BLUE"),
+            s"Finished analysis ${subAnalysis.analysisNumber} (${subAnalysis.analysisName}) in $duration seconds."
+          )
+        }
+        catch {
+          case e: Exception =>
+            subAnalysis.logger.error(s"Analysis ${subAnalysis.analysisNumber} (${subAnalysis.analysisName}) terminated due to the following error:")
+            subAnalysis.logger.error(s"--> ${e.toString}")
+            val endTime = System.currentTimeMillis()
+            val duration = f"${(endTime - startTime) / 1000.0}%.3f".replace(',', '.')
+            subAnalysis.logger.error(
+              s"Analysis ${subAnalysis.analysisNumber} (${subAnalysis.analysisName}) ran for $duration seconds before termination."
+            )
+        }
+      }
+    }
   }
 }
 

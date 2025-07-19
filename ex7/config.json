@@ -1,9 +1,14 @@
 {
-  "projectJars" : [ ],
-  "libraryJars" : [ ],
+  "projectJars" : [
+    "example/joda-time-2.14.0.jar"
+  ],
+  "libraryJars" : [
+    "example/lib/joda-convert-1.9.2.jar",
+    "example/lib/junit-3.8.2.jar"
+  ],
   "resultsOutputPath" : "analysis",
   "godClassDetector" : {
-    "execute" : false,
+    "execute" : true,
     "wmcThresh" : "DEFAULT",
     "tccThresh" : "DEFAULT",
     "atfdThresh" : "DEFAULT",
