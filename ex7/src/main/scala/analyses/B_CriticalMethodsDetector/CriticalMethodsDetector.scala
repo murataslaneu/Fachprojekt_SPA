@@ -1,185 +1,103 @@
 package analyses.B_CriticalMethodsDetector
 
-import misc._
+import analyses.SubAnalysis
 import analysis.CriticalMethodsAnalysis
-import com.typesafe.config.{Config, ConfigFactory}
-import data.{SelectedMethodsOfClass, IgnoredCall}
-import org.opalj.br.analyses.{Analysis, AnalysisApplication, BasicReport, ProgressManagement, Project, ReportableAnalysisResult}
-import org.opalj.log.LogContext
-import org.opalj.tac.cg.{CHACallGraphKey, CTACallGraphKey, CallGraphKey, RTACallGraphKey, XTACallGraphKey}
+import com.typesafe.scalalogging.Logger
+import configs.StaticAnalysisConfig
+import org.opalj.tac.cg.{CFA_1_1_CallGraphKey, CHACallGraphKey, CTACallGraphKey, RTACallGraphKey, XTACallGraphKey}
+import org.slf4j.MarkerFactory
+import util.{ProjectInitializer, Utils}
 
-import java.io.File
-import java.net.URL
-import scala.collection.mutable.ListBuffer
-import scala.jdk.CollectionConverters.{IterableHasAsJava, MapHasAsJava}
+import scala.util.Random
 
 
 /**
  * Application that looks for possibly critical method calls in a software project regarding security.
  */
-object CriticalMethodsDetector extends Analysis[URL, BasicReport] with AnalysisApplication {
+class CriticalMethodsDetector(override val shouldExecute: Boolean) extends SubAnalysis {
+
+  override val logger: Logger = Logger("CriticalMethodsDetector")
+
+  override val analysisName: String = "Critical Methods Detector"
+
+  override val analysisNumber: String = "2"
 
   /** Results string to print after analysis */
   private val analysisResults = new StringBuilder()
 
-  /**
-   * Flag whether the application entry points (*including* JRE main methods) should be included in the call graph.
-   *
-   * This flag is mutually exclusive to the [[includeApplicationWithoutJREEntryPoints]]
-   */
-  private var includeApplicationEntryPoints: Boolean = false
+  override def executeAnalysis(config: StaticAnalysisConfig): Unit = {
+    val analysisConfig = config.criticalMethodsDetector
+    // Print out configuration
+    val criticalMethodsString = Utils.buildSampleSelectedMethodsString(analysisConfig.criticalMethods, 5, 3)
+    var ignoreClassString = Random.shuffle(analysisConfig.ignore).take(10).map {ignoreCall =>
+      s"${ignoreCall.callerClass}#${ignoreCall.callerMethod} -> ${ignoreCall.targetClass}#${ignoreCall.targetMethod}"
+    }.mkString("\n    - ", "\n    - ", "")
+    val moreIgnoreCalls = if(analysisConfig.ignore.size > 10) s"\n... and ${analysisConfig.ignore.size - 10} more ignores"
+    else ""
+    // Override ignoreClassString if it doesn't contain anything
+    if (analysisConfig.ignore.isEmpty) ignoreClassString = "None"
+    val entryPointsFinder = analysisConfig.entryPointsFinder match {
+      case "custom" => "Only custom entry points"
+      case "application" => "Application (without JRE)"
+      case "applicationwithjre" => "Application with JRE"
+      case "library" => "Library"
+      case invalid => throw new IllegalArgumentException(s"Invalid entry points finder $invalid selected.")
+    }
+    val customEntryPointsString = Utils.buildSampleSelectedMethodsString(analysisConfig.customEntryPoints, 5, 3)
+    logger.info(
+      s"""Configuration:
+         |  - Critical Methods: $criticalMethodsString
+         |  - Ignore calls: $ignoreClassString$moreIgnoreCalls
+         |  - Call graph algorithm: ${analysisConfig.callGraphAlgorithmName.toUpperCase}
+         |  - Entry points finder: $entryPointsFinder
+         |  - Custom entry points: $customEntryPointsString
+         |""".stripMargin
+    )
 
-  /**
-   * Flag whether the application entry points (*excluding* JRE main methods) should be included in the call graph.
-   *
-   * This flag is mutually exclusive to the [[includeApplicationEntryPoints]]
-   */
-  private var includeApplicationWithoutJREEntryPoints: Boolean = false
+    // Set up project
+    logger.info("Initializing OPAL project...")
+    val opalConfig = ProjectInitializer.setupOPALProjectConfig(analysisConfig.entryPointsFinder, analysisConfig.customEntryPoints)
+    val project = ProjectInitializer.setupProject(
+      logger = logger,
+      cpFiles = config.projectJars,
+      libcpFiles = config.libraryJars,
+      completelyLoadLibraries = true,
+      configuredConfig = opalConfig
+    )
 
-  /** Selected algorithm to use. Default: RTA */
-  private var callGraphAlgorithm: CallGraphKey = RTACallGraphKey
-
-  /** Holds the critical methods to look out for, grouped by class */
-  private var criticalMethods: ListBuffer[SelectedMethodsOfClass] = ListBuffer(SelectedMethodsOfClass(
-    "java.lang.System",
-    List("getSecurityManager", "setSecurityManager")
-  ))
-
-  /** Holds the entry points if set by the user. Otherwise, the normal ApplicationWithoutJREEntryPointsFinder is used */
-  private var customEntryPoints: ListBuffer[SelectedMethodsOfClass] = ListBuffer()
-
-  /** Used to suppress warnings during analysis */
-  private var suppressedCalls: ListBuffer[IgnoredCall] = ListBuffer()
-
-  /** Flag set during analysis to indicate if at least one found method call has been suppressed. */
-  private var suppressedAtLeastOneCall: Boolean = false
-
-  override def title: String = "Critical methods detector"
-
-  override def checkAnalysisSpecificParameters(parameters: Seq[String]): Iterable[String] = {
-    /** Internal method to retrieve the value from the given parameter */
-    def getValue(arg: String): String = arg.substring(arg.indexOf("=") + 1).strip()
-
-    if (parameters.isEmpty) {
-      return Nil
+    val callGraphKey = analysisConfig.callGraphAlgorithmName.toUpperCase match {
+      case "CHA" => CHACallGraphKey
+      case "RTA" => RTACallGraphKey
+      case "XTA" => XTACallGraphKey
+      case "CTA" => CTACallGraphKey
+      case "1-1-CFA" => CFA_1_1_CallGraphKey
     }
 
-    val issues: ListBuffer[String] = ListBuffer()
-
-    parameters.foreach { arg: String =>
-      if (arg.startsWith("-include=")) {
-        val path = getValue(arg)
-
-        if (!FileIO.fileReadable(path)) {
-          issues += "-include: Could not read from file, must be a txt file."
-        }
-        else {
-          criticalMethods = FileIO.readIncludeMethodsFile(path)
-        }
-      }
-      else if (arg.startsWith("-entryPoints=")) {
-        val path = getValue(arg)
-        if (!FileIO.fileReadable(path)) {
-          issues += "-entryPoints: Could not read from file, must be a txt file."
-        }
-        else {
-          customEntryPoints = FileIO.readEntryPointsFile(path)
-        }
-      }
-      else if (arg.startsWith("-suppress=")) {
-        val path = getValue(arg)
-
-        if (!FileIO.fileReadable(path)) {
-          issues += "-suppress: Could not read from file, must be a txt file."
-        }
-        else {
-          suppressedCalls = FileIO.readSuppressCallsFile(path)
-        }
-      }
-      else if (arg.equals("-includeApplicationEntries")) {
-        includeApplicationWithoutJREEntryPoints = true
-      }
-      else if (arg.equals("-includeApplicationWithJREEntries")) {
-        includeApplicationEntryPoints = true
-      }
-      else if (arg.startsWith("-alg=")) {
-        val alg = getValue(arg).toLowerCase()
-        callGraphAlgorithm = (alg match {
-          case "cha" => CHACallGraphKey
-          case "rta" => RTACallGraphKey
-          case "xta" => XTACallGraphKey
-          case "cta" => CTACallGraphKey
-          case _ =>
-            issues += s"-alg: Unknown algorithm $alg. Available are: CHA, RTA, XTA, CTA"
-            CHACallGraphKey
-        }): CallGraphKey
-      }
-      else issues += s"unknown parameter: $arg"
-    }
-
-    if (includeApplicationEntryPoints && includeApplicationWithoutJREEntryPoints) {
-      issues += "-includeApplicationEntryPoints and -includeApplicationWithJREEntries are mutually exclusive. " +
-        "Please select at most one of the options."
-    }
-    else if (!includeApplicationEntryPoints && !includeApplicationWithoutJREEntryPoints && customEntryPoints.isEmpty) {
-      // If no configuration for the entry points if given whatsoever, default to application entry points without JRE
-      // (also OPALs default configuration)
-      includeApplicationWithoutJREEntryPoints = true
-    }
-
-    issues
-  }
-
-  override def analysisSpecificParametersDescription: String = super.analysisSpecificParametersDescription +
-    s"""[-include=<FilePath> (Include a text file of methods that the detector should look out for as well. See the readme for more details)]
-       |[-suppress=<FilePath> (Include a text file of specific method calls that should be suppressed from warnings)]
-       |[-entryPoints=<FilePath> (Include a text file of methods that the detector uses as entry points of the program.)]
-       |[-includeApplicationEntries (Flag whether to include the main entry points in the analysis. Default: True if entryPoints option not given, false if entryPoints given)]
-       |[-includeApplicationWithJREEntries (Flag whether to include the main entry points in the analysis, including those from the JRE. Default: False. Mutually exclusive to -includeApplicationEntries.]
-       |[-alg=<algorithm> (The algorithm to generate a call graph. Available are: CHA, RTA, XTA, CTA)]""".stripMargin
-
-  override def setupProject(cpFiles: Iterable[File], libcpFiles: Iterable[File], completelyLoadLibraries: Boolean, configuredConfig: Config)(implicit initialLogContext: LogContext): Project[URL] = {
-    var mainEntryPoints = "org.opalj.br.analyses.cg.ConfigurationEntryPointsFinder"
-    if (includeApplicationWithoutJREEntryPoints) {
-      mainEntryPoints = "org.opalj.br.analyses.cg.ApplicationWithoutJREEntryPointsFinder"
-    }
-    else if (includeApplicationEntryPoints) {
-      mainEntryPoints = "org.opalj.br.analyses.cg.ApplicationEntryPointsFinder"
-    }
-
-    val additionalEntryPoints = customEntryPoints.flatMap { eps =>
-      eps.selectedMethods.map { epMethod =>
-        Map("declaringClass" -> eps.className, "name" -> epMethod).asJava
-      }
-    }.asJava
-
-    val overrides = ConfigFactory.parseMap(Map(
-      "org.opalj.br.analyses.cg.InitialEntryPointsKey.analysis" -> mainEntryPoints,
-      "org.opalj.br.analyses.cg.InitialEntryPointsKey.entryPoints" -> additionalEntryPoints
-    ).asJava)
-    val newConfig = overrides.withFallback(configuredConfig).resolve()
-    super.setupProject(cpFiles, libcpFiles, completelyLoadLibraries, newConfig)
-  }
-
-  override def analyze(project: Project[URL], parameters: Seq[String], initProgressManagement: Int => ProgressManagement): BasicReport = {
-    val callGraph = project.get(callGraphAlgorithm)
-    val tuple = CriticalMethodsAnalysis.analyze(callGraph, criticalMethods.toList, suppressedCalls.toList)
+    logger.info("Project initialization finished. Starting analysis on project...")
+    logger.info(
+      MarkerFactory.getMarker("BLUE"),
+      s"Beginning calculation of the ${analysisConfig.callGraphAlgorithmName.toUpperCase} call graph..."
+    )
+    logger.info(
+      MarkerFactory.getMarker("BLUE"),
+      s"(This might take a while, depending on the call graph algorithm and size of the project and libraries!)"
+    )
+    val callGraph = project.get(callGraphKey)
+    logger.info(s"Finished calculation of the ${analysisConfig.callGraphAlgorithmName.toUpperCase} call graph.")
+    logger.info("Beginning analysis on the call graph...")
+    val tuple = CriticalMethodsAnalysis.analyze(callGraph, analysisConfig.criticalMethods, analysisConfig.ignore)
     val results = tuple._1
-    suppressedAtLeastOneCall = tuple._2
-    analysisResults.append("# ------------------- Analysis Results ------------------- #\n\n")
-
+    val ignoredAtLeastOneCall = tuple._2
     if (results.nonEmpty) {
       results.foreach { result =>
         analysisResults.append(result + "\n")
       }
-      if (suppressedAtLeastOneCall) analysisResults.append("Other method calls have been found but were suppressed.\n")
+      if (ignoredAtLeastOneCall) analysisResults.append("Other method calls have been found but were ignored due to the config.\n")
     } else {
-      analysisResults.append("No warnings :)\n")
-      if (suppressedAtLeastOneCall) analysisResults.append("Method calls have been found but were suppressed.\n")
+      if (ignoredAtLeastOneCall) analysisResults.append("Method calls have been found but were ignored due to the config.\n")
     }
 
-    BasicReport(analysisResults.toString)
+    logger.info(s"Analysis completed. Found ${results.length} critical call${if (results.length != 1) "s" else ""}.")
+    logger.info(s"Results:\n${analysisResults.toString}")
   }
-
-  override val analysis: Analysis[URL, ReportableAnalysisResult] = this
 }

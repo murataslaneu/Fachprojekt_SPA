@@ -269,7 +269,7 @@ class JsonIO {
       expectedTypeDescription = "list of {\"className\": String, \"selectedMethods\": List[String]}",
       isRequiredOption = execute
     )
-    val ignore = readConfigValueWithDefault[List[IgnoredCall]](
+    val ignore = readConfigValueWithDefault[Set[IgnoredCall]](
       subJson = subAnalysisJson,
       field = "ignore",
       parentField = parentField,
@@ -379,7 +379,7 @@ class JsonIO {
       expectedTypeDescription = "list of {\"className\": String, \"selectedMethods\": List[String]}",
       isRequiredOption = execute
     )
-    val ignore = readConfigValueWithDefault[List[IgnoredCall]](
+    val ignore = readConfigValueWithDefault[Set[IgnoredCall]](
       subJson = subAnalysisJson,
       field = "ignore",
       parentField = parentField,

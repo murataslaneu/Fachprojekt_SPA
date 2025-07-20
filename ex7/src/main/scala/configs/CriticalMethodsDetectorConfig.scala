@@ -1,7 +1,6 @@
 package configs
 
 import data.{IgnoredCall, SelectedMethodsOfClass}
-import org.opalj.tac.cg.CallGraphKey
 
 /**
  * Analysis 2: Critical methods detector (ex2), Config
@@ -26,7 +25,7 @@ case class CriticalMethodsDetectorConfig
 (
   override val execute: Boolean,
   criticalMethods: List[SelectedMethodsOfClass],
-  ignore: List[IgnoredCall],
+  ignore: Set[IgnoredCall],
   callGraphAlgorithmName: String,
   entryPointsFinder: String,
   customEntryPoints: List[SelectedMethodsOfClass]
@@ -36,7 +35,7 @@ object CriticalMethodsDetectorConfig {
   val DEFAULT_CRITICAL_METHODS: List[SelectedMethodsOfClass] = List(
     SelectedMethodsOfClass("java.lang.System", List("getSecurityManager", "setSecurityManager"))
   )
-  val DEFAULT_IGNORE: List[IgnoredCall] = List.empty
+  val DEFAULT_IGNORE: Set[IgnoredCall] = Set.empty
   val DEFAULT_CALL_GRAPH_ALGORITHM_NAME: String = "rta"
   val DEFAULT_ENTRY_POINTS_FINDER: String = "application"
   val DEFAULT_CUSTOM_ENTRY_POINTS: List[SelectedMethodsOfClass] = List.empty

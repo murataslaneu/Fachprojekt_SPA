@@ -23,7 +23,7 @@ object CriticalMethodsAnalysis {
    *         found method call has been suppressed.
    */
   def analyze(callGraph: CallGraph, criticalMethods: List[SelectedMethodsOfClass],
-              suppressedCalls: List[IgnoredCall] = List()): (List[String], Boolean) = {
+              suppressedCalls: Set[IgnoredCall] = Set()): (List[String], Boolean) = {
 
     var suppressedACall: Boolean = false
     val warnings = ListBuffer[String]()
@@ -34,7 +34,7 @@ object CriticalMethodsAnalysis {
       val declaringClassName = context.method.declaringClassType.toJava
       val isCritical = criticalMethods.exists { classMethods: SelectedMethodsOfClass =>
         classMethods.className == declaringClassName &&
-          classMethods.selectedMethods.contains(methodName)
+          classMethods.methods.contains(methodName)
       }
 
       if (isCritical) {

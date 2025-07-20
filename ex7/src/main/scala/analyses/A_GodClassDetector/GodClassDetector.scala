@@ -60,7 +60,7 @@ class GodClassDetector(override val shouldExecute: Boolean) extends SubAnalysis 
       throw new IllegalArgumentException(s"nofThresh must be non-negative integer, received $nofThreshold.")
 
     logger.info(
-      s"""Looking for God Classes with thresholds:
+      s"""Configuration (looking for god classes with the following thresholds):
          |  - WMC (method count) >= $wmcThreshold
          |  - TCC (cohesion) < $tccThreshold
          |  - ATFD (foreign data access) > $atfdThreshold

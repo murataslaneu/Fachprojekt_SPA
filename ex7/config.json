@@ -15,8 +15,15 @@
     "nofThresh" : "DEFAULT"
   },
   "criticalMethodsDetector" : {
-    "execute" : false,
-    "criticalMethods" : "DEFAULT",
+    "execute" : true,
+    "criticalMethods" : [
+      {
+        "className": "org.joda.time.tz.ZoneInfoCompiler",
+        "methods": [
+          "printUsage"
+        ]
+      }
+    ],
     "ignore" : "DEFAULT",
     "callGraphAlgorithmName" : "DEFAULT",
     "entryPointsFinder" : "DEFAULT",

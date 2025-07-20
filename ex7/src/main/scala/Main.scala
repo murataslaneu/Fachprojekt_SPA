@@ -1,4 +1,5 @@
 import analyses.A_GodClassDetector.GodClassDetector
+import analyses.B_CriticalMethodsDetector.CriticalMethodsDetector
 import analyses.SubAnalysis
 import com.typesafe.scalalogging.Logger
 import org.opalj.log.{ConsoleOPALLogger, GlobalLogContext, OPALLogger}
@@ -34,9 +35,11 @@ object Main {
     /* Checking arguments, possibly exit depending on argument(s) and current state */
     val jsonIO = new JsonIO
 
-    // Avoid OPAL spamming into the console and therefore hiding the analysis log messages.
-    // Only show errors from OPAL.
-    OPALLogger.updateLogger(GlobalLogContext, new ConsoleOPALLogger(minLogLevel = org.opalj.log.Error))
+    // Avoid OPAL completely spamming into the console and therefore hiding the analysis log messages.
+    // Only show errors and warnings from OPAL.
+    // Only reason warnings are also shown is that the user can see the program is still doing something
+    // during the call graph generation.
+    OPALLogger.updateLogger(GlobalLogContext, new ConsoleOPALLogger(ansiColored = false, minLogLevel = org.opalj.log.Warn))
 
     // Don't allow more than one argument
     if (args.length > 1) {
@@ -102,7 +105,8 @@ object Main {
     // Setup analyses
     // TODO: Add missing analyses
     val analyses: List[SubAnalysis] = List(
-      new GodClassDetector(config.godClassDetector.execute)
+      new GodClassDetector(config.godClassDetector.execute),
+      new CriticalMethodsDetector(config.criticalMethodsDetector.execute)
     )
 
     analyses.foreach { subAnalysis =>

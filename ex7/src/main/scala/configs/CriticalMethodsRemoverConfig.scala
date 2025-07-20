@@ -14,5 +14,5 @@ case class CriticalMethodsRemoverConfig
 (
   override val execute: Boolean,
   criticalMethods: List[SelectedMethodsOfClass],
-  ignore: List[IgnoredCall]
+  ignore: Set[IgnoredCall]
 ) extends SubAnalysisConfig()

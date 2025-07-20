@@ -2,6 +2,7 @@ package util
 
 import com.typesafe.config.{Config, ConfigFactory}
 import com.typesafe.scalalogging.Logger
+import data.SelectedMethodsOfClass
 import org.opalj.br.analyses.{Project, SomeProject}
 import org.opalj.br.{ClassFile, reader}
 import org.opalj.br.reader.Java9LibraryFramework
@@ -10,11 +11,14 @@ import org.opalj.log.OPALLogger.{error, info}
 
 import java.io.File
 import java.net.URL
+import scala.collection.mutable
+import scala.jdk.CollectionConverters.{IterableHasAsJava, MapHasAsJava}
 
 /**
  * This object is responsible for creating the project files used for each sub-analysis.
  *
- * Contained code is basically a copy from the code of org.opalj.br.analyses.AnalysisApplication
+ * Contained code is mostly a copy from the code of org.opalj.br.analyses.AnalysisApplication,
+ * with [[setupOPALProjectConfig]] being the only somewhat custom part.
  */
 object ProjectInitializer {
 
@@ -119,4 +123,42 @@ object ProjectInitializer {
       .mkString("OPAL project statistics:\n    ", "\n    ", "")
   }
 
+  /**
+   * Retrieves the corresponding OPAL config from the set entryPointsFinder and customEntryPoints in our analysis config.
+   *
+   * @param entryPointsFinder String "custom", "application", "applicationwithjre" or "library". Anything else will
+   *                          throw an [[IllegalArgumentException]].
+   * @param customEntryPoints List of methods (grouped by class) that should be used by OPAL as additional entry points
+   *                          for the call graph generation.
+   * @return The configured config that can be used by OPAL when setting up a project.
+   */
+  def setupOPALProjectConfig(entryPointsFinder: String, customEntryPoints: List[SelectedMethodsOfClass]): Config = {
+    val entryPointsFinderValue = entryPointsFinder match {
+      case "custom" => ("org.opalj.br.analyses.cg.ConfigurationEntryPointsFinder",
+        "org.opalj.br.analyses.cg.ApplicationInstantiatedTypesFinder")
+      case "application" => ("org.opalj.br.analyses.cg.ApplicationWithoutJREEntryPointsFinder",
+        "org.opalj.br.analyses.cg.ApplicationInstantiatedTypesFinder")
+      case "applicationwithjre" => ("org.opalj.br.analyses.cg.ApplicationEntryPointsFinder",
+        "org.opalj.br.analyses.cg.ApplicationInstantiatedTypesFinder")
+      case "library" => ("org.opalj.br.analyses.cg.LibraryEntryPointsFinder",
+        "org.opalj.br.analyses.cg.LibraryInstantiatedTypesFinder")
+      case invalid => throw new IllegalArgumentException(s"Invalid entry points finder $invalid selected.")
+    }
+
+    val overridesMap: mutable.Map[String, Object] = mutable.Map(
+      "org.opalj.br.analyses.cg.InitialEntryPointsKey.analysis" -> entryPointsFinderValue._1,
+      "org.opalj.br.analyses.cg.InitialInstantiatedTypesKey.analysis" -> entryPointsFinderValue._2
+    )
+
+    if (customEntryPoints.nonEmpty) {
+      val customEntryPointsValue = customEntryPoints.flatMap { eps =>
+        eps.methods.map { epMethod =>
+          Map("declaringClass" -> eps.className, "name" -> epMethod).asJava
+        }
+      }.asJava
+      overridesMap.put("org.opalj.br.analyses.cg.InitialEntryPointsKey.entryPoints", customEntryPointsValue)
+    }
+
+    ConfigFactory.parseMap(overridesMap.asJava).withFallback(ConfigFactory.load).resolve()
+  }
 }

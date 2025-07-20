@@ -7,9 +7,9 @@ import play.api.libs.json.{Json, OFormat}
  * points of a class.
  *
  * @param className Name of the class
- * @param selectedMethods Corresponding methods names of the class which have been selected.
+ * @param methods Corresponding methods names of the class which have been selected.
  */
-case class SelectedMethodsOfClass(var className: String, var selectedMethods: List[String])
+case class SelectedMethodsOfClass(var className: String, var methods: List[String])
 
 object SelectedMethodsOfClass {
   implicit val format: OFormat[SelectedMethodsOfClass] = Json.format[SelectedMethodsOfClass]

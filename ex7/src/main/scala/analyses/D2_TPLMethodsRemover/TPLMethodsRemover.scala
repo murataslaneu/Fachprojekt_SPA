@@ -1,6 +1,7 @@
 package analyses.D2_TPLMethodsRemover
 
 import com.typesafe.config.{Config, ConfigFactory}
+import configs.StaticAnalysisConfig
 import create.{FileIO, TPLMethodUsageAnalysis}
 import create.data.AnalysisConfig
 import org.opalj.br.analyses.{Analysis, AnalysisApplication, BasicReport, ProgressManagement, Project, ReportableAnalysisResult}
@@ -86,19 +87,19 @@ object TPLMethodsRemover extends Analysis[URL, BasicReport] with AnalysisApplica
   override def analyze(project: Project[URL], parameters: Seq[String], initProgressManagement: Int => ProgressManagement): BasicReport = {
     // Print config
     println("\n==================== Loaded Configuration ====================")
-    println(s"* projectJars: ${if (config.get.projectJars.isEmpty) "[None]" else ""}")
-    config.get.projectJars.foreach {file => println(s"  - $file")}
-    println(s"* libraryJars: ${if (config.get.libraryJars.isEmpty) "[None]" else ""}")
-    config.get.libraryJars.foreach {file => println(s"  - $file")}
+//    println(s"* projectJars: ${if (config.get.projectJars.isEmpty) "[None]" else ""}")
+//    config.get.projectJars.foreach {file => println(s"  - $file")}
+//    println(s"* libraryJars: ${if (config.get.libraryJars.isEmpty) "[None]" else ""}")
+//    config.get.libraryJars.foreach {file => println(s"  - $file")}
     println(s"* tplJar: ${config.get.tplJar}")
     println(s"* includeNonPublicMethods: ${config.get.includeNonPublicMethods}")
-    val entryPointsFinder = config.get.entryPointsFinder._1 match {
-      case "org.opalj.br.analyses.cg.ConfigurationEntryPointsFinder" => "custom"
-      case "org.opalj.br.analyses.cg.ApplicationWithoutJREEntryPointsFinder" => "application"
-      case "org.opalj.br.analyses.cg.ApplicationEntryPointsFinder" => "applicationWithJre"
-      case "org.opalj.br.analyses.cg.LibraryEntryPointsFinder" => "library"
-    }
-    println(s"* entryPointsFinder: $entryPointsFinder")
+//    val entryPointsFinder = config.get.entryPointsFinder._1 match {
+//      case "org.opalj.br.analyses.cg.ConfigurationEntryPointsFinder" => "custom"
+//      case "org.opalj.br.analyses.cg.ApplicationWithoutJREEntryPointsFinder" => "application"
+//      case "org.opalj.br.analyses.cg.ApplicationEntryPointsFinder" => "applicationWithJre"
+//      case "org.opalj.br.analyses.cg.LibraryEntryPointsFinder" => "library"
+//    }
+//    println(s"* entryPointsFinder: $entryPointsFinder")
     println(s"* customEntryPoints: ${if (config.get.customEntryPoints.isEmpty) "[None]" else ""}")
     config.get.customEntryPoints.foreach { eps =>
       if (eps.methods.nonEmpty) {
