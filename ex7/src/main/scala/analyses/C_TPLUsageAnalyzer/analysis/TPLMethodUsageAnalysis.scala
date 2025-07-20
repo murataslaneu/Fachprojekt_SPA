@@ -1,5 +1,6 @@
 package analyses.C_TPLUsageAnalyzer.analysis
 
+import configs.TPLUsageAnalyzerConfig
 import org.opalj.br.analyses.Project
 import org.opalj.br.{ClassFile, Method}
 import org.opalj.tac.cg.CallGraph
@@ -19,15 +20,14 @@ object TPLMethodUsageAnalysis {
    *
    * @param project The OPAL project with all loaded class files
    * @param callGraph Call graph generated from the project
-   * @param tplFiles List of third party library JAR files which should be analyzed.
    * @param config Configuration of analysis
    * @return List containing results for each library
    */
   def analyze(
                 project: Project[URL],
                 callGraph: CallGraph,
-                tplFiles: List[File],
-                config: AnalysisConfig
+                tplFiles: Array[File],
+                config: TPLUsageAnalyzerConfig
               ): List[TPLInfo] = {
     // Step 1: Assign each library class file the corresponding library jar
     val libraryPaths = tplFiles.map {

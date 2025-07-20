@@ -20,7 +20,9 @@ libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest" % "3.2.19" % "test",
   // For logging
   "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5",
-  "ch.qos.logback" % "logback-classic" % "1.5.18"
+  "ch.qos.logback" % "logback-classic" % "1.5.18",
+  // For charts
+  "org.knowm.xchart" % "xchart" % "3.8.8"
 )
 
 // Parallel execution is not possible as multiple tests are accessing the global variables

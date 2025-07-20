@@ -30,5 +30,5 @@ case class TPLUsageAnalyzerConfig
 ) extends SubAnalysisConfig()
 
 object TPLUsageAnalyzerConfig {
-  val DEFAULT_COUNT_ALL_METHODS: Boolean = true
+  val DEFAULT_COUNT_ALL_METHODS: Boolean = false
 }

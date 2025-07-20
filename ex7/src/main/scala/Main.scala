@@ -1,5 +1,6 @@
 import analyses.A_GodClassDetector.GodClassDetector
 import analyses.B_CriticalMethodsDetector.CriticalMethodsDetector
+import analyses.C_TPLUsageAnalyzer.TPLUsageAnalyzer
 import analyses.SubAnalysis
 import com.typesafe.scalalogging.Logger
 import org.opalj.log.{ConsoleOPALLogger, GlobalLogContext, OPALLogger}
@@ -8,6 +9,7 @@ import util.JsonIO.DEFAULT_INPUT_JSON_PATH
 import util.{JsonIO, ProjectInitializer}
 
 import java.io.File
+import java.nio.file.{Files, Path}
 
 object Main {
 
@@ -39,7 +41,7 @@ object Main {
     // Only show errors and warnings from OPAL.
     // Only reason warnings are also shown is that the user can see the program is still doing something
     // during the call graph generation.
-    OPALLogger.updateLogger(GlobalLogContext, new ConsoleOPALLogger(ansiColored = false, minLogLevel = org.opalj.log.Warn))
+    OPALLogger.updateLogger(GlobalLogContext, new ConsoleOPALLogger(ansiColored = false, minLogLevel = org.opalj.log.Error))
 
     // Don't allow more than one argument
     if (args.length > 1) {
@@ -60,7 +62,7 @@ object Main {
       if (new File(DEFAULT_INPUT_JSON_PATH).exists()) {
         println(s"${Console.RED}ERROR: Json file already exists at $DEFAULT_INPUT_JSON_PATH." +
           s"If you want to overwrite the file, you must delete the file before execution of this program. ${Console.RESET}")
-        return
+        System.exit(1)
       }
       jsonIO.writeDefaultJson()
       println(s"${Console.BLUE}Wrote default json config at $DEFAULT_INPUT_JSON_PATH.${Console.RESET}")
@@ -88,6 +90,27 @@ object Main {
     val (outputPath, json) = jsonIO.readAnalysisConfigInit(inputJsonPath)
     System.setProperty("LOG_DIR", outputPath)
 
+    // Create directory for the analysis results
+    val outputDirectoryFile = new File(outputPath)
+    // Catch edge case that a file already exists that isn't a directory
+    if (outputDirectoryFile.isFile) {
+      println(s"${Console.RED}ERROR: Output path \"$outputPath\" leads to file and not a directory.${Console.RESET}")
+      println("Exiting...")
+      System.exit(1)
+    }
+    if (!outputDirectoryFile.exists ) {
+      try {
+        Files.createDirectory(Path.of(outputPath))
+        println(s"Created output directory $outputPath.")
+      }
+      catch {
+        case _: java.io.IOException =>
+          println(s"${Console.RED}ERROR: Could not create the directory \"$outputPath\" as parent directory does not exist.${Console.RESET}")
+          println("Exiting...")
+          System.exit(1)
+      }
+    }
+
     // Setup logger
     val logger = Logger("main")
     logger.info(s"Writing log to console and in file $outputPath/analysis.log.")
@@ -106,7 +129,8 @@ object Main {
     // TODO: Add missing analyses
     val analyses: List[SubAnalysis] = List(
       new GodClassDetector(config.godClassDetector.execute),
-      new CriticalMethodsDetector(config.criticalMethodsDetector.execute)
+      new CriticalMethodsDetector(config.criticalMethodsDetector.execute),
+      new TPLUsageAnalyzer(config.tplUsageAnalyzer.execute)
     )
 
     analyses.foreach { subAnalysis =>

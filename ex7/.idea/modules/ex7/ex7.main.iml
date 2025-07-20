@@ -20,6 +20,7 @@
     <orderEntry type="library" name="sbt: com.typesafe.play:play-json_2.13:2.10.7:jar" level="project" />
     <orderEntry type="library" name="sbt: com.typesafe.scala-logging:scala-logging_2.13:3.9.5:jar" level="project" />
     <orderEntry type="library" name="sbt: ch.qos.logback:logback-classic:1.5.18:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.knowm.xchart:xchart:3.8.8:jar" level="project" />
     <orderEntry type="library" name="sbt: de.opal-project:bytecode-assembler_2.13:5.0.0:jar" level="project" />
     <orderEntry type="library" name="sbt: de.opal-project:architecture-validation_2.13:5.0.0:jar" level="project" />
     <orderEntry type="library" name="sbt: de.opal-project:three-address-code_2.13:5.0.0:jar" level="project" />
