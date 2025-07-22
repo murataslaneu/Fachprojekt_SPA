@@ -1,58 +1,99 @@
 package analyses.E_DeadCodeDetector.helpers
 
-import analyses.E_DeadCodeDetector.data.{AnalysisConfig, DeadCodeReport, DeadInstruction, MethodWithDeadCode}
+import analyses.E_DeadCodeDetector.data.{DeadCodeReport, DeadInstruction, MethodWithDeadCode, MultiDomainDeadCodeReport, MultiDomainDeadInstruction, MultiDomainMethodWithDeadCode}
+import com.typesafe.scalalogging.Logger
+import configs.StaticAnalysisConfig
 import org.opalj.ai.{AIResult, BaseAI}
 import org.opalj.ai.common.DomainRegistry
 import org.opalj.br.analyses.Project
 
 import java.net.URL
-import scala.io.StdIn
 import scala.collection.mutable
 
 object DeadCodeAnalysis {
 
-  /**
-   * Simple method to select which domain shall be used for abstract interpretation. In interactive mode, the user can
-   * select one of the available domains from the DomainRegistry. In non-interactive mode, the first domain is automatically
-   * selected.
-   *
-   * Domains dictate how precise the tracking of variable values is during abstract interpretation.
-   *
-   * @param interactive True if interactive selection shall be used
-   * @return A string identifier of the selected domain
-   */
-  def selectDomain(interactive: Boolean): String = {
-    val domainDescriptions = DomainRegistry.domainDescriptions
-
-    var cnt = 0
-    val domainMap = domainDescriptions.map { descr =>
-      val t = (cnt, descr)
-      cnt += 1
-      t
-    }.toMap
-
-    println("The available domains are: ")
-    domainMap.toList.sortBy { case (cnt, _) => cnt } foreach { case (cnt, str) =>
-      println(s"\t [$cnt] - $str")
+  def analyze(logger: Logger, project: Project[URL], config: StaticAnalysisConfig): (MultiDomainDeadCodeReport, List[DeadCodeReport]) = {
+    val domains = DomainRegistry.domainDescriptions()
+    val domainStrings = domains.map { domain =>
+      (
+        // Identifier for OPAL
+        domain.substring(domain.indexOf(']') + 2),
+        // Domain name
+        domain.substring(domain.indexOf("[") + 1, domain.indexOf("]"))
+      )
     }
 
-    if (interactive) {
-      println(s"\nEnter the corresponding domain number to proceed...")
-      print(">>> ")
-      val input = StdIn.readInt()
-      if (input < 0 || input >= cnt) {
-        println(s"${Console.RED}Invalid domain number selected, exiting.${Console.RESET}")
-        System.exit(1)
+    logger.info("Start abstract interpretation with every available domain...")
+    val singleDomainReports = mutable.ListBuffer[DeadCodeReport]()
+    domainStrings.zipWithIndex.foreach { case ((domainIdentifier, domainName), i) =>
+      logger.info(s"[$i] $domainName...")
+      singleDomainReports += analyzeForDomain(project, domainIdentifier, domainName, config)
+    }
+
+    logger.info("Finished abstract interpretation. Group results into a single report...")
+    // First, collect results in a map
+    // Key: (Signature of method, total instructions, enclosing type name)
+    val multiDomainResults = mutable.Map[(String, Int, String), mutable.Map[DeadInstruction, mutable.ListBuffer[Int]]]()
+    // Update for each domain
+    singleDomainReports.zipWithIndex.foreach { case (singleDomainReport, i) =>
+      // Update each method
+      singleDomainReport.methodsFound.foreach { methodWithDeadCode =>
+        // Retrieve or create new value
+        val deadInstructionsMap = multiDomainResults.getOrElseUpdate(
+          key = (
+            methodWithDeadCode.fullSignature,
+            methodWithDeadCode.numberOfTotalInstructions,
+            methodWithDeadCode.enclosingTypeName
+          ),
+          defaultValue = mutable.Map.empty
+        )
+        // Update each instruction
+        methodWithDeadCode.deadInstructions.foreach { deadInstruction =>
+          // Retrieve or create new value
+          val foundByDomains = deadInstructionsMap.getOrElseUpdate(
+            key = deadInstruction,
+            defaultValue = mutable.ListBuffer.empty
+          )
+          // Insert that this instruction was found by the current domain
+          // (i.e. is contained in the current singleDomainReport)
+          foundByDomains += i
+        }
       }
-      domainMap(input)
-    } else {
-      val theDomain = domainDescriptions.head
-      println(s"Automatically selected domain $theDomain")
-      theDomain
     }
+
+    // Then, build the actual report to output
+    val foundMethodsWithDomains: List[MultiDomainMethodWithDeadCode] = multiDomainResults.toList.map { case (methodData, deadInstructionsWithDomains) =>
+      MultiDomainMethodWithDeadCode(
+        fullSignature = methodData._1,
+        numberOfTotalInstructions = methodData._2,
+        numberOfDeadInstructions = deadInstructionsWithDomains.size,
+        enclosingTypeName = methodData._3,
+        deadInstructions = deadInstructionsWithDomains.toList.map { case (deadInstruction, foundByDomains) =>
+          MultiDomainDeadInstruction(
+            stringRepresentation = deadInstruction.stringRepresentation,
+            programCounter = deadInstruction.programCounter,
+            foundByDomain = foundByDomains.toList
+          )
+        }
+      )
+    }
+    val totalDeadInstructions = foundMethodsWithDomains
+      .map {method => method.numberOfDeadInstructions}.sum
+
+    val multiDomainReport = MultiDomainDeadCodeReport(
+      projectJars = config.projectJars.map {file => file.getPath.replace('\\', '/')},
+      libraryJars = config.libraryJars.map {file => file.getPath.replace('\\', '/')},
+      completelyLoadedLibraries = config.deadCodeDetector.completelyLoadLibraries,
+      totalMethodsWithDeadInstructions = foundMethodsWithDomains.length,
+      totalDeadInstructions = totalDeadInstructions,
+      methodsFound = foundMethodsWithDomains
+    )
+    logger.info("Finished grouping results.")
+
+    (multiDomainReport, singleDomainReports.toList)
   }
 
-  def analyze(project: Project[URL], domainStr: String, domainName: String, config: AnalysisConfig): DeadCodeReport = {
+  private def analyzeForDomain(project: Project[URL], domainStr: String, domainName: String, config: StaticAnalysisConfig): DeadCodeReport = {
     // Measuring required time for the analysis
     val startTime = System.currentTimeMillis()
     val ai = new BaseAI(IdentifyDeadVariables = true, RegisterStoreMayThrowExceptions = false)
@@ -65,7 +106,6 @@ object DeadCodeAnalysis {
       classFile.methods.foreach { method =>
         // We can only start abstract interpretation when there is code inside the method
         if (method.body.isDefined) {
-//          println(s"${classFile.fqn}#${method.name}")
           // Build the domain object
           val domain = DomainRegistry.newDomain(domainStr, project, method)
 
@@ -79,7 +119,7 @@ object DeadCodeAnalysis {
           // there must be at one dead instruction.
           if (evaluatedInstructionPCs.length < methodCode.instructionsCount) {
             val methodSignature = method.signature.toJava
-            val enclosingType = method.classFile.fqn.replace('/','.')
+            val enclosingType = method.classFile.fqn.replace('/', '.')
             val totalInstructions = methodCode.instructionsCount
             // Looking for dead instructions
             val deadInstructions = mutable.ListBuffer.empty[DeadInstruction]
@@ -107,7 +147,7 @@ object DeadCodeAnalysis {
     val runtime = endTime - startTime
     // Create report object
     DeadCodeReport(
-      config.projectJars.map { file => file.getPath.replace('\\', '/') },
+      config.projectJars.map { file => file.getPath.replace('\\', '/') }.toList,
       domainName,
       java.time.LocalDateTime.now(),
       runtime,

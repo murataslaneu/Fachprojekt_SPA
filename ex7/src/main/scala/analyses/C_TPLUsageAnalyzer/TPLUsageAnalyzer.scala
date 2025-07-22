@@ -27,6 +27,8 @@ class TPLUsageAnalyzer(override val shouldExecute: Boolean) extends SubAnalysis 
   override val analysisName: String = "Third Party Library Usage Analyzer"
   /** The number of the sub-analysis */
   override val analysisNumber: String = "3"
+  /** Name of the folder where this sub-analysis will put their results in */
+  override val outputFolderName: String = "3_TPLUsageAnalyzer"
 
   /**
    * Main analysis logic: Build call graph, run TPL method analysis, report results.
@@ -129,17 +131,7 @@ class TPLUsageAnalyzer(override val shouldExecute: Boolean) extends SubAnalysis 
     analysisResults.append(s"Run time of entire sub-analysis: $subAnalysisTime seconds")
 
     // Output results
-    val outputDirectory = s"${config.resultsOutputPath}/3_TPLUsagerAnalyzer"
-    val outputDirectoryFile = new File(outputDirectory)
-    if (!outputDirectoryFile.exists) {
-      try {
-        Files.createDirectory(Path.of(outputDirectory))
-      }
-      catch {
-        case _: Exception =>
-          throw new java.io.IOException("Could not create the directory \"$outputPath\" to output the results for this sub-analysis")
-      }
-    }
+    val outputDirectory = s"${config.resultsOutputPath}/$outputFolderName"
     val jsonOutputPath = s"$outputDirectory/results.json"
     JsonIO.writeResult(finalResult, jsonOutputPath)
     exportChart(finalResult, outputDirectory)

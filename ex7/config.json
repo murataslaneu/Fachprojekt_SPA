@@ -67,8 +67,8 @@
     "customEntryPoints": "DEFAULT"
   },
   "deadCodeDetector": {
-    "execute": false,
-    "completelyLoadLibraries": "DEFAULT"
+    "execute": true,
+    "completelyLoadLibraries": false
   },
   "architectureValidator": {
     "execute": false,

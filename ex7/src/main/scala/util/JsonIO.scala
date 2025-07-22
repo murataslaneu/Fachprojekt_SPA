@@ -4,7 +4,7 @@ import analyses.F_ArchitectureValidator.data.ArchitectureSpec.ruleFormat
 import analyses.F_ArchitectureValidator.data.Rule
 import com.typesafe.scalalogging.Logger
 import configs.{ArchitectureValidatorConfig, CriticalMethodsDetectorConfig, CriticalMethodsRemoverConfig, DeadCodeDetectorConfig, GodClassDetectorConfig, StaticAnalysisConfig, TPLMethodsRemoverConfig, TPLUsageAnalyzerConfig}
-import data.{IgnoredCall, SelectedMethodsOfClass}
+import data.{IgnoredCall, SelectedMethodsOfClass, Summary}
 import play.api.libs.json.{JsDefined, JsError, JsString, JsSuccess, JsUndefined, JsValue, Json, Reads}
 
 import java.io.{File, PrintWriter}
@@ -778,6 +778,19 @@ class JsonIO {
     )
 
     entryPointsFinder
+  }
+
+  /**
+   * Writes the summary for the entire analysis suite at the given path.
+   *
+   * @param summary The Summary of this analyis suite run.
+   * @param path Path to write the summary to.
+   */
+  def writeSummary(summary: Summary, path: String): Unit = {
+    val json = Json.toJson(summary)
+    val writer = new PrintWriter(new File(path))
+    writer.write(Json.prettyPrint(json))
+    writer.close()
   }
 }
 

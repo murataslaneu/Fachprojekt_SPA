@@ -3,15 +3,19 @@ import analyses.B_CriticalMethodsDetector.CriticalMethodsDetector
 import analyses.C_TPLUsageAnalyzer.TPLUsageAnalyzer
 import analyses.D1_CriticalMethodsRemover.CriticalMethodsRemover
 import analyses.D2_TPLMethodsRemover.TPLMethodsRemover
+import analyses.E_DeadCodeDetector.DeadCodeDetector
 import analyses.SubAnalysis
 import com.typesafe.scalalogging.Logger
+import data.{SubAnalysisRun, Summary}
 import org.opalj.log.{ConsoleOPALLogger, GlobalLogContext, OPALLogger}
 import org.slf4j.MarkerFactory
 import util.JsonIO.DEFAULT_INPUT_JSON_PATH
-import util.{JsonIO, ProjectInitializer}
+import util.{JsonIO, ProjectInitializer, Utils}
 
 import java.io.File
 import java.nio.file.{Files, Path}
+import java.time.format.DateTimeFormatter
+import scala.collection.mutable
 
 object Main {
 
@@ -36,13 +40,12 @@ object Main {
        |""".stripMargin
 
   def main(args: Array[String]): Unit = {
+    val programStartTime = System.currentTimeMillis()
     /* Checking arguments, possibly exit depending on argument(s) and current state */
     val jsonIO = new JsonIO
 
     // Avoid OPAL completely spamming into the console and therefore hiding the analysis log messages.
-    // Only show errors and warnings from OPAL.
-    // Only reason warnings are also shown is that the user can see the program is still doing something
-    // during the call graph generation.
+    // Only shows errors from OPAL.
     OPALLogger.updateLogger(GlobalLogContext, new ConsoleOPALLogger(ansiColored = false, minLogLevel = org.opalj.log.Error))
 
     // Don't allow more than one argument
@@ -134,8 +137,11 @@ object Main {
       new CriticalMethodsDetector(config.criticalMethodsDetector.execute),
       new TPLUsageAnalyzer(config.tplUsageAnalyzer.execute),
       new CriticalMethodsRemover(config.criticalMethodsRemover.execute),
-      new TPLMethodsRemover(config.tplMethodsRemover.execute)
+      new TPLMethodsRemover(config.tplMethodsRemover.execute),
+      new DeadCodeDetector(config.deadCodeDetector.execute)
     )
+
+    val subAnalysisSummaries = mutable.ListBuffer[SubAnalysisRun]()
 
     analyses.foreach { subAnalysis =>
       if (subAnalysis.shouldExecute) {
@@ -143,12 +149,25 @@ object Main {
           MarkerFactory.getMarker("BLUE"),
           s"Starting analysis ${subAnalysis.analysisNumber}: ${subAnalysis.analysisName}"
         )
-        val startTime = System.currentTimeMillis()
+        val outputPath = s"${config.resultsOutputPath}/${subAnalysis.outputFolderName}"
+        val deletedFile = Utils.initializeSubAnalysisOutputDirectory(outputPath)
+        logger.info(s"Initialized output path $outputPath.")
+        if (deletedFile) logger.warn(s"Deleted at least one file in or at the path while doing so.")
+
+        val subAnalysisStartTime = System.currentTimeMillis()
 
         try {
           subAnalysis.executeAnalysis(config)
-          val endTime = System.currentTimeMillis()
-          val duration = f"${(endTime - startTime) / 1000.0}%.3f".replace(',', '.')
+          val subAnalysisEndTime = System.currentTimeMillis()
+          val runTime = subAnalysisEndTime - subAnalysisStartTime
+          val duration = f"${runTime / 1000.0}%.3f".replace(',', '.')
+          subAnalysisSummaries += SubAnalysisRun(
+            analysisName = subAnalysis.analysisName,
+            successful = true,
+            resultsPath = outputPath,
+            timeFinished = java.time.LocalDateTime.now(),
+            runTimeMs = runTime
+          )
           subAnalysis.logger.info(
             MarkerFactory.getMarker("BLUE"),
             s"Finished analysis ${subAnalysis.analysisNumber} (${subAnalysis.analysisName}) in $duration seconds."
@@ -158,14 +177,35 @@ object Main {
           case e: Exception =>
             subAnalysis.logger.error(s"Analysis ${subAnalysis.analysisNumber} (${subAnalysis.analysisName}) terminated due to the following error:")
             subAnalysis.logger.error(s"--> ${e.toString}")
-            val endTime = System.currentTimeMillis()
-            val duration = f"${(endTime - startTime) / 1000.0}%.3f".replace(',', '.')
+            val subAnalysisEndTime = System.currentTimeMillis()
+            val runTime = subAnalysisEndTime - subAnalysisStartTime
+            val duration = f"${runTime / 1000.0}%.3f".replace(',', '.')
+            subAnalysisSummaries += SubAnalysisRun(
+              analysisName = subAnalysis.analysisName,
+              successful = false,
+              resultsPath = outputPath,
+              timeFinished = java.time.LocalDateTime.now(),
+              runTimeMs = runTime
+            )
             subAnalysis.logger.error(
               s"Analysis ${subAnalysis.analysisNumber} (${subAnalysis.analysisName}) ran for $duration seconds before termination."
             )
         }
       }
     }
+    val programFinishTime = System.currentTimeMillis()
+    val timeFinished = java.time.LocalDateTime.now()
+    val runTime = programFinishTime - programStartTime
+    val duration = f"${runTime / 1000.0}%.3f".replace(',', '.')
+    val summary = Summary(
+      totalRunTimeMs = runTime,
+      timeFinished = timeFinished,
+      analysesExecuted = subAnalysisSummaries.toList
+    )
+    jsonIO.writeSummary(summary, s"$outputPath/summary.json")
+    logger.info("Analysis suite finished.")
+    logger.info(s"Total run time: $duration seconds.")
+    logger.info(s"Finished at ${timeFinished.format(java.time.format.DateTimeFormatter.ISO_LOCAL_DATE_TIME)}")
   }
 }
 

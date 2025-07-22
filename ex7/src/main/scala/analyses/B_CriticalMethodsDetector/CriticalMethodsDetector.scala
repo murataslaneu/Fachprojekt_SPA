@@ -22,6 +22,8 @@ class CriticalMethodsDetector(override val shouldExecute: Boolean) extends SubAn
   override val analysisName: String = "Critical Methods Detector"
   /** The number of the sub-analysis */
   override val analysisNumber: String = "2"
+  /** Name of the folder where this sub-analysis will put their results in */
+  override val outputFolderName: String = "2_CriticalMethodsDetector"
 
   override def executeAnalysis(config: StaticAnalysisConfig): Unit = {
     val analysisConfig = config.criticalMethodsDetector

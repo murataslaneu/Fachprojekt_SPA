@@ -24,6 +24,8 @@ class TPLMethodsRemover(override val shouldExecute: Boolean) extends SubAnalysis
   override val analysisName: String = "Unused TPL methods remover"
   /** The number of the sub-analysis */
   override val analysisNumber: String = "4b"
+  /** Name of the folder where this sub-analysis will put their results in */
+  override val outputFolderName: String = "4b_TPLMethodsRemover"
 
   override def executeAnalysis(config: StaticAnalysisConfig): Unit = {
     // Perform checks (and maybe modify) config
@@ -84,7 +86,7 @@ class TPLMethodsRemover(override val shouldExecute: Boolean) extends SubAnalysis
     val modifiedClassFiles = TPLMethodUsageAnalysis.analyzeAndCreate(project, callGraph, analysisConfig)
 
     // Write created class files
-    val outputDir = s"${config.resultsOutputPath}/4b_TPLMethodsRemover"
+    val outputDir = s"${config.resultsOutputPath}/$outputFolderName"
     val classesOutputDir = s"$outputDir/tplDummy"
     FileIO.writeModifiedClassFiles(logger, classesOutputDir, modifiedClassFiles)
     logger.info("Finished writing class files, TPL dummy created successfully.")

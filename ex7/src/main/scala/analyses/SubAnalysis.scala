@@ -8,14 +8,20 @@ import configs.StaticAnalysisConfig
  */
 trait SubAnalysis {
 
+  /** Logger used in the sub-analysis */
+  val logger: Logger
+
   /** The name of the sub-analysis */
   val analysisName: String
 
   /** The number of the sub-analysis */
   val analysisNumber: String
 
-  /** Logger used in the sub-analysis*/
-  val logger: Logger
+  /**
+   * Name of the folder (inside the resultsOutputPath of [[StaticAnalysisConfig]])
+   * where the sub-analysis will put their results.
+   */
+  val outputFolderName: String
 
   /**
    * Whether this sub-analysis should actually be executed or not.
@@ -26,4 +32,5 @@ trait SubAnalysis {
 
   /** Function that executes the sub-analysis with the given config */
   def executeAnalysis(config: StaticAnalysisConfig): Unit
+
 }

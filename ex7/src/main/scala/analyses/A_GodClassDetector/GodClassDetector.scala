@@ -26,13 +26,14 @@ class GodClassDetector(override val shouldExecute: Boolean) extends SubAnalysis 
   override val analysisName: String = "God Class Detector"
   /** The number of the sub-analysis */
   override val analysisNumber: String = "1"
+  /** Name of the folder where this sub-analysis will put their results in */
+  override val outputFolderName: String = "1_GodClassDetector"
 
   // Results storage
   /** The total amount of god classes found after analysis */
   private var godClassCount: Int = 0
   /** Results string to print after analysis */
   private val godClassDetails = new mutable.StringBuilder()
-
 
   override def executeAnalysis(config: StaticAnalysisConfig): Unit = {
     val wmcThreshold = config.godClassDetector.wmcThresh

@@ -31,6 +31,8 @@ class CriticalMethodsRemover(override val shouldExecute: Boolean) extends SubAna
   override val analysisName: String = "Critical Methods Remover"
   /** The number of the sub-analysis */
   override val analysisNumber: String = "4a"
+  /** Name of the folder where this sub-analysis will put their results in */
+  override val outputFolderName: String = "4a_CriticalMethodsRemover"
 
   private val resultsBuffer = ListBuffer.empty[AnalysisResult]
 
@@ -72,7 +74,7 @@ class CriticalMethodsRemover(override val shouldExecute: Boolean) extends SubAna
         sm.methods.map(methodName => (sm.className, methodName))
       )
 
-    val outputDir = s"${config.resultsOutputPath}/4a_CriticalMethodsRemover"
+    val outputDir = s"${config.resultsOutputPath}/$outputFolderName"
     val classFilesOutputDir = s"$outputDir/modifiedClasses"
 
     var replacedInvalidCharacter = false

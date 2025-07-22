@@ -1,114 +1,64 @@
 package analyses.E_DeadCodeDetector
 
-import com.typesafe.config.Config
-import data.AnalysisConfig
+import analyses.SubAnalysis
+import com.typesafe.scalalogging.Logger
+import configs.StaticAnalysisConfig
 import helpers.{DeadCodeAnalysis, JsonIO}
-import org.opalj.br.analyses.{Analysis, AnalysisApplication, BasicReport, ProgressManagement, Project, ReportableAnalysisResult}
-import org.opalj.log.LogContext
+import util.{ProjectInitializer, Utils}
 
-import java.io.File
-import java.net.URL
-import scala.collection.mutable.ListBuffer
-
-// Application that does the analysis part
+import java.nio.file.{Files, Path, Paths}
 
 /**
  * Application that searches through the project for dead instructions
  * (i.e. instructions that will under no circumstances be executed during runtime)
  */
-object DeadCodeDetector extends Analysis[URL, BasicReport] with AnalysisApplication {
+class DeadCodeDetector(override val shouldExecute: Boolean) extends SubAnalysis {
 
-  /** Boolean whether the -interactive flag has been entered in the terminal */
-  private var interactive: Boolean = false
+  /** Logger used inside this sub-analysis */
+  override val logger: Logger = Logger("DeadCodeDetector")
+  /** The name of the sub-analysis */
+  override val analysisName: String = "Dead Code Detector"
+  /** The number of the sub-analysis */
+  override val analysisNumber: String = "5"
+  /** Name of the folder where this sub-analysis will put their results in */
+  override val outputFolderName: String = "5_DeadCodeDetector"
 
-  /** String entered in the terminal where the result json file should be written to */
-  private var outputJsonPath: String = "result.json"
+  override def executeAnalysis(config: StaticAnalysisConfig): Unit = {
+    val analysisConfig = config.deadCodeDetector
 
-  /** Boolean whether the -config option has been entered in the terminal */
-  var configSet: Boolean = false
+    // Print out configuration
+    logger.info(
+      s"""Configuration:
+         |  - Completely load libraries: ${analysisConfig.completelyLoadLibraries}""".stripMargin
+    )
 
-  /** Object holding the configuration for the analysis */
-  var config: Option[AnalysisConfig] = None
+    // Set up project
+    logger.info("Initializing OPAL project...")
+    val project = ProjectInitializer.setupProject(
+      logger = logger,
+      cpFiles = config.projectJars,
+      libcpFiles = config.libraryJars,
+      completelyLoadLibraries = analysisConfig.completelyLoadLibraries,
+    )
+    logger.info("Project initialization finished. Starting analysis on project...")
 
-  override def title: String = "Dead code detector"
+    // Domain selection removed to avoid user input during analysis
+    // Instead, run all domains
 
-  override def checkAnalysisSpecificParameters(parameters: Seq[String]): Iterable[String] = {
-    /** Internal method to retrieve the value from the given parameter */
-    def getValue(arg: String): String = arg.substring(arg.indexOf("=") + 1).strip()
-
-    val issues: ListBuffer[String] = ListBuffer()
-
-    parameters.foreach {
-      case arg if arg.startsWith("-config=") =>
-        val configPath = getValue(arg)
-        try {
-          configSet = true
-          config = Some(JsonIO.readJsonConfig(configPath))
-        }
-        catch {
-          case ex: Exception => issues += s"Config file at path $configPath could not be parsed correctly: $ex"
-        }
-      case arg if arg.equals("-interactive") => interactive = true
-      case arg if arg.startsWith("-outputJson=") => outputJsonPath = getValue(arg)
-      case unknown => issues += s"Unknown parameter: $unknown"
+    val (multiDomainReport, singleDomainReports) = DeadCodeAnalysis.analyze(logger, project, config)
+    logger.info("Analysis finished. Writing reports...")
+    val outputDir = s"${config.resultsOutputPath}/$outputFolderName"
+    val multiDomainReportPath = s"$outputDir/multiDomainResult.json"
+    JsonIO.writeMultiDomainResult(multiDomainReport, multiDomainReportPath)
+    val singleDomainReportDirectory = s"$outputDir/singleDomainReports"
+    val singleDomainReportPath = Path.of(singleDomainReportDirectory)
+    if (Files.notExists(singleDomainReportPath)) {
+      Files.createDirectory(singleDomainReportPath)
     }
-
-    if (configSet) {
-      println(s"${Console.BLUE}Config loaded from json file. NOTE: The config is prioritized over all other options! " +
-        s"If you entered another parameter in the terminal, it will be ignored!${Console.RESET}")
+    singleDomainReports.zipWithIndex.foreach { case (report, i) =>
+      val singleDomainReportPath = s"$singleDomainReportDirectory/$i.json"
+      JsonIO.writeSingleDomainResult(report, singleDomainReportPath)
     }
-
-    issues
+    logger.info(s"Reports written to $outputDir.")
   }
-
-  override def analysisSpecificParametersDescription: String =
-    """
-      | ========================= CUSTOM PARAMETERS =========================
-      | [-config=<config.json> (Optional. Configuration used for analysis. See template for schema.)]
-      | [-interactive (Flag. If given, the analysis will ask you what domain to use for the abstract interpretation.)]
-      | [-outputJson=<result.json> (Optional string. Output path for the generated json file containing the analysis results.)]
-      |
-      | Note: This analysis can be configured with a custom config json instead of via the terminal.
-      | IF GIVEN, ALL OTHER OPTIONS BESIDES -help ARE IGNORED.
-      | """.stripMargin
-
-  override def setupProject(cpFiles: Iterable[File], libcpFiles: Iterable[File], completelyLoadLibraries: Boolean, configuredConfig: Config)(implicit initialLogContext: LogContext): Project[URL] = {
-    if (configSet) {
-      super.setupProject(config.get.projectJars, config.get.libraryJars, config.get.completelyLoadLibraries, configuredConfig)
-    }
-    else {
-      this.config = Some(AnalysisConfig(cpFiles.toList, libcpFiles.toList, completelyLoadLibraries, interactive, outputJsonPath))
-      super.setupProject(cpFiles, libcpFiles, completelyLoadLibraries, configuredConfig)
-    }
-  }
-
-  override def analyze(project: Project[URL], parameters: Seq[String], initProgressManagement: Int => ProgressManagement): BasicReport = {
-    // Print config
-    println(s"\n==================== Loaded Configuration (${if (configSet) "via config json" else "via terminal options"}) ====================")
-    println(s"* projectJars: ${if (config.get.projectJars.isEmpty) "[None]" else ""}")
-    config.get.projectJars.foreach { file => println(s"  - $file") }
-    println(s"* libraryJars: ${if (config.get.libraryJars.isEmpty) "[None]" else ""}")
-    config.get.libraryJars.foreach { file => println(s"  - $file") }
-    println(s"* completelyLoadLibraries: ${config.get.completelyLoadLibraries}")
-    println(s"* interactive: ${config.get.interactive}")
-    println(s"* outputJson path: ${config.get.outputJson}")
-    println("===============================================================\n")
-
-    println("Selecting domain...")
-    var domainStr = DeadCodeAnalysis.selectDomain(config.get.interactive)
-    // This is needed because there is likely a bug in the way OPAL 5.0.0 handles domain identifiers.
-    val domainName = domainStr.substring(domainStr.indexOf("[") + 1, domainStr.indexOf("]"))
-    domainStr = domainStr.substring(domainStr.indexOf("]") + 2)
-
-    println("Starting analysis...")
-    val report = DeadCodeAnalysis.analyze(project, domainStr, domainName, config.get)
-    println("Analysis finished.")
-
-    JsonIO.writeResult(report, config.get.outputJson)
-    println(s"Result written to ${config.get.outputJson}.")
-
-    BasicReport("")
-  }
-
-  override val analysis: Analysis[URL, ReportableAnalysisResult] = this
 }

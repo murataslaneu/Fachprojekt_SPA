@@ -2,6 +2,9 @@ package util
 
 import data.SelectedMethodsOfClass
 
+import java.io.IOException
+import java.nio.file.attribute.BasicFileAttributes
+import java.nio.file.{FileVisitResult, Files, Path, SimpleFileVisitor}
 import scala.util.Random
 
 /**
@@ -34,5 +37,49 @@ object Utils {
     else ""
 
     s"$mainString$moreClasses"
+  }
+
+  /**
+   * Initializes the output path for a sub-analysis.
+   *
+   * May create the directory and/or delete the file(s) at/in the path.
+   *
+   * @param path The path to initialize.
+   * @return `true` if at least one file was deleted, `false` otherwise.
+   */
+  def initializeSubAnalysisOutputDirectory(path: String): Boolean = {
+    val outputPath = Path.of(path)
+    var deletedFile = false
+    if (Files.isRegularFile(outputPath)) {
+      // Regular file exists that has the same name as the directory that should be created
+      // File must be deleted
+      Files.delete(outputPath)
+      deletedFile = true
+    }
+    if (Files.notExists(outputPath)) {
+      // Directory doesn't exist yet, create it
+      Files.createDirectory(outputPath)
+    }
+    else {
+      // Directory already exists
+      // Might contain files, in this case delete them
+      Files.walkFileTree(outputPath, new SimpleFileVisitor[Path]() {
+        override def visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult = {
+          Files.delete(file)
+          deletedFile = true
+          FileVisitResult.CONTINUE
+        }
+
+        override def postVisitDirectory(dir: Path, exc: IOException): FileVisitResult = {
+          // Result folder itself should not be deleted!
+          if (dir != outputPath) {
+            Files.delete(dir)
+            deletedFile = true
+          }
+          FileVisitResult.CONTINUE
+        }
+      })
+    }
+    deletedFile
   }
 }
