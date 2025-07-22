@@ -11,6 +11,7 @@ import scala.collection.mutable
 
 /**
  * God Class Detector Analysis
+ *
  * Detects God Classes in Java bytecode based on configurable metrics:
  * - Weighted Methods per Class (WMC): Number of methods
  * - Tight Class Cohesion (TCC): Ratio of method pairs that share instance variables
@@ -19,24 +20,12 @@ import scala.collection.mutable
  */
 class GodClassDetector(override val shouldExecute: Boolean) extends SubAnalysis {
 
-  /** Logger sued inside this sub-analysis */
+  /** Logger used inside this sub-analysis */
   override val logger: Logger = Logger("GodClassDetector")
-
   /** The name of the sub-analysis */
   override val analysisName: String = "God Class Detector"
-
   /** The number of the sub-analysis */
   override val analysisNumber: String = "1"
-
-  // Configurable thresholds
-  /** Weighted Methods per Class threshold */
-  private var wmcThreshold: Int = -1
-  /** Tight Class Cohesion threshold (lower values indicate potential God Class) */
-  private var tccThreshold: Double = -1
-  /** Access to Foreign Data threshold */
-  private var atfdThreshold: Int = -1
-  /** Number of Fields threshold */
-  private var nofThreshold: Int = -1
 
   // Results storage
   /** The total amount of god classes found after analysis */
@@ -46,16 +35,16 @@ class GodClassDetector(override val shouldExecute: Boolean) extends SubAnalysis 
 
 
   override def executeAnalysis(config: StaticAnalysisConfig): Unit = {
-    wmcThreshold = config.godClassDetector.wmcThresh
+    val wmcThreshold = config.godClassDetector.wmcThresh
     if (wmcThreshold < 0)
       throw new IllegalArgumentException(s"wmcThresh must be non-negative integer, received $wmcThreshold.")
-    tccThreshold = config.godClassDetector.tccThresh
+    val tccThreshold = config.godClassDetector.tccThresh
     if (tccThreshold < 0 || tccThreshold > 1)
       throw new IllegalArgumentException(s"tccThresh must be decimal number between 0 and 1, received $tccThreshold.")
-    atfdThreshold = config.godClassDetector.atfdThresh
+    val atfdThreshold = config.godClassDetector.atfdThresh
     if (atfdThreshold < 0)
       throw new IllegalArgumentException(s"atfdThresh must be non-negative integer, received $atfdThreshold.")
-    nofThreshold = config.godClassDetector.nofThresh
+    val nofThreshold = config.godClassDetector.nofThresh
     if (nofThreshold < 0)
       throw new IllegalArgumentException(s"nofThresh must be non-negative integer, received $nofThreshold.")
 
@@ -68,6 +57,7 @@ class GodClassDetector(override val shouldExecute: Boolean) extends SubAnalysis 
     logger.info("Initializing OPAL project...")
     val project = ProjectInitializer.setupProject(cpFiles = config.projectJars, libcpFiles = config.libraryJars, logger = logger)
     logger.info("Project initialization finished. Starting analysis on project...")
+
     val allClasses = project.allProjectClassFiles
     godClassCount = 0
     godClassDetails.clear()
@@ -75,7 +65,7 @@ class GodClassDetector(override val shouldExecute: Boolean) extends SubAnalysis 
     allClasses.foreach { classFile =>
       // Skip interfaces, abstract classes, and library classes
       if (!classFile.isInterfaceDeclaration && !classFile.isAbstract) {
-        analyzeClass(classFile)
+        analyzeClass(classFile, wmcThreshold, tccThreshold, atfdThreshold, nofThreshold)
       }
     }
 
@@ -86,7 +76,7 @@ class GodClassDetector(override val shouldExecute: Boolean) extends SubAnalysis 
   /**
    * Analyze a single class to determine if it's a God Class
    */
-  private def analyzeClass(classFile: ClassFile): Unit = {
+  private def analyzeClass(classFile: ClassFile, wmcThreshold: Int, tccThreshold: Double, atfdThreshold: Int, nofThreshold: Int): Unit = {
     // Calculate metrics
     val wmc = calculateWMC(classFile)
     val nof = classFile.fields.size
@@ -102,15 +92,16 @@ class GodClassDetector(override val shouldExecute: Boolean) extends SubAnalysis 
     )
 
     // Check if this class meets the criteria for a God Class
-    if (isGodClass(metrics)) {
+    if (isGodClass(metrics, wmcThreshold, tccThreshold, atfdThreshold, nofThreshold)) {
+      logger.info(f"Found god class ${classFile.thisType.fqn} (WMC $wmc, TCC $tcc%.2f, ATFD $atfd, NOF $nof).")
       godClassCount += 1
 
       // Build detailed information about this God Class
       godClassDetails.append(s"God Class: ${classFile.thisType.fqn}\n")
       godClassDetails.append(s"  - WMC (methods): $wmc (threshold: $wmcThreshold)\n")
-      godClassDetails.append(s"  - NOF (fields): $nof (threshold: $nofThreshold)\n")
       godClassDetails.append(f"  - TCC (cohesion): $tcc%.2f (threshold: < $tccThreshold)\n")
       godClassDetails.append(s"  - ATFD (foreign data): $atfd (threshold: > $atfdThreshold)\n")
+      godClassDetails.append(s"  - NOF (fields): $nof (threshold: $nofThreshold)\n")
       godClassDetails.append("--------------------------------------------------")
     }
   }
@@ -216,7 +207,7 @@ class GodClassDetector(override val shouldExecute: Boolean) extends SubAnalysis 
   /**
    * Determine if a class is a God Class based on its metrics
    */
-  private def isGodClass(metrics: Map[String, Any]): Boolean = {
+  private def isGodClass(metrics: Map[String, Any], wmcThreshold: Int, tccThreshold: Double, atfdThreshold: Int, nofThreshold: Int): Boolean = {
     // A class is considered a God Class if it meets at least 3 of the 4 criteria
     var criteriaCount = 0
 

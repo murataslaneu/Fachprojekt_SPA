@@ -12,6 +12,7 @@ object JsonIO {
   def writeResult(result: TPLAnalysisResult, path: String): Unit = {
     val writer = new PrintWriter(new File(path))
     writer.write(Json.prettyPrint(Json.toJson(result)))
+    Json.prettyPrint(Json.toJson(result))
     writer.close()
   }
 }

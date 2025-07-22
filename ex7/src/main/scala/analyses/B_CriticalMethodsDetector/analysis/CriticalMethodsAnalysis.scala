@@ -1,6 +1,8 @@
 package analyses.B_CriticalMethodsDetector.analysis
 
-import data.{SelectedMethodsOfClass, IgnoredCall}
+import com.typesafe.scalalogging.Logger
+import configs.CriticalMethodsDetectorConfig
+import data.SelectedMethodsOfClass
 import org.opalj.br.DeclaredMethod
 import org.opalj.br.fpcf.properties.Context
 import org.opalj.tac.cg.CallGraph
@@ -17,19 +19,19 @@ object CriticalMethodsAnalysis {
    * Analyzes the given project for calls to critical methods.
    *
    * @param callGraph The call graph generated with OPAL.
-   * @param criticalMethods A list of critical methods to detect.
-   * @param suppressedCalls A list of critical method calls that should be suppressed.
+   * @param config    The config for this analysis.
    * @return A 2-tuple. The first element is a list of warnings as strings, the second a boolean whether at least one
    *         found method call has been suppressed.
    */
-  def analyze(callGraph: CallGraph, criticalMethods: List[SelectedMethodsOfClass],
-              suppressedCalls: Set[IgnoredCall] = Set()): (List[String], Boolean) = {
+  def analyze(logger: Logger, callGraph: CallGraph, config: CriticalMethodsDetectorConfig): (List[String], Boolean) = {
+    val criticalMethods = config.criticalMethods
+    val ignore = config.ignore
 
-    var suppressedACall: Boolean = false
+    var ignoredCall: Boolean = false
     val warnings = ListBuffer[String]()
 
     // First look through all reachable method if one of them is critical
-    callGraph.reachableMethods().iterator.foreach {context: Context =>
+    callGraph.reachableMethods().iterator.foreach { context: Context =>
       val methodName = context.method.name
       val declaringClassName = context.method.declaringClassType.toJava
       val isCritical = criticalMethods.exists { classMethods: SelectedMethodsOfClass =>
@@ -47,36 +49,40 @@ object CriticalMethodsAnalysis {
           callersWithCount(tuple) = callersWithCount.getOrElse(tuple, 0) + 1
         }
 
-        callersWithCount.foreach {tuple =>
+        callersWithCount.foreach { tuple =>
           val count = tuple._2
           val callerClassName = tuple._1._1.declaringClassType.toJava
-          val callerName = tuple._1._1.name
+          val callerMethodName = tuple._1._1.name
           val callerDescriptor = tuple._1._1.descriptor
           val isDirect = tuple._1._2
-          val isSuppressed = suppressedCalls.exists {sc =>
-            sc.callerClass == callerClassName &&
-              sc.callerMethod == callerName &&
-              sc.targetClass == declaringClassName &&
-              sc.targetMethod == methodName
+          val shouldIgnore = ignore.exists { ic =>
+            ic.callerClass == callerClassName &&
+              ic.callerMethod == callerMethodName &&
+              ic.targetClass == declaringClassName &&
+              ic.targetMethod == methodName
           }
 
-          if (!isSuppressed) {
-            // Warning not suppressed, add to result
+          if (!shouldIgnore) {
+            // Warning not ignored, add to result
+            logger.info(s"Found critical call $declaringClassName#$methodName in $callerClassName#$callerMethodName${callerDescriptor.toUMLNotation}")
             if (isDirect) {
               warnings += s"[WARNING] Found $count direct call${if (count != 1) "s" else ""}:\n" +
                 s"    To: Class $declaringClassName with method $methodName${context.method.descriptor.toUMLNotation}\n" ++
-                s"    In: Class $callerClassName with method$callerName${callerDescriptor.toUMLNotation}"
+                s"    In: Class $callerClassName with method$callerMethodName${callerDescriptor.toUMLNotation}"
             } else {
               warnings += s"[WARNING] Found $count indirect call${if (count != 1) "s" else ""}:\n" +
                 s"    To: Class $declaringClassName with method $methodName${context.method.descriptor.toUMLNotation}\n" ++
-                s"    In: Class $callerClassName with method$callerName${callerDescriptor.toUMLNotation}"
+                s"    In: Class $callerClassName with method$callerMethodName${callerDescriptor.toUMLNotation}"
             }
           }
-          else suppressedACall = true
+          else {
+            logger.info(s"Ignore call of $declaringClassName#$methodName in $callerClassName#$callerMethodName${callerDescriptor.toUMLNotation}")
+            ignoredCall = true
+          }
         }
       }
     }
 
-    (warnings.toList, suppressedACall)
+    (warnings.toList, ignoredCall)
   }
 }

@@ -1,4 +1,4 @@
-package modify.data
+package analyses.D1_CriticalMethodsRemover.modify.data
 
 import play.api.libs.json._
 

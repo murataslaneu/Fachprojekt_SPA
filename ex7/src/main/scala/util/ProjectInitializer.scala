@@ -153,7 +153,7 @@ object ProjectInitializer {
     if (customEntryPoints.nonEmpty) {
       val customEntryPointsValue = customEntryPoints.flatMap { eps =>
         eps.methods.map { epMethod =>
-          Map("declaringClass" -> eps.className, "name" -> epMethod).asJava
+          Map("declaringClass" -> eps.className.replace('.', '/'), "name" -> epMethod).asJava
         }
       }.asJava
       overridesMap.put("org.opalj.br.analyses.cg.InitialEntryPointsKey.entryPoints", customEntryPointsValue)

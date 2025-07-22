@@ -1,6 +1,8 @@
 import analyses.A_GodClassDetector.GodClassDetector
 import analyses.B_CriticalMethodsDetector.CriticalMethodsDetector
 import analyses.C_TPLUsageAnalyzer.TPLUsageAnalyzer
+import analyses.D1_CriticalMethodsRemover.CriticalMethodsRemover
+import analyses.D2_TPLMethodsRemover.TPLMethodsRemover
 import analyses.SubAnalysis
 import com.typesafe.scalalogging.Logger
 import org.opalj.log.{ConsoleOPALLogger, GlobalLogContext, OPALLogger}
@@ -130,7 +132,9 @@ object Main {
     val analyses: List[SubAnalysis] = List(
       new GodClassDetector(config.godClassDetector.execute),
       new CriticalMethodsDetector(config.criticalMethodsDetector.execute),
-      new TPLUsageAnalyzer(config.tplUsageAnalyzer.execute)
+      new TPLUsageAnalyzer(config.tplUsageAnalyzer.execute),
+      new CriticalMethodsRemover(config.criticalMethodsRemover.execute),
+      new TPLMethodsRemover(config.tplMethodsRemover.execute)
     )
 
     analyses.foreach { subAnalysis =>

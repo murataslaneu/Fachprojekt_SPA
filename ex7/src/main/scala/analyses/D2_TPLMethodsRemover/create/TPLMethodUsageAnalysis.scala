@@ -1,9 +1,9 @@
 package analyses.D2_TPLMethodsRemover.create
 
-import analyses.D2_TPLMethodsRemover.create.data.AnalysisConfig
+import configs.TPLMethodsRemoverConfig
 import org.opalj.br.analyses.Project
-import org.opalj.br.instructions.{ACONST_NULL, ARETURN, DCONST_0, DRETURN, FCONST_0, FRETURN, ICONST_0, IRETURN, Instruction, LCONST_0, LRETURN, RETURN}
-import org.opalj.br.{BooleanType, ByteType, CharType, ClassFile, DoubleType, FloatType, IntegerType, LongType, Method, NoExceptionHandlers, ShortType, Type, VoidType}
+import org.opalj.br.instructions._
+import org.opalj.br._
 import org.opalj.tac.cg.CallGraph
 
 import java.net.{URL, URLDecoder}
@@ -19,17 +19,17 @@ object TPLMethodUsageAnalysis {
   /**
    * Function that does the main analysis of this application and creates the modified class files.
    *
-   * @param project   The OPAL project with all loaded class files
-   * @param callGraph Call graph generated from the project
-   * @param config    Configuration of analysis
+   * @param project        The OPAL project with all loaded class files
+   * @param callGraph      Call graph generated from the project
+   * @param analysisConfig The config for this analysis
    * @return List containing results for each library
    */
   def analyzeAndCreate(
                         project: Project[URL],
                         callGraph: CallGraph,
-                        config: AnalysisConfig): mutable.ListBuffer[ClassFile] = {
+                        analysisConfig: TPLMethodsRemoverConfig): mutable.ListBuffer[ClassFile] = {
     // Step 1: Find corresponding class files of the TPL jar
-    val tplPath = config.tplJar.getAbsolutePath.replace('\\', '/')
+    val tplPath = analysisConfig.tplJar
     val tplClasses = mutable.Map.empty[ClassFile, mutable.ListBuffer[Method]]
 
     project.libraryClassFilesWithSources.foreach { case (classFile, source) =>
@@ -53,7 +53,7 @@ object TPLMethodUsageAnalysis {
 
       // Step 2.2: Add method as being used/accessed if it its corresponding class file is part of the TPL to analyze
       methods.foreach { method =>
-        if (config.includeNonPublicMethods || method.isPublic) tplClasses.get(method.classFile).foreach {
+        if (analysisConfig.includeNonPublicMethods || method.isPublic) tplClasses.get(method.classFile).foreach {
           accessedMethods => accessedMethods += method
         }
       }

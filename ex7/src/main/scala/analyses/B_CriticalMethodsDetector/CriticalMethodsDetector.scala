@@ -16,14 +16,12 @@ import scala.util.Random
  */
 class CriticalMethodsDetector(override val shouldExecute: Boolean) extends SubAnalysis {
 
+  /** Logger used inside this sub-analysis */
   override val logger: Logger = Logger("CriticalMethodsDetector")
-
+  /** The name of the sub-analysis */
   override val analysisName: String = "Critical Methods Detector"
-
+  /** The number of the sub-analysis */
   override val analysisNumber: String = "2"
-
-  /** Results string to print after analysis */
-  private val analysisResults = new StringBuilder()
 
   override def executeAnalysis(config: StaticAnalysisConfig): Unit = {
     val analysisConfig = config.criticalMethodsDetector
@@ -84,10 +82,13 @@ class CriticalMethodsDetector(override val shouldExecute: Boolean) extends SubAn
     )
     val callGraph = project.get(callGraphKey)
     logger.info(s"Finished calculation of the ${analysisConfig.callGraphAlgorithmName.toUpperCase} call graph.")
+
     logger.info("Beginning analysis on the call graph...")
-    val tuple = CriticalMethodsAnalysis.analyze(callGraph, analysisConfig.criticalMethods, analysisConfig.ignore)
+    val tuple = CriticalMethodsAnalysis.analyze(logger, callGraph, analysisConfig)
+
     val results = tuple._1
     val ignoredAtLeastOneCall = tuple._2
+    val analysisResults = new StringBuilder()
     if (results.nonEmpty) {
       results.foreach { result =>
         analysisResults.append(result + "\n")

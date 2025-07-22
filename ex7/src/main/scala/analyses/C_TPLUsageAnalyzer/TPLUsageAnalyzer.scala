@@ -21,25 +21,12 @@ import scala.util.Random
  */
 class TPLUsageAnalyzer(override val shouldExecute: Boolean) extends SubAnalysis {
 
+  /** Logger used inside this sub-analysis */
   override val logger: Logger = Logger("TPLUsageAnalyzer")
-
+  /** The name of the sub-analysis */
   override val analysisName: String = "Third Party Library Usage Analyzer"
-
+  /** The number of the sub-analysis */
   override val analysisNumber: String = "3"
-
-  // Add a flag to check whether the user wants visual output or not
-  // private var visual: Boolean = false
-
-  //  override def analysisSpecificParametersDescription: String = {
-  //    """ ========================= CUSTOM PARAMETERS =========================
-  //      | [-config=<config.json> (REQUIRED. Configuration used for analysis. See template for schema.)]
-  //      |
-  //      | This analysis uses a custom config json to configure the project.
-  //      | OPTIONS -cp AND -libcp ARE IGNORED. PLEASE CONFIGURE PROJECT
-  //      | AND LIBRARY JARS VIA THE CONFIG JSON.
-  //      |
-  //      | [-visual (Optional. Shows a graph showing the coverage/usage ratios of the TPLs.)]""".stripMargin
-  //  }
 
   /**
    * Main analysis logic: Build call graph, run TPL method analysis, report results.
@@ -47,6 +34,7 @@ class TPLUsageAnalyzer(override val shouldExecute: Boolean) extends SubAnalysis 
   override def executeAnalysis(config: StaticAnalysisConfig): Unit = {
     val subAnalysis_begin = System.currentTimeMillis()
     val analysisConfig = config.tplUsageAnalyzer
+    val callGraphAlgorithmName = analysisConfig.callGraphAlgorithmName.toUpperCase
 
     // Print out configuration
     val entryPointsFinder = analysisConfig.entryPointsFinder match {
@@ -60,7 +48,7 @@ class TPLUsageAnalyzer(override val shouldExecute: Boolean) extends SubAnalysis 
     logger.info(
       s"""Configuration:
          |  - Count all methods: ${analysisConfig.countAllMethods}
-         |  - Call graph algorithm: ${analysisConfig.callGraphAlgorithmName.toUpperCase}
+         |  - Call graph algorithm: $callGraphAlgorithmName
          |  - Entry points finder: $entryPointsFinder
          |  - Custom entry points: $customEntryPointsString
          |""".stripMargin
@@ -76,7 +64,6 @@ class TPLUsageAnalyzer(override val shouldExecute: Boolean) extends SubAnalysis 
       completelyLoadLibraries = true,
       configuredConfig = opalConfig
     )
-    val callGraphAlgorithmName = analysisConfig.callGraphAlgorithmName.toUpperCase
     val callGraphKey = callGraphAlgorithmName match {
       case "CHA" => CHACallGraphKey
       case "RTA" => RTACallGraphKey
@@ -141,8 +128,6 @@ class TPLUsageAnalyzer(override val shouldExecute: Boolean) extends SubAnalysis 
     analysisResults.append(s"Analysis on call graph: $analysisTime seconds\n")
     analysisResults.append(s"Run time of entire sub-analysis: $subAnalysisTime seconds")
 
-    logger.info(s"Results:\n$analysisResults")
-
     // Output results
     val outputDirectory = s"${config.resultsOutputPath}/3_TPLUsagerAnalyzer"
     val outputDirectoryFile = new File(outputDirectory)
@@ -159,6 +144,8 @@ class TPLUsageAnalyzer(override val shouldExecute: Boolean) extends SubAnalysis 
     JsonIO.writeResult(finalResult, jsonOutputPath)
     exportChart(finalResult, outputDirectory)
     logger.info(s"Wrote results to $outputDirectory.")
+
+    logger.info(s"Results:\n$analysisResults")
   }
 
   /**
@@ -174,7 +161,13 @@ class TPLUsageAnalyzer(override val shouldExecute: Boolean) extends SubAnalysis 
       else jarName.substring(0, 30) + "..."
     }
     // Skip visualization when nothing can be visualized to avoid exception
-    if (libraries.isEmpty) return
+    if (libraries.isEmpty) {
+      val chartFile = new File(s"$outputDirectory/chart.png")
+      if (chartFile.exists) {
+        chartFile.delete()
+      }
+      return
+    }
     val usagePercents: java.util.List[java.lang.Double] =
       results.analysis.map { tplInfo => java.lang.Double.valueOf(tplInfo.usageRatio * 100) }.asJava
 
