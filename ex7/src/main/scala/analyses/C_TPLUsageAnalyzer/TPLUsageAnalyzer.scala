@@ -52,8 +52,7 @@ class TPLUsageAnalyzer(override val shouldExecute: Boolean) extends SubAnalysis 
          |  - Count all methods: ${analysisConfig.countAllMethods}
          |  - Call graph algorithm: $callGraphAlgorithmName
          |  - Entry points finder: $entryPointsFinder
-         |  - Custom entry points: $customEntryPointsString
-         |""".stripMargin
+         |  - Custom entry points: $customEntryPointsString""".stripMargin
     )
 
     // Set up project

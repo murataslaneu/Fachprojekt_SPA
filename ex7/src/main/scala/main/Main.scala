@@ -1,9 +1,12 @@
+package main
+
 import analyses.A_GodClassDetector.GodClassDetector
 import analyses.B_CriticalMethodsDetector.CriticalMethodsDetector
 import analyses.C_TPLUsageAnalyzer.TPLUsageAnalyzer
 import analyses.D1_CriticalMethodsRemover.CriticalMethodsRemover
 import analyses.D2_TPLMethodsRemover.TPLMethodsRemover
 import analyses.E_DeadCodeDetector.DeadCodeDetector
+import analyses.F_ArchitectureValidator.ArchitectureValidator
 import analyses.SubAnalysis
 import com.typesafe.scalalogging.Logger
 import data.{SubAnalysisRun, Summary}
@@ -14,7 +17,6 @@ import util.{JsonIO, ProjectInitializer, Utils}
 
 import java.io.File
 import java.nio.file.{Files, Path}
-import java.time.format.DateTimeFormatter
 import scala.collection.mutable
 
 object Main {
@@ -38,6 +40,13 @@ object Main {
        |with the config in $DEFAULT_INPUT_JSON_PATH.
        |=======================================================================
        |""".stripMargin
+
+  /**
+   * Path where the input config json was read from.
+   *
+   * Exists for report in [[analyses.F_ArchitectureValidator.helpers.ArchitectureValidation]].
+   */
+  var inputJsonPath: String = DEFAULT_INPUT_JSON_PATH
 
   def main(args: Array[String]): Unit = {
     val programStartTime = System.currentTimeMillis()
@@ -86,7 +95,7 @@ object Main {
     /* Begin setup of actual analysis */
 
     // Retrieve path where to read the json file from
-    val inputJsonPath = {
+    inputJsonPath = {
       val relevantArg = args.find(arg => arg.startsWith("-config="))
       if (relevantArg.isDefined) relevantArg.get.substring(8)
       else DEFAULT_INPUT_JSON_PATH
@@ -131,14 +140,14 @@ object Main {
     logger.info(ProjectInitializer.projectStatistics(sampleProject))
 
     // Setup analyses
-    // TODO: Add missing analyses
     val analyses: List[SubAnalysis] = List(
       new GodClassDetector(config.godClassDetector.execute),
       new CriticalMethodsDetector(config.criticalMethodsDetector.execute),
       new TPLUsageAnalyzer(config.tplUsageAnalyzer.execute),
       new CriticalMethodsRemover(config.criticalMethodsRemover.execute),
       new TPLMethodsRemover(config.tplMethodsRemover.execute),
-      new DeadCodeDetector(config.deadCodeDetector.execute)
+      new DeadCodeDetector(config.deadCodeDetector.execute),
+      new ArchitectureValidator(config.architectureValidator.execute)
     )
 
     val subAnalysisSummaries = mutable.ListBuffer[SubAnalysisRun]()
@@ -152,7 +161,7 @@ object Main {
         val outputPath = s"${config.resultsOutputPath}/${subAnalysis.outputFolderName}"
         val deletedFile = Utils.initializeSubAnalysisOutputDirectory(outputPath)
         logger.info(s"Initialized output path $outputPath.")
-        if (deletedFile) logger.warn(s"Deleted at least one file in or at the path while doing so.")
+        if (deletedFile) logger.warn(s"Deleted at least one file during initialization.")
 
         val subAnalysisStartTime = System.currentTimeMillis()
 
@@ -205,7 +214,7 @@ object Main {
     jsonIO.writeSummary(summary, s"$outputPath/summary.json")
     logger.info("Analysis suite finished.")
     logger.info(s"Total run time: $duration seconds.")
-    logger.info(s"Finished at ${timeFinished.format(java.time.format.DateTimeFormatter.ISO_LOCAL_DATE_TIME)}")
+    logger.info(s"Finished at ${timeFinished.format(java.time.format.DateTimeFormatter.ISO_LOCAL_DATE_TIME)}.")
   }
 }
 

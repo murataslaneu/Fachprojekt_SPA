@@ -50,8 +50,7 @@ class CriticalMethodsDetector(override val shouldExecute: Boolean) extends SubAn
          |  - Ignore calls: $ignoreClassString$moreIgnoreCalls
          |  - Call graph algorithm: ${analysisConfig.callGraphAlgorithmName.toUpperCase}
          |  - Entry points finder: $entryPointsFinder
-         |  - Custom entry points: $customEntryPointsString
-         |""".stripMargin
+         |  - Custom entry points: $customEntryPointsString""".stripMargin
     )
 
     // Set up project

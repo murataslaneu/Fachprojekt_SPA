@@ -1,133 +1,124 @@
 package analyses.F_ArchitectureValidator
 
-import com.typesafe.config.Config
-import data.{ArchitectureConfig, RecursiveWarnings}
+import analyses.SubAnalysis
+import com.typesafe.scalalogging.Logger
+import configs.StaticAnalysisConfig
+import data.{ArchitectureSpec, Dependency, RecursiveWarnings, Rule}
 import helpers.{ArchitectureJsonIO, ArchitectureValidation}
-import org.opalj.br.analyses.{Analysis, AnalysisApplication, BasicReport, ProgressManagement, Project, ReportableAnalysisResult}
-import org.opalj.log.LogContext
+import util.ProjectInitializer
 
-import java.io.File
-import java.net.URL
-import scala.collection.mutable.ListBuffer
+import scala.util.Random
 
-object ArchitectureValidator extends Analysis[URL, BasicReport] with AnalysisApplication {
+class ArchitectureValidator(override val shouldExecute: Boolean) extends SubAnalysis {
 
-  var configFile: Option[String] = None
-  var specFile: Option[String] = None
-  var outputPath: String = "architecture-report.json"
-  var onlyMethodAndFieldAccesses: Boolean = false
-  var config: Option[ArchitectureConfig] = None
+  /** Logger used inside this sub-analysis */
+  override val logger: Logger = Logger("ArchitectureValidator")
+  /** The name of the sub-analysis */
+  override val analysisName: String = "Architecture Validator"
+  /** The number of the sub-analysis */
+  override val analysisNumber: String = "6"
+  /** Name of the folder where this sub-analysis will put their results in */
+  override val outputFolderName: String = "6_ArchitectureValidator"
 
-  override def title: String = "Architecture Validator"
+  override def executeAnalysis(config: StaticAnalysisConfig): Unit = {
+    val analysisConfig = config.architectureValidator
+    // Print out config
+    val totalNumberOfRules = {
+      def countRules(rules: List[Rule]): Int = {
+        rules.length + rules.map { rule => if (rule.except.isDefined) countRules(rule.except.get) else 0 }.sum
+      }
 
-  override def checkAnalysisSpecificParameters(parameters: Seq[String]): Iterable[String] = {
-    def getValue(arg: String): String = arg.substring(arg.indexOf("=") + 1).strip()
-
-    val issues: ListBuffer[String] = ListBuffer()
-
-    parameters.foreach {
-      case arg if arg.startsWith("-config=") =>
-        val configPath = getValue(arg)
-        try {
-          config = Some(ArchitectureJsonIO.readConfig(configPath))
-          configFile = Some(configPath)
-        } catch {
-          case ex: Exception => issues += s"Config file at path $configPath could not be parsed: $ex"
-        }
-      case arg if arg.startsWith("-spec=") =>
-        specFile = Some(getValue(arg))
-      case arg if arg.startsWith("-output=") =>
-        outputPath = getValue(arg)
-      case arg if arg.equals("-onlyMethodAndFieldAccesses") => onlyMethodAndFieldAccesses = true
-      case unknown => issues += s"Unknown parameter: $unknown"
+      countRules(analysisConfig.rules)
     }
+    val onlyMethodAndFieldAccessesString = if (analysisConfig.onlyMethodAndFieldAccesses)
+      "Only considering dependencies resulting from method and field accesses."
+    else "Considering all dependencies inside the project."
+    logger.info(
+      s"""Configuration:
+         |  - Only count method and field accesses: ${analysisConfig.onlyMethodAndFieldAccesses}
+         |     --> $onlyMethodAndFieldAccessesString
+         |  - Default rule: ${analysisConfig.defaultRule}
+         |  - Number of additional base rules: ${analysisConfig.rules.length}
+         |  - Total number of additional rules: $totalNumberOfRules""".stripMargin
+    )
 
-    if (config.isEmpty && specFile.isEmpty) {
-      issues += "Either -config=<file> or -spec=<file> must be provided"
-    }
+    // Set up project
+    logger.info("Initializing OPAL project...")
+    val project = ProjectInitializer.setupProject(
+      logger = logger,
+      cpFiles = config.projectJars,
+      libcpFiles = config.libraryJars
+    )
+    val spec = ArchitectureSpec(
+      defaultRule = analysisConfig.defaultRule,
+      rules = analysisConfig.rules
+    )
+    logger.info("Project initialization finished. Starting analysis on project...")
 
-    issues
-  }
+    val report = ArchitectureValidation.analyze(logger, project, spec, config)
 
-  override def analysisSpecificParametersDescription: String =
-    """
-      | ========================= ARCHITECTURE VALIDATOR =========================
-      | [-config=<config.json> (Configuration file containing all analysis parameters)]
-      | [-spec=<spec.json> (Architecture specification file)]
-      | [-output=<output.json> (Output file for the analysis report)]
-      | [-onlyMethodAndFieldAccesses (Only consider dependencies resulting from method and field accesses)]
-      |
-      | Either -config or -spec must be provided.
-      | -config gets prioritized over all other options!
-      | """.stripMargin
+    logger.info("Architecture validation finished.")
 
-  override def setupProject(cpFiles: Iterable[File], libcpFiles: Iterable[File],
-                            completelyLoadLibraries: Boolean, configuredConfig: Config)
-                           (implicit initialLogContext: LogContext): Project[URL] = {
-    config match {
-      case Some(cfg) =>
-        super.setupProject(cfg.projectJars, cfg.libraryJars, cfg.completelyLoadLibraries, configuredConfig)
-      case None =>
-        super.setupProject(cpFiles, libcpFiles, completelyLoadLibraries, configuredConfig)
-    }
-  }
+    val reportOutputDir = s"${config.resultsOutputPath}/$outputFolderName/architecture_report.json"
+    ArchitectureJsonIO.writeReport(report, reportOutputDir)
+    logger.info(s"Wrote json report to $reportOutputDir.")
 
-  override def analyze(project: Project[URL], parameters: Seq[String],
-                       initProgressManagement: Int => ProgressManagement): BasicReport = {
-
-    val actualSpecFile = config.map(_.specificationFile).orElse(specFile).get
-    val actualOutputPath = config.map(_.outputJson).getOrElse(outputPath)
-    val actualOnlyMethodAndFieldAccesses = config.map(_.onlyMethodAndFieldAccesses).getOrElse(onlyMethodAndFieldAccesses)
-
-    println(s"\n==================== Architecture Validation ====================")
-    println(s"* Specification file: $actualSpecFile")
-    println(s"* Output file: $actualOutputPath")
-    println(s"* Project JARs: ${project.allClassFiles.size} classes loaded")
-    println(s"* ${if (actualOnlyMethodAndFieldAccesses) "Only considering dependencies resulting from method and field accesses"
-    else "Considering all dependencies inside the project"}.")
-    println("================================================================\n")
-
-    println("Reading architecture specification...")
-    val spec = ArchitectureJsonIO.readSpecification(actualSpecFile)
-
-    println("Starting architecture validation...")
-
-    val report = ArchitectureValidation.analyze(project, spec,
-      config.getOrElse(ArchitectureConfig(List.empty, List.empty, actualSpecFile, actualOutputPath, actualOnlyMethodAndFieldAccesses)))
-
-    println("Architecture validation finished.")
-    println(s"Found ${report.violations.size} violations")
-    println(s"Generated ${report.warningsCount} warnings")
-
-    ArchitectureJsonIO.writeReport(report, actualOutputPath)
-    println(s"Report written to $actualOutputPath")
+    logger.info(s"Found ${report.violations.size} dependency violations.")
 
     // Print summary
     if (report.violations.nonEmpty) {
-      println("\nViolations found:")
-      report.violations.take(5).foreach { violation =>
-        println(s"  ${violation.fromPackage}.${violation.fromClass} -> ${violation.toPackage}.${violation.toClass} (${violation.accessType})")
-      }
-      if (report.violations.size > 5) {
-        println(s"  ... and ${report.violations.size - 5} more violations")
-      }
+      logger.info(s"Violations found:${buildViolationsString(report.violations, 5)}")
     }
 
     if (report.warnings.warnings.nonEmpty || report.warnings.innerWarnings.nonEmpty) {
-      println("\nWarnings:")
-      prettyPrintWarnings(report.warnings)
+      logger.warn(s"Generated a total of ${report.warningsCount} warnings regarding the specification.")
+      logger.warn(s"Specification warnings:\n${prettyPrintWarnings(report.warnings)}")
     }
-
-    BasicReport("")
   }
 
-  override val analysis: Analysis[URL, ReportableAnalysisResult] = this
-
-  private def prettyPrintWarnings(warnings: RecursiveWarnings, indent: String = ""): Unit = {
-    warnings.warnings.foreach { message => println(s"$indent- $message")}
-    warnings.innerWarnings.foreach {case (rule, nestedWarnings) =>
-      println(s"$indent$rule:")
-      prettyPrintWarnings(nestedWarnings, indent + "  ")
+  /**
+   * Builds a readable string out of the [[RecursiveWarnings]] generated during the specification validation.
+   *
+   * @param warnings The warning(s) to print out.
+   * @param indent   Depth for the warning.
+   * @return String to output to the log.
+   */
+  private def prettyPrintWarnings(warnings: RecursiveWarnings, indent: String = ""): String = {
+    val stringBuilder = new StringBuilder()
+    warnings.warnings.foreach { message => stringBuilder.append(s"$indent- $message\n") }
+    warnings.innerWarnings.foreach { case (rule, nestedWarnings) =>
+      stringBuilder.append(s"$indent$rule:\n")
+      stringBuilder.append(prettyPrintWarnings(nestedWarnings, indent + "  ") + "\n")
     }
+    stringBuilder.toString
+  }
+
+  /**
+   * Builds a string that can be used to print some sample violations in the logs.
+   *
+   * Also sorts the samples alphabetically.
+   *
+   * @param violations Violations generated by the analysis.
+   * @param k The number of samples to show. When violations contains less than k elements, just show all elements.
+   * @return String that can be outputted in the logs.
+   */
+  //noinspection SameParameterValue
+  private def buildViolationsString(
+                                     violations: List[Dependency],
+                                     k: Int): String = {
+    val samples = Random.shuffle(violations).take(k)
+    if (samples.isEmpty) return "None"
+    val mainString = samples.map { sample =>
+      val fromPackage = sample.fromPackage
+      val fromClass = sample.fromClass
+      val toPackage = sample.toPackage
+      val toClass = sample.toClass
+      val accessType = sample.accessType.name
+      s"$fromPackage.$fromClass -> $toPackage.$toClass ($accessType)"
+    }.sorted.mkString("\n  - ", "\n  - ", "")
+    val moreViolations = if (violations.size > k) s"\n... and ${violations.size - k} more violations"
+    else ""
+
+    s"$mainString$moreViolations"
   }
 }

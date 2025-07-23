@@ -54,8 +54,7 @@ class CriticalMethodsRemover(override val shouldExecute: Boolean) extends SubAna
     logger.info(
       s"""Configuration:
          |  - Critical Methods: $criticalMethodsString
-         |  - Ignore calls: $ignoreClassString$moreIgnoreCalls
-         |""".stripMargin
+         |  - Ignore calls: $ignoreClassString$moreIgnoreCalls""".stripMargin
     )
 
     // Set up project
@@ -228,9 +227,9 @@ class CriticalMethodsRemover(override val shouldExecute: Boolean) extends SubAna
   private def findCriticalInvokes(
                                    method: Method,
                                    criticalMethods: List[(String, String)]
-                                 ): Seq[(Int, Instruction)] = {
+                                 ): Array[(Int, Instruction)] = {
 
-    val result: Option[Seq[(Int, Instruction)]] = method.body.map { code =>
+    val result: Option[Array[(Int, Instruction)]] = method.body.map { code =>
       code.instructions.zipWithIndex.collect {
         case (instr: MethodInvocationInstruction, idx)
           if criticalMethods.contains((instr.declaringClass.toJava, instr.name)) =>
@@ -238,7 +237,7 @@ class CriticalMethodsRemover(override val shouldExecute: Boolean) extends SubAna
       }
     }
 
-    result.getOrElse(Seq.empty[(Int, Instruction)])
+    result.getOrElse(Array.empty[(Int, Instruction)])
   }
 
   // Prints the original bytecode instructions of a method before modification

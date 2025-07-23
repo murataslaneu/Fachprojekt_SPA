@@ -2,6 +2,9 @@ package analyses.F_ArchitectureValidator.helpers
 
 import analyses.F_ArchitectureValidator.data.AccessType._
 import analyses.F_ArchitectureValidator.data._
+import com.typesafe.scalalogging.Logger
+import configs.{ArchitectureValidatorConfig, StaticAnalysisConfig}
+import main.Main
 import org.opalj.br.analyses.Project
 import org.opalj.br.instructions._
 import org.opalj.br.{ClassFile, ObjectType, ReferenceType}
@@ -29,10 +32,6 @@ object ArchitectureValidation {
         }
       case None => "[Unknown]"
     }
-  }
-
-  def matchesPackage(rulePackage: String, actualPackage: String): Boolean = {
-    actualPackage == rulePackage || actualPackage.startsWith(rulePackage + ".")
   }
 
   /**
@@ -157,28 +156,7 @@ object ArchitectureValidation {
     val allPackages = project.allClassFiles.map(_.thisType.packageName.replace('/', '.')).toSet
     val allJars = project.allClassFiles.map(cf => getJarName(cf, project)).toSet
 
-    // Maybe useful to improve warnings regarding "Exception rule ... may not be within parent rule scope ...".
-    // Example: In the ground truth example, there are 4 warnings of this type, although the rules are actually within
-    // the parents scope.
-    // However, I couldn't get it to work
-
-    //    val allClassesWithJars = project.allClassFiles.map(cf => {
-    //      val source = project.source(cf)
-    //      if (source.isDefined) {
-    //        val pathSplit = source.get.toString.split('!')
-    //        val classFilePath = {
-    //          val path = pathSplit.last
-    //          // Remove .class at the end of the class file path (if present)
-    //          if (path.endsWith(".class")) path.substring(0, path.length - 6)
-    //          else path
-    //        }
-    //        val jarFileName = pathSplit(pathSplit.length - 2).split('/').last
-    //        (jarFileName, classFilePath.substring(1).replace('/', '.'))
-    //      }
-    //      else ("[Unknown]", cf.thisType.toJava)
-    //    }).toSet
-    //    println(allClassesWithJars.mkString("", "\n", ""))
-
+    /** Removes [[RecursiveWarnings]] objects that contain no warnings. */
     def cleanWarnings(rw: RecursiveWarnings): Option[RecursiveWarnings] = {
       val cleanedInner = rw.innerWarnings.flatMap {
         case (k, v) => cleanWarnings(v).map(k -> _)
@@ -190,6 +168,12 @@ object ArchitectureValidation {
         None
     }
 
+    /**
+     * Checks whether an entity specified in a rule can be found in the project.
+     *
+     * @param entity The entity to check
+     * @return Possibly a String containing a warning (ideally None)
+     */
     def validateEntity(entity: String): Option[String] = {
       if (entity.endsWith(".jar")) {
         if (!allJars.contains(entity)) {
@@ -207,9 +191,15 @@ object ArchitectureValidation {
       None
     }
 
-    def validateRule(rule: Rule, parentRule: Option[Rule] = None, depth: Int = 0): RecursiveWarnings = {
+    /**
+     * Checks whether a rule is sensical in the context of the project or is (maybe) not needed or incorrect.
+     *
+     * @param rule The [[Rule]] to check.
+     * @param parentRule The [[Rule]] that contained rule.
+     * @return [[RecursiveWarnings]] regarding this rule and its children.
+     */
+    def validateRule(rule: Rule, parentRule: Option[Rule] = None): RecursiveWarnings = {
       val currentWarnings = ListBuffer.empty[String]
-      //val indent = "  " * depth
 
       // Validate entities exist
       val entityFromWarning = validateEntity(rule.from)
@@ -228,14 +218,12 @@ object ArchitectureValidation {
         case Some(parent) =>
           // Exception should be more specific than parent rule
           if (rule.`type` == parent.`type`) {
-            //addWarning(currentPath, s"${indent}Exception rule has same type as parent rule")
             currentWarnings += "Exception rule has same type as parent rule"
             warningsCount += 1
           }
 
           // Exception should be within the scope of parent rule
           if (!isEntitySubsetOf(rule.from, parent.from) || !isEntitySubsetOf(rule.to, parent.to)) {
-            //addWarning(currentPath, s"${indent}Exception rule may not be within parent rule scope")
             currentWarnings += "Exception rule may not be within parent rule scope"
             warningsCount += 1
           }
@@ -248,7 +236,7 @@ object ArchitectureValidation {
       // Validate exceptions recursively
       val innerWarnings = rule.except.getOrElse(Nil).map { child =>
         val key = s"${child.from} -> ${child.to}"
-        key -> validateRule(child, Some(rule), depth + 1)
+        key -> validateRule(child, Some(rule))
       }.toMap
       RecursiveWarnings(currentWarnings.toList, innerWarnings)
     }
@@ -293,7 +281,7 @@ object ArchitectureValidation {
   /**
    * Enhanced dependency detection including potential calls
    */
-  private def findAllDependencies(project: Project[URL], config: ArchitectureConfig): Set[Dependency] = {
+  private def findAllDependencies(project: Project[URL], config: ArchitectureValidatorConfig): Set[Dependency] = {
     val dependencies = mutable.Set.empty[Dependency]
 
     /**
@@ -381,40 +369,44 @@ object ArchitectureValidation {
   //  /**
   //   * Debug method to show all packages and classes in the project
   //   */
-  //  private def debugPackageNames(project: Project[URL]): Unit = {
-  //    println("=== DEBUG: All packages in project ===")
+  //  private def debugPackageNames(logger: Logger, project: Project[URL]): Unit = {
+  //    logger.debug("=== DEBUG: All packages in project ===")
   //    val allPackages = project.allClassFiles.map(_.thisType.packageName).toSet.toList.sorted
-  //    allPackages.foreach(pkg => println(s"  Package: $pkg"))
+  //    allPackages.foreach(pkg => logger.debug(s"  Package: $pkg"))
   //
-  //    println(s"\nTotal packages: ${allPackages.size}")
-  //    println(s"Total classes: ${project.allClassFiles.size}")
+  //    logger.debug(s"\nTotal packages: ${allPackages.size}")
+  //    logger.debug(s"Total classes: ${project.allClassFiles.size}")
   //
   //    // Find util packages specifically
   //    val utilClasses = project.allClassFiles.filter(_.thisType.packageName.contains("util"))
-  //    println(s"\nClasses containing 'util': ${utilClasses.size}")
+  //    logger.debug(s"\nClasses containing 'util': ${utilClasses.size}")
   //    utilClasses.take(10).foreach(cls =>
-  //      println(s"  ${cls.thisType.toJava} (package: ${cls.thisType.packageName})")
+  //      logger.debug(s"  ${cls.thisType.toJava} (package: ${cls.thisType.packageName})")
   //    )
   //
-  //    println("=" * 50)
+  //    logger.debug("=" * 50)
   //  }
 
   /**
    * Main analysis method - Enhanced version
    */
-  def analyze(project: Project[URL], specification: ArchitectureSpec, config: ArchitectureConfig): ArchitectureReport = {
+  def analyze(logger: Logger, project: Project[URL], specification: ArchitectureSpec, config: StaticAnalysisConfig): ArchitectureReport = {
     val startTime = System.currentTimeMillis()
 
     // DEBUG: Show all packages and classes
     //debugPackageNames(project)
 
     // Validate specification
+    logger.info("Validating specification...")
     val (warningsCount, warnings) = validateSpecification(specification, project)
+    if (warningsCount > 0) logger.warn(s"Generated $warningsCount warnings regarding the specification.")
+    else logger.info("Specification valid, generated no warnings.")
 
     // Find all dependencies
-    println("Finding all dependencies...")
-    val allDependencies = findAllDependencies(project, config)
-    println(s"Found ${allDependencies.size} total dependencies")
+    logger.info("Finding all dependencies...")
+    val allDependencies = findAllDependencies(project, config.architectureValidator)
+    logger.info(s"Found ${allDependencies.size} total dependencies.")
+    logger.info(s"Checking for each dependency whether it is allowed or not...")
 
     val violations = mutable.ListBuffer.empty[Dependency]
 
@@ -427,17 +419,16 @@ object ArchitectureValidation {
 
     val endTime = System.currentTimeMillis()
     val runtime = endTime - startTime
+    val duration = f"${runtime / 1000.0}%.3f".replace(',', '.')
 
-    println(s"Analysis completed in ${runtime}ms")
-    println(s"Total dependencies analyzed: ${allDependencies.size}")
-    println(s"Violations found: ${violations.size}")
+    logger.info(s"Dependency finding and checking completed in $duration seconds.")
 
     ArchitectureReport(
-      config.projectJars.map(_.getPath.replace('\\', '/')),
-      config.specificationFile,
+      config.projectJars.map(_.getPath.replace('\\', '/')).toList,
+      Main.inputJsonPath,
       java.time.LocalDateTime.now(),
       runtime,
-      config.onlyMethodAndFieldAccesses,
+      config.architectureValidator.onlyMethodAndFieldAccesses,
       violations.toList,
       warningsCount,
       warnings

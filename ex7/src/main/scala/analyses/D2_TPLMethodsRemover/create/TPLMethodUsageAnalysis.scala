@@ -38,7 +38,7 @@ object TPLMethodUsageAnalysis {
     }
 
     // Step 2: Go through all reachable methods (found by the call graph)
-    callGraph.reachableMethods.foreach { context =>
+    callGraph.reachableMethods().foreach { context =>
       // Step 2.1: Check type of declaredMethod
       val declaredMethod = context.method
       val methods = mutable.ListBuffer.empty[Method]
