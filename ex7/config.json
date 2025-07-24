@@ -68,7 +68,8 @@
   },
   "deadCodeDetector": {
     "execute": true,
-    "completelyLoadLibraries": false
+    "completelyLoadLibraries": false,
+    "domains": "DEFAULT"
   },
   "architectureValidator": {
     "execute": true,

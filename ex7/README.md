@@ -1,2 +1,1 @@
 - TODO: Improve logging (less text, put more in the reports)
-- TODO: Make domains in DeadCodeDetector configurable

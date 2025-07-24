@@ -60,7 +60,8 @@ class JsonIO {
       ),
       "deadCodeDetector" -> Json.obj(
         "execute" -> false,
-        "completelyLoadLibraries" -> "DEFAULT"
+        "completelyLoadLibraries" -> "DEFAULT",
+        "domains" -> "DEFAULT"
       ),
       "architectureValidator" -> Json.obj(
         "execute" -> false,
@@ -479,8 +480,31 @@ class JsonIO {
       expectedTypeDescription = "boolean, i.e. true or false",
       isRequiredOption = execute
     )
+    // Domains also accepts a custom string "ALL" that selects all domains
+    val domains = subAnalysisJson \ "domains" match {
+      // Field found and contains "DEFAULT"
+      case JsDefined(JsString("DEFAULT")) =>
+        DeadCodeDetectorConfig.DEFAULT_DOMAINS
+      case JsDefined(JsString("ALL")) =>
+        List[Int](1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13)
+      // Field found and contains some value
+      case JsDefined(jsValue) =>
+        jsValue.validate[List[Int]] match {
+          // Value has expected type
+          case JsSuccess(value, _) => value
+          // Value has wrong type, log error or warning
+          case JsError(_) =>
+            val message = "Expected List of Integers, \"ALL\" or \"DEFAULT\""
+            handleOptionValueInvalid(execute, message, parentField, "domains")
+            DeadCodeDetectorConfig.DEFAULT_DOMAINS // Return default value in case just a warning was printed out
+        }
+      // Field not found, log error or warning
+      case _: JsUndefined =>
+        handleOptionNotFound(execute, parentField, "domains")
+        DeadCodeDetectorConfig.DEFAULT_DOMAINS // Return default value in case just a warning was printed out
+    }
 
-    DeadCodeDetectorConfig(execute, completelyLoadLibraries)
+    DeadCodeDetectorConfig(execute, completelyLoadLibraries, domains)
   }
 
   private def readArchitectureValidatorConfig(json: JsValue): ArchitectureValidatorConfig = {

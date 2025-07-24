@@ -70,15 +70,6 @@ object CriticalMethodsAnalysis {
               toMethod = s"$methodName${context.method.descriptor.toUMLNotation}",
               numberOfCalls = count
             )
-//            if (isDirect) {
-//              warnings += s"[WARNING] Found $count direct call${if (count != 1) "s" else ""}:\n" +
-//                s"    To: Class $declaringClassName with method $methodName${context.method.descriptor.toUMLNotation}\n" ++
-//                s"    In: Class $callerClassName with method$callerMethodName${callerDescriptor.toUMLNotation}"
-//            } else {
-//              warnings += s"[WARNING] Found $count indirect call${if (count != 1) "s" else ""}:\n" +
-//                s"    To: Class $declaringClassName with method $methodName${context.method.descriptor.toUMLNotation}\n" ++
-//                s"    In: Class $callerClassName with method$callerMethodName${callerDescriptor.toUMLNotation}"
-//            }
           }
           else {
             ignoredCall = true

@@ -271,7 +271,7 @@ class GodClassDetector(override val shouldExecute: Boolean) extends SubAnalysis 
     }.sorted.mkString("\n  - ", "\n  - ", "")
 
     val remainingClasses = godClasses.length - k
-    val moreClasses = if (remainingClasses > 0) s"\n... and ${remainingClasses} more god class${if (remainingClasses != 1) "es" else ""}"
+    val moreClasses = if (remainingClasses > 0) s"\n... and $remainingClasses more god class${if (remainingClasses != 1) "es" else ""}"
     else ""
 
     s"$mainString$moreClasses"
