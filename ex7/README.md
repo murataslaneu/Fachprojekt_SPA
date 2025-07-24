@@ -1,3 +1,2 @@
-- TODO: Json-Report for GodClassDetector and CriticalMethodsDetector
 - TODO: Improve logging (less text, put more in the reports)
 - TODO: Make domains in DeadCodeDetector configurable

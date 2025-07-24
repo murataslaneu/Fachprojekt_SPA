@@ -82,4 +82,33 @@ object Utils {
     }
     deletedFile
   }
+
+  /**
+   * Deletes the directory of a sub-analysis that may have been left over in a previous analysis run.
+   *
+   * @param path The path to delete.
+   * @return `true` if at least one file was deleted, `false` otherwise.
+   */
+  def deleteSubAnalysisOutputDirectory(path: String): Boolean = {
+    val outputPath = Path.of(path)
+    var deletedFile = false
+    if (Files.exists(outputPath)) {
+      deletedFile = true
+      // Directory already exists, delete everything
+      Files.walkFileTree(outputPath, new SimpleFileVisitor[Path]() {
+        override def visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult = {
+          Files.delete(file)
+          FileVisitResult.CONTINUE
+        }
+
+        override def postVisitDirectory(dir: Path, exc: IOException): FileVisitResult = {
+          // Delete every directory,
+          // including the directory (possibly) containing the results from a previous run itself
+          Files.delete(dir)
+          FileVisitResult.CONTINUE
+        }
+      })
+    }
+    deletedFile
+  }
 }

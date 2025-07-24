@@ -201,6 +201,11 @@ object Main {
             )
         }
       }
+      else {
+        val outputPath = s"${config.resultsOutputPath}/${subAnalysis.outputFolderName}"
+        val deletedFile = Utils.deleteSubAnalysisOutputDirectory(outputPath)
+        if (deletedFile) logger.warn(s"Deleted $outputPath from a (probably) previous run.")
+      }
     }
     val programFinishTime = System.currentTimeMillis()
     val timeFinished = java.time.LocalDateTime.now()

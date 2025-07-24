@@ -2,6 +2,7 @@ package analyses.B_CriticalMethodsDetector.analysis
 
 import configs.CriticalMethodsDetectorConfig
 import _root_.data.SelectedMethodsOfClass
+import analyses.B_CriticalMethodsDetector.data.CriticalCall
 import org.opalj.br.DeclaredMethod
 import org.opalj.br.fpcf.properties.Context
 import org.opalj.tac.cg.CallGraph
@@ -19,15 +20,15 @@ object CriticalMethodsAnalysis {
    *
    * @param callGraph The call graph generated with OPAL.
    * @param config    The config for this analysis.
-   * @return A 2-tuple. The first element is a list of warnings as strings, the second a boolean whether at least one
+   * @return A 2-tuple. The first element is a list the found critical calls, the second a boolean whether at least one
    *         found method call has been suppressed.
    */
-  def analyze(callGraph: CallGraph, config: CriticalMethodsDetectorConfig): (List[String], Boolean) = {
+  def analyze(callGraph: CallGraph, config: CriticalMethodsDetectorConfig): (List[CriticalCall], Boolean) = {
     val criticalMethods = config.criticalMethods
     val ignore = config.ignore
 
     var ignoredCall: Boolean = false
-    val warnings = ListBuffer[String]()
+    val criticalCalls =  ListBuffer[CriticalCall]()
 
     // First look through all reachable method if one of them is critical
     callGraph.reachableMethods().iterator.foreach { context: Context =>
@@ -53,7 +54,6 @@ object CriticalMethodsAnalysis {
           val callerClassName = tuple._1._1.declaringClassType.toJava
           val callerMethodName = tuple._1._1.name
           val callerDescriptor = tuple._1._1.descriptor
-          val isDirect = tuple._1._2
           val shouldIgnore = ignore.exists { ic =>
             ic.callerClass == callerClassName &&
               ic.callerMethod == callerMethodName &&
@@ -63,15 +63,22 @@ object CriticalMethodsAnalysis {
 
           if (!shouldIgnore) {
             // Warning not ignored, add to result
-            if (isDirect) {
-              warnings += s"[WARNING] Found $count direct call${if (count != 1) "s" else ""}:\n" +
-                s"    To: Class $declaringClassName with method $methodName${context.method.descriptor.toUMLNotation}\n" ++
-                s"    In: Class $callerClassName with method$callerMethodName${callerDescriptor.toUMLNotation}"
-            } else {
-              warnings += s"[WARNING] Found $count indirect call${if (count != 1) "s" else ""}:\n" +
-                s"    To: Class $declaringClassName with method $methodName${context.method.descriptor.toUMLNotation}\n" ++
-                s"    In: Class $callerClassName with method$callerMethodName${callerDescriptor.toUMLNotation}"
-            }
+            criticalCalls += CriticalCall(
+              fromClass = callerClassName,
+              fromMethod = s"$callerMethodName${callerDescriptor.toUMLNotation}",
+              toClass = declaringClassName,
+              toMethod = s"$methodName${context.method.descriptor.toUMLNotation}",
+              numberOfCalls = count
+            )
+//            if (isDirect) {
+//              warnings += s"[WARNING] Found $count direct call${if (count != 1) "s" else ""}:\n" +
+//                s"    To: Class $declaringClassName with method $methodName${context.method.descriptor.toUMLNotation}\n" ++
+//                s"    In: Class $callerClassName with method$callerMethodName${callerDescriptor.toUMLNotation}"
+//            } else {
+//              warnings += s"[WARNING] Found $count indirect call${if (count != 1) "s" else ""}:\n" +
+//                s"    To: Class $declaringClassName with method $methodName${context.method.descriptor.toUMLNotation}\n" ++
+//                s"    In: Class $callerClassName with method$callerMethodName${callerDescriptor.toUMLNotation}"
+//            }
           }
           else {
             ignoredCall = true
@@ -80,6 +87,6 @@ object CriticalMethodsAnalysis {
       }
     }
 
-    (warnings.toList, ignoredCall)
+    (criticalCalls.toList, ignoredCall)
   }
 }

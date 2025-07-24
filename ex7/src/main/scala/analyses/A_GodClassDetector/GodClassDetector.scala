@@ -74,7 +74,7 @@ class GodClassDetector(override val shouldExecute: Boolean) extends SubAnalysis 
     val godClassCount = godClasses.length
 
     val report = JsonReport(
-      projectJars = config.projectJars.map {file => file.getPath.replace('\\', '/')},
+      projectJars = config.projectJars.map { file => file.getPath.replace('\\', '/') },
       wmcThreshold = wmcThreshold,
       tccThreshold = tccThreshold,
       atfdThreshold = atfdThreshold,
@@ -84,7 +84,7 @@ class GodClassDetector(override val shouldExecute: Boolean) extends SubAnalysis 
     val outputDirectory = s"${config.resultsOutputPath}/$outputFolderName"
     val jsonOutputPath = s"$outputDirectory/results.json"
     writeJsonReport(report, jsonOutputPath)
-    logger.info(s"Wrote json report to $outputDirectory.")
+    logger.info(s"Wrote json report to $jsonOutputPath.")
 
     if (godClassCount == 0) {
       logger.info(s"Found no god classes.")
@@ -131,17 +131,6 @@ class GodClassDetector(override val shouldExecute: Boolean) extends SubAnalysis 
         atfd = atfd,
         nof = nof
       ))
-      //
-      // logger.info(f"Found god class ${classFile.thisType.fqn} (WMC $wmc, TCC $tcc%.2f, ATFD $atfd, NOF $nof).")
-      // godClassCount += 1
-      //
-      // // Build detailed information about this God Class
-      // godClassDetails.append(s"God Class: ${classFile.thisType.fqn}\n")
-      // godClassDetails.append(s"  - WMC (methods): $wmc (threshold: $wmcThreshold)\n")
-      // godClassDetails.append(f"  - TCC (cohesion): $tcc%.2f (threshold: < $tccThreshold)\n")
-      // godClassDetails.append(s"  - ATFD (foreign data): $atfd (threshold: > $atfdThreshold)\n")
-      // godClassDetails.append(s"  - NOF (fields): $nof (threshold: $nofThreshold)\n")
-      // godClassDetails.append("--------------------------------------------------")
     }
     else None
   }
@@ -265,7 +254,7 @@ class GodClassDetector(override val shouldExecute: Boolean) extends SubAnalysis 
    * Also sorts the samples alphabetically.
    *
    * @param godClasses God classes found by the analysis.
-   * @param k The number of samples to show. When godClasses contains less than k elements, just show all elements.
+   * @param k          The number of samples to show. When godClasses contains less than k elements, just show all elements.
    * @return String that can be outputted in the logs.
    */
   //noinspection SameParameterValue
@@ -275,13 +264,14 @@ class GodClassDetector(override val shouldExecute: Boolean) extends SubAnalysis 
     val mainString = samples.map { sample =>
       val className = sample.className
       val wmc = sample.wmc
-      val tcc = f"${sample.tcc}%.2f".replace(',','.')
+      val tcc = f"${sample.tcc}%.2f".replace(',', '.')
       val atfd = sample.atfd
       val nof = sample.nof
       f"$className: WMC $wmc, TCC $tcc, ATFD $atfd, NOF $nof"
     }.sorted.mkString("\n  - ", "\n  - ", "")
 
-    val moreClasses = if (godClasses.length > k) s"\n... and ${godClasses.size - k} more god classes"
+    val remainingClasses = godClasses.length - k
+    val moreClasses = if (remainingClasses > 0) s"\n... and ${remainingClasses} more god class${if (remainingClasses != 1) "es" else ""}"
     else ""
 
     s"$mainString$moreClasses"

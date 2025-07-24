@@ -1,13 +1,16 @@
 package analyses.B_CriticalMethodsDetector
 
+import data.{CriticalCall, JsonReport}
 import analyses.SubAnalysis
 import analysis.CriticalMethodsAnalysis
 import com.typesafe.scalalogging.Logger
 import configs.StaticAnalysisConfig
 import org.opalj.tac.cg.{CFA_1_1_CallGraphKey, CHACallGraphKey, CTACallGraphKey, RTACallGraphKey, XTACallGraphKey}
 import org.slf4j.MarkerFactory
+import play.api.libs.json.Json
 import util.{ProjectInitializer, Utils}
 
+import java.io.{File, PrintWriter}
 import scala.util.Random
 
 
@@ -29,10 +32,10 @@ class CriticalMethodsDetector(override val shouldExecute: Boolean) extends SubAn
     val analysisConfig = config.criticalMethodsDetector
     // Print out configuration
     val criticalMethodsString = Utils.buildSampleSelectedMethodsString(analysisConfig.criticalMethods, 5, 3)
-    var ignoreClassString = Random.shuffle(analysisConfig.ignore).take(10).map {ignoreCall =>
+    var ignoreClassString = Random.shuffle(analysisConfig.ignore).take(10).map { ignoreCall =>
       s"${ignoreCall.callerClass}#${ignoreCall.callerMethod} -> ${ignoreCall.targetClass}#${ignoreCall.targetMethod}"
     }.mkString("\n    - ", "\n    - ", "")
-    val moreIgnoreCalls = if(analysisConfig.ignore.size > 10) s"\n... and ${analysisConfig.ignore.size - 10} more ignores"
+    val moreIgnoreCalls = if (analysisConfig.ignore.size > 10) s"\n... and ${analysisConfig.ignore.size - 10} more ignores"
     else ""
     // Override ignoreClassString if it doesn't contain anything
     if (analysisConfig.ignore.isEmpty) ignoreClassString = "None"
@@ -85,21 +88,73 @@ class CriticalMethodsDetector(override val shouldExecute: Boolean) extends SubAn
     logger.info(s"Finished calculation of the ${analysisConfig.callGraphAlgorithmName.toUpperCase} call graph.")
 
     logger.info("Beginning analysis on the call graph...")
-    val tuple = CriticalMethodsAnalysis.analyze(callGraph, analysisConfig)
+    val (criticalCalls, ignoredAtLeastOneCall) = CriticalMethodsAnalysis.analyze(callGraph, analysisConfig)
+    logger.info("Analysis completed.")
 
-    val results = tuple._1
-    val ignoredAtLeastOneCall = tuple._2
-    val analysisResults = new StringBuilder()
-    if (results.nonEmpty) {
-      results.foreach { result =>
-        analysisResults.append(result + "\n")
+    val report = JsonReport(
+      projectJars = config.projectJars.map { file => file.getPath.replace('\\', '/') },
+      libraryJars = config.libraryJars.map { file => file.getPath.replace('\\', '/') },
+      criticalMethods = analysisConfig.criticalMethods,
+      ignore = analysisConfig.ignore,
+      callGraphAlgorithmUsed = analysisConfig.callGraphAlgorithmName.toUpperCase,
+      usedEntryPointsFinder = entryPointsFinder,
+      customEntryPoints = analysisConfig.customEntryPoints,
+      criticalCallsFound = criticalCalls.length,
+      criticalCalls = criticalCalls
+    )
+
+    val outputDirectory = s"${config.resultsOutputPath}/$outputFolderName"
+    val jsonOutputPath = s"$outputDirectory/results.json"
+    writeJsonReport(report, jsonOutputPath)
+    logger.info(s"Wrote json report to $jsonOutputPath.")
+
+    if (criticalCalls.isEmpty) {
+      logger.info("Found no critical calls.")
+      if (ignoredAtLeastOneCall) {
+        logger.info("Method calls have been found but were ignored due to the config.")
       }
-      if (ignoredAtLeastOneCall) analysisResults.append("Other method calls have been found but were ignored due to the config.\n")
-    } else {
-      if (ignoredAtLeastOneCall) analysisResults.append("Method calls have been found but were ignored due to the config.\n")
     }
+    else {
+      val resultsString = buildCriticalCallsString(criticalCalls, 10)
+      logger.info(s"Found ${criticalCalls.length} critical call${if (criticalCalls.length != 1) "s" else ""}: $resultsString")
+      if (ignoredAtLeastOneCall) {
+        logger.info("Other method calls have been found but were ignored due to the config.")
+      }
+    }
+  }
 
-    logger.info(s"Analysis completed. Found ${results.length} critical call${if (results.length != 1) "s" else ""}.")
-    logger.info(s"Results:\n${analysisResults.toString}")
+  /** Writes the analysis result to a file in JSON format */
+  private def writeJsonReport(report: JsonReport, path: String): Unit = {
+    val writer = new PrintWriter(new File(path))
+    writer.write(Json.prettyPrint(Json.toJson(report)))
+    writer.close()
+  }
+
+  /**
+   * Builds a string that can be used to print some sample critical calls in the logs.
+   *
+   * Also sorts the samples alphabetically.
+   *
+   * @param criticalCalls CriticalCalls found by the analysis.
+   * @param k          The number of samples to show. When criticalCalls contains less than k elements, just show all elements.
+   * @return String that can be outputted in the logs.
+   */
+  //noinspection SameParameterValue
+  private def buildCriticalCallsString(criticalCalls: List[CriticalCall], k: Int): String = {
+    val samples = Random.shuffle(criticalCalls).take(k)
+    if (samples.isEmpty) return "None"
+    val mainString = samples.map { sample =>
+      val from = s"${sample.fromClass}#${sample.fromMethod}"
+      val to = s"${sample.toClass}#${sample.toMethod}"
+      val count = sample.numberOfCalls
+      s"""  - Critical call of $to
+         |    - From: $from
+         |    - Number of calls: $count""".stripMargin
+    }.sorted.mkString("\n", "\n", "")
+    val remainingCalls = criticalCalls.length - k
+    val moreClasses = if (remainingCalls > 0) s"\n... and $remainingCalls more critical call${if (remainingCalls != 1) "s" else ""}"
+    else ""
+
+    s"$mainString$moreClasses"
   }
 }
