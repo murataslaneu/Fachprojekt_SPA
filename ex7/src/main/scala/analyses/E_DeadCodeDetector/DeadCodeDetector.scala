@@ -1,5 +1,6 @@
 package analyses.E_DeadCodeDetector
 
+import analyses.E_DeadCodeDetector.data.MultiDomainMethodWithDeadCode
 import analyses.SubAnalysis
 import com.typesafe.scalalogging.Logger
 import configs.StaticAnalysisConfig
@@ -8,6 +9,7 @@ import org.opalj.ai.common.DomainRegistry
 import util.ProjectInitializer
 
 import java.nio.file.{Files, Path}
+import scala.util.Random
 
 /**
  * Application that searches through the project for dead instructions
@@ -64,6 +66,14 @@ class DeadCodeDetector(override val shouldExecute: Boolean) extends SubAnalysis 
       JsonIO.writeSingleDomainResult(report, singleDomainReportPath)
     }
     logger.info(s"Reports written to $outputDir.")
+
+    val numberOfMethodsWithDeadCode = multiDomainReport.totalMethodsWithDeadInstructions
+
+    if (numberOfMethodsWithDeadCode == 0) logger.info("Found no methods with dead instructions.")
+    else {
+      val methodsWithDeadCodeString = buildFoundMethodsWithDeadCodeString(multiDomainReport.methodsFound, 10)
+      logger.info(s"Found a total of $numberOfMethodsWithDeadCode methods with dead instructions: $methodsWithDeadCodeString")
+    }
   }
 
   /**
@@ -108,5 +118,33 @@ class DeadCodeDetector(override val shouldExecute: Boolean) extends SubAnalysis 
     }
 
     stringBuilder.toString
+  }
+
+  /**
+   * Builds a string showing a sample of the methods that have at least one dead instructions.
+   *
+   * @param methodsWithDeadCode Grouped results from the analysis.
+   * @param k Number of samples to show.
+   * @return String that can be shown in the logs.
+   */
+  //noinspection SameParameterValue
+  private def buildFoundMethodsWithDeadCodeString(methodsWithDeadCode: List[MultiDomainMethodWithDeadCode], k: Int): String = {
+    val samples = Random.shuffle(methodsWithDeadCode).take(k)
+    if (samples.isEmpty) return "None"
+    val mainString = samples.map { sample =>
+      val className = sample.enclosingTypeName
+      val method = sample.fullSignature
+      val totalInstructions = sample.numberOfTotalInstructions
+      val deadInstructions =sample.numberOfDeadInstructions
+      s"""In $className:
+         |    - Method: $method
+         |      - Total instructions: $totalInstructions
+         |      --> $deadInstructions instruction${if (deadInstructions != 1) "s are" else " is"} determined to be never accessed""".stripMargin
+    }.sorted.mkString("\n  - ", "\n  - ", "")
+    val remainingMethods = methodsWithDeadCode.length - k
+    val moreMethods = if (remainingMethods > 0) s"\n... and $remainingMethods more method${if (remainingMethods != 1) "s" else ""}"
+    else ""
+
+    s"$mainString$moreMethods"
   }
 }

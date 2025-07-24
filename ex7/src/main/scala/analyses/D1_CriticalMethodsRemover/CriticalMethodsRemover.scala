@@ -2,19 +2,22 @@ package analyses.D1_CriticalMethodsRemover
 
 import analyses.SubAnalysis
 import data.IgnoredCall
-import analyses.D1_CriticalMethodsRemover.modify.data.{AnalysisResult, RemovedCall}
+import analyses.D1_CriticalMethodsRemover.modify.data.{AnalysisResult, OriginalBytecode, RemovedCall}
 import com.typesafe.scalalogging.Logger
 import configs.StaticAnalysisConfig
 import org.opalj.br.instructions._
 import org.opalj.br.{ClassFile, Code, Method, NoExceptionHandlers}
 import org.opalj.bc.Assembler
 import org.opalj.ba.toDA
+import org.opalj.br.analyses.Project
 
 import java.nio.file.{Files, Path}
 import org.opalj.br.instructions.Instruction
 import org.slf4j.MarkerFactory
 import util.{ProjectInitializer, Utils}
 
+import java.io.File
+import java.net.URL
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 import scala.util.Random
@@ -77,6 +80,8 @@ class CriticalMethodsRemover(override val shouldExecute: Boolean) extends SubAna
     val classFilesOutputDir = s"$outputDir/modifiedClasses"
 
     var replacedInvalidCharacter = false
+    val originalBytecodes = mutable.ListBuffer[OriginalBytecode]()
+
     // Analyze all methods in the project
     project.allProjectClassFiles.foreach { cf =>
       cf.methods.foreach { m =>
@@ -84,8 +89,8 @@ class CriticalMethodsRemover(override val shouldExecute: Boolean) extends SubAna
 
         // If critical calls are found, proceed with modification
         if (foundInvokes.nonEmpty && m.body.isDefined) {
-          printOriginalBytecode(cf, m)
-          logger.info(s"Found critical call(s) in method: ${cf.thisType.toJava}.${m.name}${m.descriptor.toJava}.")
+          originalBytecodes += getOriginalBytecode(project, cf, m, foundInvokes.map(_._1))
+          //logger.debug(s"Found critical call(s) in method: ${cf.thisType.toJava}.${m.name}${m.descriptor.toJava}.")
 
           // Modify the method body to remove critical calls
           val oldCode = m.body.get
@@ -133,7 +138,7 @@ class CriticalMethodsRemover(override val shouldExecute: Boolean) extends SubAna
           Files.write(classFilePath, newClassBytes)
 
           // After class writing
-          logger.info(s"Wrote modified class file to: $classFilePath.")
+          //logger.debug(s"Wrote modified class file to: $classFilePath.")
 
           // Track removed calls
           val removed = foundInvokes.collect {
@@ -174,10 +179,24 @@ class CriticalMethodsRemover(override val shouldExecute: Boolean) extends SubAna
             }
           }
 
+          val jarFile = project.source(cf) match {
+            case Some(source) =>
+              val sourcePath = source.toString
+              if (sourcePath.contains("jar:file:")) {
+                val jarPath = sourcePath.substring(sourcePath.indexOf("jar:file:") + 9)
+                val jarName = jarPath.substring(0, jarPath.lastIndexOf("!"))
+                new File(jarName).getName
+              } else {
+                "[Unknown]"
+              }
+            case None => "[Unknown]"
+          }
+
           // Collect analysis result
           val result = AnalysisResult(
             className = cf.thisType.toJava,
-            methodName = m.name,
+            method = m.signature.toJava,
+            fromJar = jarFile,
             removedCalls = removed,
             path = s"$classFilesOutputDir/${cf.thisType.toJava.replace('.', '/')}.class",
             ignored = wasIgnored,
@@ -189,6 +208,7 @@ class CriticalMethodsRemover(override val shouldExecute: Boolean) extends SubAna
         }
       }
     }
+    logger.info("Analysis finished.")
 
     // Write analysis results to JSON if configured
     val resultList = resultsBuffer.toList
@@ -197,12 +217,14 @@ class CriticalMethodsRemover(override val shouldExecute: Boolean) extends SubAna
     modify.FileIO.writeResult(resultList, jsonOutputPath)
     logger.info(s"Wrote json report to $jsonOutputPath.")
 
+    val originalBytecodePath = s"$outputDir/originalBytecode.txt"
+    modify.FileIO.writeOriginalBytecodeFile(originalBytecodes.toList, originalBytecodePath)
+    logger.info(s"Wrote text file with original bytecode for each modified method to $originalBytecodePath.")
+
     if (resultsBuffer.isEmpty) logger.info(s"No classes/methods have been modified.")
     else {
-      val modifiedMethods = resultsBuffer
-        .map { result => s"${result.className}#${result.methodName}" }
-        .mkString("\n  - ", "\n  - ", "")
-      logger.info(s"Modified the following methods:$modifiedMethods")
+      val modifiedMethods = buildModifiedMethodsString(resultsBuffer.toList, 10)
+      logger.info(s"Modified the following methods: $modifiedMethods")
     }
 
     if (replacedInvalidCharacter) {
@@ -240,17 +262,72 @@ class CriticalMethodsRemover(override val shouldExecute: Boolean) extends SubAna
     result.getOrElse(Array.empty[(Int, Instruction)])
   }
 
-  // Prints the original bytecode instructions of a method before modification
-  private def printOriginalBytecode(classFile: ClassFile, method: Method): Unit = {
+  /**
+   * Retrieves an [[OriginalBytecode]] that can be used to write to a text file.
+   *
+   * @param project Used project for this analysis.
+   * @param classFile The class file that will be modified.
+   * @param method The method that will be modified.
+   * @param criticalInvokePCs The program counters whose instructions will be replaced with NOP.
+   * @return [[OriginalBytecode]] object that can be used to show the original bytecode.
+   */
+  private def getOriginalBytecode(project: Project[URL], classFile: ClassFile, method: Method, criticalInvokePCs: Array[Int]): OriginalBytecode = {
     val originalBytecodeBuilder = new StringBuilder()
     method.body.foreach { code =>
+      val digits = (code.instructions.length - 1).toString.length
       code.instructions.zipWithIndex.foreach {
         case (instr, idx) =>
+          val replaceWithNop = if (criticalInvokePCs.contains(idx)) "  // Replaced with NOP" else ""
           val display = if (instr == null) "null" else instr.toString
-          originalBytecodeBuilder.append(f"    $idx%03d: $display\n")
+          originalBytecodeBuilder.append(String.format("    %0" + digits + "d: %s%s%n", idx.asInstanceOf[Object], display, replaceWithNop))
       }
     }
-    logger.info(s"Original Bytecode of ${classFile.thisType.toJava}.${method.name}: \n${originalBytecodeBuilder.toString} ")
+    val jarFile = project.source(classFile) match {
+      case Some(source) =>
+        val sourcePath = source.toString
+        if (sourcePath.contains("jar:file:")) {
+          val jarPath = sourcePath.substring(sourcePath.indexOf("jar:file:") + 9)
+          val jarName = jarPath.substring(0, jarPath.lastIndexOf("!"))
+          new File(jarName).getName
+        } else {
+          "[Unknown]"
+        }
+      case None => "[Unknown]"
+    }
+
+    OriginalBytecode(
+      className = classFile.thisType.toJava,
+      method = method.signatureToJava(true),
+      fromJar = jarFile,
+      bytecode = originalBytecodeBuilder.toString
+    )
+  }
+
+  /**
+   * Builds a string from the analysis results given to give a sample of the methods modified.
+   *
+   * @param modified The List of AnalysisResults to build the string from.
+   * @param k        The number of sample methods to take.
+   * @return String that can be used to show in the logs.
+   */
+  // noinspection SameParameterValue
+  private def buildModifiedMethodsString(modified: List[AnalysisResult], k: Int): String = {
+    val samples = Random.shuffle(modified).take(k)
+    if (samples.isEmpty) return "None"
+    val mainString = samples.map { sample =>
+      val className = sample.className
+      val method = sample.method
+      val numberOfRemovedCalls = sample.removedCalls.length
+
+      s"""In $className:
+         |    - Method: $method
+         |    - Removed $numberOfRemovedCalls calls.""".stripMargin
+    }.sorted.mkString("\n  - ", "\n  - ", "")
+    val remainingMethods = modified.length - k
+    val moreMethods = if (remainingMethods > 0) s"\n... and $remainingMethods more method${if (remainingMethods != 1) "s" else ""} modified"
+    else ""
+
+    s"$mainString$moreMethods"
   }
 
   /**
@@ -288,18 +365,18 @@ class CriticalMethodsRemover(override val shouldExecute: Boolean) extends SubAna
             ic.targetMethod == call._2
         }
 
-        // DEBUG for Ignore and CriticalMethods
-        var debugLogCounter: Int = 0
-        val debugLogLimit: Int = 0
-
-        if (debugLogCounter < debugLogLimit) {
-          logger.debug(f"[?] Should ignore: $className.$methodName -> ${call._1}.${call._2} = $shouldIgnore")
-          logger.debug(s"[!] Active criticalMethods: " + criticalMethods.map { case (c, m) => s"$c#$m" }.mkString(", "))
-          debugLogCounter += 1
-        }
+//        // DEBUG for Ignore and CriticalMethods
+//        var debugLogCounter: Int = 0
+//        val debugLogLimit: Int = 0
+//
+//        if (debugLogCounter < debugLogLimit) {
+//          logger.debug(f"[?] Should ignore: $className.$methodName -> ${call._1}.${call._2} = $shouldIgnore")
+//          logger.debug(s"[!] Active criticalMethods: " + criticalMethods.map { case (c, m) => s"$c#$m" }.mkString(", "))
+//          debugLogCounter += 1
+//        }
 
         if (criticalMethods.contains(call) && !shouldIgnore) {
-          logger.info(s"Will replace with NOP: $i at PC=$idx")
+          //logger.debug(s"Will replace with NOP: $i at PC=$idx")
           replacedWithNOP += ((idx, i.toString))
           NOP
         } else i
@@ -307,8 +384,6 @@ class CriticalMethodsRemover(override val shouldExecute: Boolean) extends SubAna
       case (null, _) => NOP
       case (other, _) => other
     }
-
-    logger.info(s"Finished bytecode modification on $className#$methodName.")
 
     // Attach NOP info to global state for JSON generation
     lastNOPReplacements = Some(replacedWithNOP.toList)

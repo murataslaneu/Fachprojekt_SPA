@@ -5,11 +5,13 @@ import analyses.SubAnalysis
 import com.typesafe.scalalogging.Logger
 import configs.StaticAnalysisConfig
 import org.opalj.br.ClassFile
+import org.opalj.br.analyses.Project
 import org.opalj.br.instructions._
 import play.api.libs.json.Json
 import util.ProjectInitializer
 
 import java.io.{File, PrintWriter}
+import java.net.URL
 import scala.collection.mutable
 import scala.util.Random
 
@@ -64,7 +66,7 @@ class GodClassDetector(override val shouldExecute: Boolean) extends SubAnalysis 
     allClasses.foreach { classFile =>
       // Skip interfaces, abstract classes, and library classes
       if (!classFile.isInterfaceDeclaration && !classFile.isAbstract) {
-        val maybeGodClass = analyzeClass(classFile, wmcThreshold, tccThreshold, atfdThreshold, nofThreshold)
+        val maybeGodClass = analyzeClass(project, classFile, wmcThreshold, tccThreshold, atfdThreshold, nofThreshold)
         if (maybeGodClass.isDefined) godClasses += maybeGodClass.get
       }
     }
@@ -91,7 +93,7 @@ class GodClassDetector(override val shouldExecute: Boolean) extends SubAnalysis 
     }
     else {
       val godClassDetails = buildGodClassDetailsString(godClasses, 10)
-      logger.info(s"Found $godClassCount god class${if (godClassCount != 1) "es" else ""}:$godClassDetails")
+      logger.info(s"Found $godClassCount god class${if (godClassCount != 1) "es" else ""}: $godClassDetails")
     }
   }
 
@@ -100,7 +102,7 @@ class GodClassDetector(override val shouldExecute: Boolean) extends SubAnalysis 
    *
    * @return A GodClass when the classFile contains a god class, else None
    */
-  private def analyzeClass(classFile: ClassFile, wmcThreshold: Int, tccThreshold: Double, atfdThreshold: Int, nofThreshold: Int): Option[GodClass] = {
+  private def analyzeClass(project: Project[URL], classFile: ClassFile, wmcThreshold: Int, tccThreshold: Double, atfdThreshold: Int, nofThreshold: Int): Option[GodClass] = {
     // Calculate metrics
     val wmc = calculateWMC(classFile)
     val nof = classFile.fields.size
@@ -123,9 +125,22 @@ class GodClassDetector(override val shouldExecute: Boolean) extends SubAnalysis 
 
     // Check if this class meets the criteria for a God Class
     if (isGodClass(metrics, thresholds)) {
+      val jarFile = project.source(classFile) match {
+        case Some(source) =>
+          val sourcePath = source.toString
+          if (sourcePath.contains("jar:file:")) {
+            val jarPath = sourcePath.substring(sourcePath.indexOf("jar:file:") + 9)
+            val jarName = jarPath.substring(0, jarPath.lastIndexOf("!"))
+            new File(jarName).getName
+          } else {
+            "[Unknown]"
+          }
+        case None => "[Unknown]"
+      }
+
       Some(GodClass(
-        className = classFile.thisType.fqn,
-        jar = classFile.sourceFile.getOrElse("Unknown"),
+        className = classFile.thisType.toJava,
+        jar = jarFile,
         wmc = wmc,
         tcc = tcc,
         atfd = atfd,

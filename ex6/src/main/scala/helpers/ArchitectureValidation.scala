@@ -22,7 +22,7 @@ object ArchitectureValidation {
         val sourcePath = source.toString
         if (sourcePath.contains("jar:file:")) {
           val jarPath = sourcePath.substring(sourcePath.indexOf("jar:file:") + 9)
-          val jarName = jarPath.substring(0, jarPath.indexOf("!"))
+          val jarName = jarPath.substring(0, jarPath.lastIndexOf("!"))
           new File(jarName).getName
         } else {
           "[Unknown]"

@@ -168,14 +168,14 @@ object Main {
         try {
           subAnalysis.executeAnalysis(config)
           val subAnalysisEndTime = System.currentTimeMillis()
-          val runTime = subAnalysisEndTime - subAnalysisStartTime
-          val duration = f"${runTime / 1000.0}%.3f".replace(',', '.')
+          val runTime = (subAnalysisEndTime - subAnalysisStartTime) / 1000.0
+          val duration = f"$runTime%.3f".replace(',', '.')
           subAnalysisSummaries += SubAnalysisRun(
             analysisName = subAnalysis.analysisName,
             successful = true,
             resultsPath = outputPath,
             timeFinished = java.time.LocalDateTime.now(),
-            runTimeMs = runTime
+            runTimeSeconds = runTime
           )
           subAnalysis.logger.info(
             MarkerFactory.getMarker("BLUE"),
@@ -187,14 +187,14 @@ object Main {
             subAnalysis.logger.error(s"Analysis ${subAnalysis.analysisNumber} (${subAnalysis.analysisName}) terminated due to the following error:")
             subAnalysis.logger.error(s"--> ${e.toString}")
             val subAnalysisEndTime = System.currentTimeMillis()
-            val runTime = subAnalysisEndTime - subAnalysisStartTime
-            val duration = f"${runTime / 1000.0}%.3f".replace(',', '.')
+            val runTime = (subAnalysisEndTime - subAnalysisStartTime) / 1000.0
+            val duration = f"$runTime%.3f".replace(',', '.')
             subAnalysisSummaries += SubAnalysisRun(
               analysisName = subAnalysis.analysisName,
               successful = false,
               resultsPath = outputPath,
               timeFinished = java.time.LocalDateTime.now(),
-              runTimeMs = runTime
+              runTimeSeconds = runTime
             )
             subAnalysis.logger.error(
               s"Analysis ${subAnalysis.analysisNumber} (${subAnalysis.analysisName}) ran for $duration seconds before termination."
@@ -209,10 +209,10 @@ object Main {
     }
     val programFinishTime = System.currentTimeMillis()
     val timeFinished = java.time.LocalDateTime.now()
-    val runTime = programFinishTime - programStartTime
-    val duration = f"${runTime / 1000.0}%.3f".replace(',', '.')
+    val runTime = (programFinishTime - programStartTime) / 1000.0
+    val duration = f"$runTime%.3f".replace(',', '.')
     val summary = Summary(
-      totalRunTimeMs = runTime,
+      totalRunTimeSeconds = runTime,
       timeFinished = timeFinished,
       analysesExecuted = subAnalysisSummaries.toList
     )

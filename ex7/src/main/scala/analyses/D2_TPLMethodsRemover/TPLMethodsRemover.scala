@@ -114,7 +114,7 @@ class TPLMethodsRemover(override val shouldExecute: Boolean) extends SubAnalysis
     logger.info(s"Wrote json report to $jsonOutputPath.")
 
     val resultsString = buildResultsString(modifiedClassFiles, 10)
-    logger.info(s"Analysis finished. Used classes from ${analysisConfig.tplJar}:$resultsString")
+    logger.info(s"Analysis finished. Used classes from ${analysisConfig.tplJar}: $resultsString")
   }
 
   /**

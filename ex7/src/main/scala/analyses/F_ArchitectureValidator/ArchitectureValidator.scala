@@ -63,11 +63,11 @@ class ArchitectureValidator(override val shouldExecute: Boolean) extends SubAnal
     ArchitectureJsonIO.writeReport(report, reportOutputDir)
     logger.info(s"Wrote json report to $reportOutputDir.")
 
-    logger.info(s"Found ${report.violations.size} dependency violations.")
+    logger.info(s"Found ${report.violations.size} dependency violation${if (report.violations.size != 1) "s" else ""}.")
 
     // Print summary
     if (report.violations.nonEmpty) {
-      logger.info(s"Violations found:${buildViolationsString(report.violations, 5)}")
+      logger.info(s"Violations found: ${buildViolationsString(report.violations, 10)}")
     }
 
     if (report.warnings.warnings.nonEmpty || report.warnings.innerWarnings.nonEmpty) {
@@ -103,9 +103,7 @@ class ArchitectureValidator(override val shouldExecute: Boolean) extends SubAnal
    * @return String that can be outputted in the logs.
    */
   //noinspection SameParameterValue
-  private def buildViolationsString(
-                                     violations: List[Dependency],
-                                     k: Int): String = {
+  private def buildViolationsString(violations: List[Dependency], k: Int): String = {
     val samples = Random.shuffle(violations).take(k)
     if (samples.isEmpty) return "None"
     val mainString = samples.map { sample =>
@@ -116,7 +114,8 @@ class ArchitectureValidator(override val shouldExecute: Boolean) extends SubAnal
       val accessType = sample.accessType.name
       s"$fromPackage.$fromClass -> $toPackage.$toClass ($accessType)"
     }.sorted.mkString("\n  - ", "\n  - ", "")
-    val moreViolations = if (violations.size > k) s"\n... and ${violations.size - k} more violations"
+    val remainingViolations = violations.length - k
+    val moreViolations = if (violations.size > k) s"\n... and ${violations.size - k} more violation${if (remainingViolations != 1) "s" else ""}"
     else ""
 
     s"$mainString$moreViolations"

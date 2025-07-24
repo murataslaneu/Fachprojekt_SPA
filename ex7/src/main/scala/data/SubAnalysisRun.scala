@@ -9,7 +9,7 @@ import play.api.libs.json.{Json, OFormat}
  * @param successful Whether the sub-analysis finished without throwing an uncaught exception.
  * @param resultsPath Path where the results for this sub-analysis can be seen.
  * @param timeFinished Time at which this sub-analysis finished.
- * @param runTimeMs Run time for the sub-analysis in milliseconds.
+ * @param runTimeSeconds Run time for the sub-analysis in seconds.
  */
 case class SubAnalysisRun
 (
@@ -17,7 +17,7 @@ case class SubAnalysisRun
   successful: Boolean,
   resultsPath: String,
   timeFinished: java.time.LocalDateTime,
-  runTimeMs: Long
+  runTimeSeconds: Double
 )
 
 object SubAnalysisRun {

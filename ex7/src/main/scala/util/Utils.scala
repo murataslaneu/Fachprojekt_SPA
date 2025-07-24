@@ -33,7 +33,8 @@ object Utils {
       else ""
       s"$className:$selectedMethods$moreMethods"
     }.sorted.mkString("\n    - ", "\n    - ", "")
-    val moreClasses = if (selected.size > k) s"\n... and ${selected.size - k} more classes"
+    val remainingClasses = selected.size - k
+    val moreClasses = if (remainingClasses > 0) s"\n... and $remainingClasses more class${if (remainingClasses != 1) "es" else ""}"
     else ""
 
     s"$mainString$moreClasses"

@@ -6,7 +6,7 @@ import play.api.libs.json._
  * Represents the result of analyzing and modifying a specific method.
  *
  * @param className        Fully qualified name of the class containing the method.
- * @param methodName       Name of the method that was analyzed.
+ * @param method           Name of the method that was analyzed.
  * @param removedCalls     List of critical method calls that were removed.
  * @param path             Path where the modified class file was written to.
  * @param ignored          True if any critical calls were ignored due to ignore list.
@@ -16,7 +16,8 @@ import play.api.libs.json._
  */
 case class AnalysisResult(
                            className: String,
-                           methodName: String,
+                           method: String,
+                           fromJar: String,
                            removedCalls: List[RemovedCall],
                            path: String,
                            ignored: Boolean,
