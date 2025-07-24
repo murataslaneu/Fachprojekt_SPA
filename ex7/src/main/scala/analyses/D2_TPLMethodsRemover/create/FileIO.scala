@@ -22,19 +22,13 @@ object FileIO {
    *
    * @param path               Path where to output the dummy (must be a folder!)
    * @param modifiedClassFiles The modified class files created by the analysis.
+   * @return Whether at least one invalid character has been replaced by a similar-looking character
    */
-  def writeModifiedClassFiles(logger: Logger, path: String, modifiedClassFiles: Iterable[ClassFile]): Unit = {
+  def writeModifiedClassFiles(path: String, modifiedClassFiles: Iterable[ClassFile]): Boolean = {
     val outputPath = Path.of(path)
     var replacedInvalidCharacter = false
-    logger.info(s"Writing created class files to path $outputPath...")
+
     modifiedClassFiles.foreach { modifiedClassFile =>
-      val usedMethods = modifiedClassFile.methods.length
-      val sampleMethod = modifiedClassFile.methods(scala.util.Random.nextInt(usedMethods))
-      logger.info(
-        s"""Class file ${modifiedClassFile.fqn.replace('/', '.')}:
-           |  - Used methods: $usedMethods
-           |  - Sample method: ${sampleMethod.signatureToJava(true)}""".stripMargin
-      )
 
       val newClassBytes: Array[Byte] = Assembler(toDA(modifiedClassFile))
 
@@ -61,16 +55,7 @@ object FileIO {
       Files.write(classFilePath, newClassBytes)
     }
 
-    if (replacedInvalidCharacter) {
-      logger.info(
-        MarkerFactory.getMarker("BLUE"),
-        "Note: At least one of the class files contained a character not allowed in Windows file names (':', '<' or '>')."
-      )
-      logger.info(
-        MarkerFactory.getMarker("BLUE"),
-        "      Such characters have been replaced with similar-looking Unicode characters (U+02D0, U+2039 or U+203A).\n"
-      )
-    }
+    replacedInvalidCharacter
   }
 
   /**

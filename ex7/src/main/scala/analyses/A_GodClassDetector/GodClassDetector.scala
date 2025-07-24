@@ -1,13 +1,17 @@
 package analyses.A_GodClassDetector
 
+import analyses.A_GodClassDetector.data.{GodClass, JsonReport}
 import analyses.SubAnalysis
 import com.typesafe.scalalogging.Logger
 import configs.StaticAnalysisConfig
 import org.opalj.br.ClassFile
 import org.opalj.br.instructions._
+import play.api.libs.json.Json
 import util.ProjectInitializer
 
+import java.io.{File, PrintWriter}
 import scala.collection.mutable
+import scala.util.Random
 
 /**
  * God Class Detector Analysis
@@ -29,12 +33,6 @@ class GodClassDetector(override val shouldExecute: Boolean) extends SubAnalysis 
   /** Name of the folder where this sub-analysis will put their results in */
   override val outputFolderName: String = "1_GodClassDetector"
 
-  // Results storage
-  /** The total amount of god classes found after analysis */
-  private var godClassCount: Int = 0
-  /** Results string to print after analysis */
-  private val godClassDetails = new mutable.StringBuilder()
-
   override def executeAnalysis(config: StaticAnalysisConfig): Unit = {
     val wmcThreshold = config.godClassDetector.wmcThresh
     if (wmcThreshold < 0)
@@ -51,60 +49,101 @@ class GodClassDetector(override val shouldExecute: Boolean) extends SubAnalysis 
 
     logger.info(
       s"""Configuration (looking for god classes with the following thresholds):
-         |  - WMC (method count) >= $wmcThreshold
-         |  - TCC (cohesion) < $tccThreshold
-         |  - ATFD (foreign data access) > $atfdThreshold
-         |  - NOF (field count) >= $nofThreshold""".stripMargin)
+         |  - WMC (Weighted Methods per Class) >= $wmcThreshold
+         |  - TCC (Tight Class Cohesion) < $tccThreshold
+         |  - ATFD (Access to Foreign Data) > $atfdThreshold
+         |  - NOF (Number of Fields) >= $nofThreshold""".stripMargin)
     logger.info("Initializing OPAL project...")
     val project = ProjectInitializer.setupProject(cpFiles = config.projectJars, libcpFiles = config.libraryJars, logger = logger)
     logger.info("Project initialization finished. Starting analysis on project...")
 
     val allClasses = project.allProjectClassFiles
-    godClassCount = 0
-    godClassDetails.clear()
+
+    val godClasses = mutable.ListBuffer[GodClass]()
 
     allClasses.foreach { classFile =>
       // Skip interfaces, abstract classes, and library classes
       if (!classFile.isInterfaceDeclaration && !classFile.isAbstract) {
-        analyzeClass(classFile, wmcThreshold, tccThreshold, atfdThreshold, nofThreshold)
+        val maybeGodClass = analyzeClass(classFile, wmcThreshold, tccThreshold, atfdThreshold, nofThreshold)
+        if (maybeGodClass.isDefined) godClasses += maybeGodClass.get
       }
     }
 
-    logger.info(s"Analysis completed. Found $godClassCount God Class${if (godClassCount != 1) "es" else ""}.")
-    logger.info(s"Results:\n${godClassDetails.toString}")
+    logger.info("Analysis finished.")
+
+    val godClassCount = godClasses.length
+
+    val report = JsonReport(
+      projectJars = config.projectJars.map {file => file.getPath.replace('\\', '/')},
+      wmcThreshold = wmcThreshold,
+      tccThreshold = tccThreshold,
+      atfdThreshold = atfdThreshold,
+      nofThreshold = nofThreshold,
+      godClasses = godClasses.toList
+    )
+    val outputDirectory = s"${config.resultsOutputPath}/$outputFolderName"
+    val jsonOutputPath = s"$outputDirectory/results.json"
+    writeJsonReport(report, jsonOutputPath)
+    logger.info(s"Wrote json report to $outputDirectory.")
+
+    if (godClassCount == 0) {
+      logger.info(s"Found no god classes.")
+    }
+    else {
+      val godClassDetails = buildGodClassDetailsString(godClasses, 10)
+      logger.info(s"Found $godClassCount god class${if (godClassCount != 1) "es" else ""}:$godClassDetails")
+    }
   }
 
   /**
-   * Analyze a single class to determine if it's a God Class
+   * Analyze a single class to determine if it's a god class.
+   *
+   * @return A GodClass when the classFile contains a god class, else None
    */
-  private def analyzeClass(classFile: ClassFile, wmcThreshold: Int, tccThreshold: Double, atfdThreshold: Int, nofThreshold: Int): Unit = {
+  private def analyzeClass(classFile: ClassFile, wmcThreshold: Int, tccThreshold: Double, atfdThreshold: Int, nofThreshold: Int): Option[GodClass] = {
     // Calculate metrics
     val wmc = calculateWMC(classFile)
     val nof = classFile.fields.size
     val tcc = calculateTCC(classFile)
     val atfd = calculateATFD(classFile)
 
-    // Store metrics for reporting
-    val metrics = Map(
+    // Compare metrics and thresholds
+    val metrics: Map[String, Number] = Map(
       "WMC" -> wmc,
-      "NOF" -> nof,
       "TCC" -> tcc,
-      "ATFD" -> atfd
+      "ATFD" -> atfd,
+      "NOF" -> nof
+    )
+    val thresholds: Map[String, Number] = Map(
+      "WMC" -> wmcThreshold,
+      "TCC" -> tccThreshold,
+      "ATFD" -> atfdThreshold,
+      "NOF" -> nofThreshold
     )
 
     // Check if this class meets the criteria for a God Class
-    if (isGodClass(metrics, wmcThreshold, tccThreshold, atfdThreshold, nofThreshold)) {
-      logger.info(f"Found god class ${classFile.thisType.fqn} (WMC $wmc, TCC $tcc%.2f, ATFD $atfd, NOF $nof).")
-      godClassCount += 1
-
-      // Build detailed information about this God Class
-      godClassDetails.append(s"God Class: ${classFile.thisType.fqn}\n")
-      godClassDetails.append(s"  - WMC (methods): $wmc (threshold: $wmcThreshold)\n")
-      godClassDetails.append(f"  - TCC (cohesion): $tcc%.2f (threshold: < $tccThreshold)\n")
-      godClassDetails.append(s"  - ATFD (foreign data): $atfd (threshold: > $atfdThreshold)\n")
-      godClassDetails.append(s"  - NOF (fields): $nof (threshold: $nofThreshold)\n")
-      godClassDetails.append("--------------------------------------------------")
+    if (isGodClass(metrics, thresholds)) {
+      Some(GodClass(
+        className = classFile.thisType.fqn,
+        jar = classFile.sourceFile.getOrElse("Unknown"),
+        wmc = wmc,
+        tcc = tcc,
+        atfd = atfd,
+        nof = nof
+      ))
+      //
+      // logger.info(f"Found god class ${classFile.thisType.fqn} (WMC $wmc, TCC $tcc%.2f, ATFD $atfd, NOF $nof).")
+      // godClassCount += 1
+      //
+      // // Build detailed information about this God Class
+      // godClassDetails.append(s"God Class: ${classFile.thisType.fqn}\n")
+      // godClassDetails.append(s"  - WMC (methods): $wmc (threshold: $wmcThreshold)\n")
+      // godClassDetails.append(f"  - TCC (cohesion): $tcc%.2f (threshold: < $tccThreshold)\n")
+      // godClassDetails.append(s"  - ATFD (foreign data): $atfd (threshold: > $atfdThreshold)\n")
+      // godClassDetails.append(s"  - NOF (fields): $nof (threshold: $nofThreshold)\n")
+      // godClassDetails.append("--------------------------------------------------")
     }
+    else None
   }
 
 
@@ -143,7 +182,7 @@ class GodClassDetector(override val shouldExecute: Boolean) extends SubAnalysis 
     var connectedPairs = 0
     val totalPairs = (methods.size * (methods.size - 1)) / 2
 
-    for (i <- methods.indices; j <- (i+1) until methods.size) {
+    for (i <- methods.indices; j <- (i + 1) until methods.size) {
       val shared = methodFieldAccesses(i).intersect(methodFieldAccesses(j))
       if (shared.nonEmpty) {
         connectedPairs += 1
@@ -208,15 +247,50 @@ class GodClassDetector(override val shouldExecute: Boolean) extends SubAnalysis 
   /**
    * Determine if a class is a God Class based on its metrics
    */
-  private def isGodClass(metrics: Map[String, Any], wmcThreshold: Int, tccThreshold: Double, atfdThreshold: Int, nofThreshold: Int): Boolean = {
+  private def isGodClass(metrics: Map[String, Number], thresholds: Map[String, Number]): Boolean = {
     // A class is considered a God Class if it meets at least 3 of the 4 criteria
     var criteriaCount = 0
 
-    if (metrics("WMC").asInstanceOf[Int] >= wmcThreshold) criteriaCount += 1
-    if (metrics("NOF").asInstanceOf[Int] >= nofThreshold) criteriaCount += 1
-    if (metrics("TCC").asInstanceOf[Double] < tccThreshold) criteriaCount += 1
-    if (metrics("ATFD").asInstanceOf[Int] > atfdThreshold) criteriaCount += 1
+    if (metrics("WMC").intValue() >= thresholds("WMC").intValue()) criteriaCount += 1
+    if (metrics("TCC").doubleValue() < thresholds("TCC").doubleValue()) criteriaCount += 1
+    if (metrics("ATFD").intValue() > thresholds("ATFD").intValue()) criteriaCount += 1
+    if (metrics("NOF").intValue() >= thresholds("NOF").intValue()) criteriaCount += 1
 
     criteriaCount >= 3
+  }
+
+  /**
+   * Builds a string that can be used to print some sample god classes in the logs.
+   *
+   * Also sorts the samples alphabetically.
+   *
+   * @param godClasses God classes found by the analysis.
+   * @param k The number of samples to show. When godClasses contains less than k elements, just show all elements.
+   * @return String that can be outputted in the logs.
+   */
+  //noinspection SameParameterValue
+  private def buildGodClassDetailsString(godClasses: mutable.ListBuffer[GodClass], k: Int): String = {
+    val samples = Random.shuffle(godClasses).take(k).toList
+    if (samples.isEmpty) return "None"
+    val mainString = samples.map { sample =>
+      val className = sample.className
+      val wmc = sample.wmc
+      val tcc = f"${sample.tcc}%.2f".replace(',','.')
+      val atfd = sample.atfd
+      val nof = sample.nof
+      f"$className: WMC $wmc, TCC $tcc, ATFD $atfd, NOF $nof"
+    }.sorted.mkString("\n  - ", "\n  - ", "")
+
+    val moreClasses = if (godClasses.length > k) s"\n... and ${godClasses.size - k} more god classes"
+    else ""
+
+    s"$mainString$moreClasses"
+  }
+
+  /** Writes the analysis result to a file in JSON format */
+  private def writeJsonReport(report: JsonReport, path: String): Unit = {
+    val writer = new PrintWriter(new File(path))
+    writer.write(Json.prettyPrint(Json.toJson(report)))
+    writer.close()
   }
 }

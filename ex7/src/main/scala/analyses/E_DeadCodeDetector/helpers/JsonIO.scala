@@ -1,7 +1,7 @@
 package analyses.E_DeadCodeDetector.helpers
 
 import analyses.E_DeadCodeDetector.data.{DeadCodeReport, MultiDomainDeadCodeReport}
-import play.api.libs.json._
+import play.api.libs.json.Json
 
 import java.io.{File, PrintWriter}
 

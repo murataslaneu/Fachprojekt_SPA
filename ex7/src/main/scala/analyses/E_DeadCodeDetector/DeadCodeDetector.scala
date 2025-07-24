@@ -4,9 +4,9 @@ import analyses.SubAnalysis
 import com.typesafe.scalalogging.Logger
 import configs.StaticAnalysisConfig
 import helpers.{DeadCodeAnalysis, JsonIO}
-import util.{ProjectInitializer, Utils}
+import util.ProjectInitializer
 
-import java.nio.file.{Files, Path, Paths}
+import java.nio.file.{Files, Path}
 
 /**
  * Application that searches through the project for dead instructions

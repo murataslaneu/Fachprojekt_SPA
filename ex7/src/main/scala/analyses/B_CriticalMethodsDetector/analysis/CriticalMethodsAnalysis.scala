@@ -1,8 +1,7 @@
 package analyses.B_CriticalMethodsDetector.analysis
 
-import com.typesafe.scalalogging.Logger
 import configs.CriticalMethodsDetectorConfig
-import data.SelectedMethodsOfClass
+import _root_.data.SelectedMethodsOfClass
 import org.opalj.br.DeclaredMethod
 import org.opalj.br.fpcf.properties.Context
 import org.opalj.tac.cg.CallGraph
@@ -23,7 +22,7 @@ object CriticalMethodsAnalysis {
    * @return A 2-tuple. The first element is a list of warnings as strings, the second a boolean whether at least one
    *         found method call has been suppressed.
    */
-  def analyze(logger: Logger, callGraph: CallGraph, config: CriticalMethodsDetectorConfig): (List[String], Boolean) = {
+  def analyze(callGraph: CallGraph, config: CriticalMethodsDetectorConfig): (List[String], Boolean) = {
     val criticalMethods = config.criticalMethods
     val ignore = config.ignore
 
@@ -64,7 +63,6 @@ object CriticalMethodsAnalysis {
 
           if (!shouldIgnore) {
             // Warning not ignored, add to result
-            logger.info(s"Found critical call $declaringClassName#$methodName in $callerClassName#$callerMethodName${callerDescriptor.toUMLNotation}")
             if (isDirect) {
               warnings += s"[WARNING] Found $count direct call${if (count != 1) "s" else ""}:\n" +
                 s"    To: Class $declaringClassName with method $methodName${context.method.descriptor.toUMLNotation}\n" ++
@@ -76,7 +74,6 @@ object CriticalMethodsAnalysis {
             }
           }
           else {
-            logger.info(s"Ignore call of $declaringClassName#$methodName in $callerClassName#$callerMethodName${callerDescriptor.toUMLNotation}")
             ignoredCall = true
           }
         }

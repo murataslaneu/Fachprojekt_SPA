@@ -16,7 +16,7 @@ case class TPLAnalysisResult
   callGraphAlgorithm: String,
   var callGraphTimeSeconds: Double,
   var analysisTimeSeconds: Double,
-  var subAnalysisTimeSeconds: Double,
+  var subAnalysisTimeSeconds: Double
 )
 
 object TPLAnalysisResult {

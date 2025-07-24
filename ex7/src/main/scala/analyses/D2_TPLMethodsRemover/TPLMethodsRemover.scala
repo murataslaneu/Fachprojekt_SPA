@@ -4,6 +4,7 @@ import analyses.SubAnalysis
 import com.typesafe.scalalogging.Logger
 import configs.{StaticAnalysisConfig, TPLMethodsRemoverConfig}
 import create.{FileIO, TPLMethodUsageAnalysis}
+import org.opalj.br.ClassFile
 import org.opalj.tac.cg.{CFA_1_1_CallGraphKey, CHACallGraphKey, CTACallGraphKey, RTACallGraphKey, XTACallGraphKey}
 import org.slf4j.MarkerFactory
 import util.{ProjectInitializer, Utils}
@@ -28,7 +29,7 @@ class TPLMethodsRemover(override val shouldExecute: Boolean) extends SubAnalysis
   override val outputFolderName: String = "4b_TPLMethodsRemover"
 
   override def executeAnalysis(config: StaticAnalysisConfig): Unit = {
-    // Perform checks (and maybe modify) config
+    // Perform checks (and maybe modify tplJar) on config
     val analysisConfig = checkTplJar(config)
 
     val callGraphAlgorithmName = analysisConfig.callGraphAlgorithmName.toUpperCase
@@ -88,8 +89,20 @@ class TPLMethodsRemover(override val shouldExecute: Boolean) extends SubAnalysis
     // Write created class files
     val outputDir = s"${config.resultsOutputPath}/$outputFolderName"
     val classesOutputDir = s"$outputDir/tplDummy"
-    FileIO.writeModifiedClassFiles(logger, classesOutputDir, modifiedClassFiles)
+    logger.info(s"Writing created class files to path $classesOutputDir...")
+    val replacedInvalidCharacter = FileIO.writeModifiedClassFiles(classesOutputDir, modifiedClassFiles)
     logger.info("Finished writing class files, TPL dummy created successfully.")
+    if (replacedInvalidCharacter) {
+      logger.info(
+        MarkerFactory.getMarker("BLUE"),
+        "Note: At least one of the class files contained a character not allowed in Windows file names (':', '<' or '>')."
+      )
+      logger.info(
+        MarkerFactory.getMarker("BLUE"),
+        "      Such characters have been replaced with similar-looking Unicode characters (U+02D0, U+2039 or U+203A).\n"
+      )
+    }
+
     val jsonOutputPath = s"$outputDir/report.json"
     FileIO.writeJsonReport(
       modifiedClassFiles.toList,
@@ -99,6 +112,9 @@ class TPLMethodsRemover(override val shouldExecute: Boolean) extends SubAnalysis
       outputPath = jsonOutputPath
     )
     logger.info(s"Wrote json report to $jsonOutputPath.")
+
+    val resultsString = buildResultsString(modifiedClassFiles, 10)
+    logger.info(s"Analysis finished. Used classes from ${analysisConfig.tplJar}:$resultsString")
   }
 
   /**
@@ -120,7 +136,7 @@ class TPLMethodsRemover(override val shouldExecute: Boolean) extends SubAnalysis
         logger.error("No library jars given in \"libraryJars\"! No TPL to create dummy from, terminating...")
         throw new IllegalArgumentException("No TPL jar available to create dummy from.")
       }
-      val tplJar = config.libraryJars(Random.nextInt(config.libraryJars.length)).getPath.replace('\\','/')
+      val tplJar = config.libraryJars(Random.nextInt(config.libraryJars.length)).getPath.replace('\\', '/')
       logger.info(s"Chose $tplJar randomly.")
       analysisConfig.copy(tplJar = tplJar)
     }
@@ -145,5 +161,25 @@ class TPLMethodsRemover(override val shouldExecute: Boolean) extends SubAnalysis
       }
       analysisConfig
     }
+  }
+
+  //noinspection SameParameterValue
+  private def buildResultsString(modifiedClassFiles: Iterable[ClassFile], k: Int): String = {
+    val samples = Random.shuffle(modifiedClassFiles).take(k)
+    if (samples.isEmpty) return "None"
+    val mainString = samples.map { sample =>
+      val className = sample.thisType.toJava
+      val usedMethods = sample.methods.length
+      val sampleMethod = sample.methods(scala.util.Random.nextInt(usedMethods))
+      s"""$className:
+         |    - Used methods: $usedMethods
+         |    - Sample method: ${sampleMethod.signatureToJava(true)}""".stripMargin
+
+    }.toList.sorted.mkString("\n  - ", "\n  - ", "")
+    val remainingClasses = modifiedClassFiles.size - k
+    val moreClasses = if (remainingClasses > k) s"\n... and $remainingClasses more class${if (remainingClasses != 1) "es" else ""}"
+    else ""
+
+    s"$mainString$moreClasses"
   }
 }

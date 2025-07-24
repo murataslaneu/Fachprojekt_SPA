@@ -11,7 +11,6 @@ import org.slf4j.MarkerFactory
 import util.{ProjectInitializer, Utils}
 
 import java.io.File
-import java.nio.file.{Files, Path}
 import scala.jdk.CollectionConverters.SeqHasAsJava
 import scala.util.Random
 
@@ -119,9 +118,9 @@ class TPLUsageAnalyzer(override val shouldExecute: Boolean) extends SubAnalysis 
       .sortBy { info => info.library }
       .foreach { libraryResults =>
         analysisResults.append(s"${libraryResults.library}:\n")
-        analysisResults.append(s"    - Total: ${libraryResults.totalMethods} methods\n")
-        analysisResults.append(s"    - Used:  ${libraryResults.usedMethods} methods\n")
-        analysisResults.append(s"    - Usage ratio: ${libraryResults.usageRatio}\n")
+        analysisResults.append(s"  - Total: ${libraryResults.totalMethods} methods\n")
+        analysisResults.append(s"  - Used:  ${libraryResults.usedMethods} methods\n")
+        analysisResults.append(s"  - Usage ratio: ${libraryResults.usageRatio}\n")
       }
     if (result.size > k) analysisResults.append(s"\n... and ${result.length - k} more library jars\n")
     analysisResults.append("Run times:\n")

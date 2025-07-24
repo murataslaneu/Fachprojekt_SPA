@@ -85,7 +85,7 @@ class CriticalMethodsDetector(override val shouldExecute: Boolean) extends SubAn
     logger.info(s"Finished calculation of the ${analysisConfig.callGraphAlgorithmName.toUpperCase} call graph.")
 
     logger.info("Beginning analysis on the call graph...")
-    val tuple = CriticalMethodsAnalysis.analyze(logger, callGraph, analysisConfig)
+    val tuple = CriticalMethodsAnalysis.analyze(callGraph, analysisConfig)
 
     val results = tuple._1
     val ignoredAtLeastOneCall = tuple._2

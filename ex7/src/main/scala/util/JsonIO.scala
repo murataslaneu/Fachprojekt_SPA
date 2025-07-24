@@ -783,7 +783,7 @@ class JsonIO {
   /**
    * Writes the summary for the entire analysis suite at the given path.
    *
-   * @param summary The Summary of this analyis suite run.
+   * @param summary The Summary of this analysis suite run.
    * @param path Path to write the summary to.
    */
   def writeSummary(summary: Summary, path: String): Unit = {
