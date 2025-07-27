@@ -1,8 +1,8 @@
 import analyses.D2_TPLMethodsRemover.TPLMethodsRemover
-import com.typesafe.scalalogging.Logger
 import org.opalj.br.analyses.Project
 import org.opalj.log.{ConsoleOPALLogger, GlobalLogContext, OPALLogger}
 import org.scalatest.funsuite.AnyFunSuite
+import org.slf4j.{Logger, LoggerFactory}
 import play.api.libs.json.Json
 import util.JsonIO
 
@@ -14,7 +14,7 @@ class TestTPLMethodsRemover extends AnyFunSuite {
 
   /* Initializations */
   private val jsonIO = new JsonIO()
-  private val logger: Logger = Logger("TestTPLMethodsRemover")
+  private val logger: Logger = LoggerFactory.getLogger("TestTPLMethodsRemover")
   private val baseOutputPathString = "src/test/analysis_4.2"
   private def outputPathString(testNumber: Int): String = s"$baseOutputPathString.$testNumber"
 

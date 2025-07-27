@@ -3,7 +3,6 @@ package analyses.D1_CriticalMethodsRemover
 import analyses.SubAnalysis
 import data.IgnoredCall
 import analyses.D1_CriticalMethodsRemover.modify.data.{AnalysisResult, OriginalBytecode, RemovedCall}
-import com.typesafe.scalalogging.Logger
 import configs.StaticAnalysisConfig
 import org.opalj.br.instructions._
 import org.opalj.br.{ClassFile, Code, Method, NoExceptionHandlers}
@@ -13,7 +12,7 @@ import org.opalj.br.analyses.Project
 
 import java.nio.file.{Files, Path}
 import org.opalj.br.instructions.Instruction
-import org.slf4j.MarkerFactory
+import org.slf4j.{Logger, LoggerFactory, MarkerFactory}
 import util.{ProjectInitializer, Utils}
 
 import java.io.File
@@ -29,7 +28,7 @@ import scala.util.Random
 class CriticalMethodsRemover(override val shouldExecute: Boolean) extends SubAnalysis {
 
   /** Logger used inside this sub-analysis */
-  override val logger: Logger = Logger("CriticalMethodsRemover")
+  override val logger: Logger = LoggerFactory.getLogger("CriticalMethodsRemover")
   /** The name of the sub-analysis */
   override val analysisName: String = "Critical Methods Remover"
   /** The number of the sub-analysis */

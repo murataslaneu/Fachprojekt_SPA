@@ -1,10 +1,10 @@
 package analyses.F_ArchitectureValidator
 
 import analyses.SubAnalysis
-import com.typesafe.scalalogging.Logger
 import configs.StaticAnalysisConfig
 import data.{ArchitectureSpec, Dependency, RecursiveWarnings, Rule}
 import helpers.{ArchitectureJsonIO, ArchitectureValidation}
+import org.slf4j.{Logger, LoggerFactory}
 import util.ProjectInitializer
 
 import scala.util.Random
@@ -12,7 +12,7 @@ import scala.util.Random
 class ArchitectureValidator(override val shouldExecute: Boolean) extends SubAnalysis {
 
   /** Logger used inside this sub-analysis */
-  override val logger: Logger = Logger("ArchitectureValidator")
+  override val logger: Logger = LoggerFactory.getLogger("ArchitectureValidator")
   /** The name of the sub-analysis */
   override val analysisName: String = "Architecture Validator"
   /** The number of the sub-analysis */

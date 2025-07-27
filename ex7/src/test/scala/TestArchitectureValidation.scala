@@ -2,8 +2,8 @@ import org.scalatest.funsuite.AnyFunSuite
 import analyses.F_ArchitectureValidator.data.AccessType._
 import analyses.F_ArchitectureValidator.data.{ArchitectureSpec, Dependency, Rule}
 import analyses.F_ArchitectureValidator.helpers.ArchitectureValidation
-import com.typesafe.scalalogging.Logger
 import org.opalj.log.{ConsoleOPALLogger, GlobalLogContext, OPALLogger}
+import org.slf4j.{Logger, LoggerFactory}
 import play.api.libs.json.Json
 import util.{JsonIO, ProjectInitializer}
 
@@ -12,7 +12,7 @@ import util.{JsonIO, ProjectInitializer}
  */
 class TestArchitectureValidation extends AnyFunSuite {
 
-  private val logger: Logger = Logger("TestArchitectureValidation")
+  private val logger: Logger = LoggerFactory.getLogger("TestArchitectureValidation")
 
   private val jsonIO = new JsonIO()
 

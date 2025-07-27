@@ -2,11 +2,11 @@ package analyses.A_GodClassDetector
 
 import analyses.A_GodClassDetector.data.{GodClass, JsonReport}
 import analyses.SubAnalysis
-import com.typesafe.scalalogging.Logger
 import configs.StaticAnalysisConfig
 import org.opalj.br.ClassFile
 import org.opalj.br.analyses.Project
 import org.opalj.br.instructions._
+import org.slf4j.{Logger, LoggerFactory}
 import play.api.libs.json.Json
 import util.ProjectInitializer
 
@@ -27,7 +27,7 @@ import scala.util.Random
 class GodClassDetector(override val shouldExecute: Boolean) extends SubAnalysis {
 
   /** Logger used inside this sub-analysis */
-  override val logger: Logger = Logger("GodClassDetector")
+  override val logger: Logger = LoggerFactory.getLogger("GodClassDetector")
   /** The name of the sub-analysis */
   override val analysisName: String = "God Class Detector"
   /** The number of the sub-analysis */

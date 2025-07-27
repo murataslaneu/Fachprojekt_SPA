@@ -3,11 +3,10 @@ package analyses.C_TPLUsageAnalyzer
 import analyses.SubAnalysis
 import org.opalj.tac.cg.{CFA_1_1_CallGraphKey, CHACallGraphKey, CTACallGraphKey, RTACallGraphKey, XTACallGraphKey}
 import analysis.{JsonIO, TPLAnalysisResult, TPLInfo, TPLMethodUsageAnalysis}
-import com.typesafe.scalalogging.Logger
 import configs.StaticAnalysisConfig
 import org.knowm.xchart.BitmapEncoder.BitmapFormat
 import org.knowm.xchart.{BitmapEncoder, CategoryChart, CategoryChartBuilder}
-import org.slf4j.MarkerFactory
+import org.slf4j.{Logger, LoggerFactory, MarkerFactory}
 import util.{ProjectInitializer, Utils}
 
 import java.io.File
@@ -21,7 +20,7 @@ import scala.util.Random
 class TPLUsageAnalyzer(override val shouldExecute: Boolean) extends SubAnalysis {
 
   /** Logger used inside this sub-analysis */
-  override val logger: Logger = Logger("TPLUsageAnalyzer")
+  override val logger: Logger = LoggerFactory.getLogger("TPLUsageAnalyzer")
   /** The name of the sub-analysis */
   override val analysisName: String = "Third Party Library Usage Analyzer"
   /** The number of the sub-analysis */

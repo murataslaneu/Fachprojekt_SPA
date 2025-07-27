@@ -1,6 +1,6 @@
-import com.typesafe.scalalogging.Logger
 import data.SelectedMethodsOfClass
 import org.scalatest.funsuite.AnyFunSuite
+import org.slf4j.{Logger, LoggerFactory}
 import play.api.libs.json.Json
 import util.{JsonIO, ProjectInitializer}
 
@@ -13,7 +13,7 @@ import scala.jdk.CollectionConverters.ListHasAsScala
  */
 class TestProjectInitializer extends AnyFunSuite{
 
-  private val logger: Logger = Logger("TestProjectInitializer")
+  private val logger: Logger = LoggerFactory.getLogger("TestProjectInitializer")
 
   private val jsonIO = new JsonIO()
 

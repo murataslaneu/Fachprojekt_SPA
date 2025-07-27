@@ -1,11 +1,11 @@
 package analyses.E_DeadCodeDetector.helpers
 
 import analyses.E_DeadCodeDetector.data.{DeadCodeReport, DeadInstruction, MethodWithDeadCode, MultiDomainDeadCodeReport, MultiDomainDeadInstruction, MultiDomainMethodWithDeadCode}
-import com.typesafe.scalalogging.Logger
 import configs.StaticAnalysisConfig
 import org.opalj.ai.{AIResult, BaseAI}
 import org.opalj.ai.common.DomainRegistry
 import org.opalj.br.analyses.Project
+import org.slf4j.Logger
 
 import java.net.URL
 import scala.collection.mutable

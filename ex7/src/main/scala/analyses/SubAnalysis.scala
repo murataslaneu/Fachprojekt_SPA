@@ -1,7 +1,7 @@
 package analyses
 
-import com.typesafe.scalalogging.Logger
 import configs.StaticAnalysisConfig
+import org.slf4j.Logger
 
 /**
  * A sub-analysis is a single analysis executed inside this analysis suite.

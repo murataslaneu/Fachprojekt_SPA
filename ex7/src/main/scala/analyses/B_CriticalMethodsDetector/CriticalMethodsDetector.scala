@@ -3,10 +3,9 @@ package analyses.B_CriticalMethodsDetector
 import data.{CriticalCall, JsonReport}
 import analyses.SubAnalysis
 import analysis.CriticalMethodsAnalysis
-import com.typesafe.scalalogging.Logger
 import configs.StaticAnalysisConfig
 import org.opalj.tac.cg.{CFA_1_1_CallGraphKey, CHACallGraphKey, CTACallGraphKey, RTACallGraphKey, XTACallGraphKey}
-import org.slf4j.MarkerFactory
+import org.slf4j.{Logger, LoggerFactory, MarkerFactory}
 import play.api.libs.json.Json
 import util.{ProjectInitializer, Utils}
 
@@ -20,7 +19,7 @@ import scala.util.Random
 class CriticalMethodsDetector(override val shouldExecute: Boolean) extends SubAnalysis {
 
   /** Logger used inside this sub-analysis */
-  override val logger: Logger = Logger("CriticalMethodsDetector")
+  override val logger: Logger = LoggerFactory.getLogger("CriticalMethodsDetector")
   /** The name of the sub-analysis */
   override val analysisName: String = "Critical Methods Detector"
   /** The number of the sub-analysis */

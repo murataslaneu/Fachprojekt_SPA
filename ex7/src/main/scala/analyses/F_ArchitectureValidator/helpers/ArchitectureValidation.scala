@@ -2,12 +2,12 @@ package analyses.F_ArchitectureValidator.helpers
 
 import analyses.F_ArchitectureValidator.data.AccessType._
 import analyses.F_ArchitectureValidator.data._
-import com.typesafe.scalalogging.Logger
 import configs.{ArchitectureValidatorConfig, StaticAnalysisConfig}
 import main.Main
 import org.opalj.br.analyses.Project
 import org.opalj.br.instructions._
 import org.opalj.br.{ClassFile, ObjectType, ReferenceType}
+import org.slf4j.Logger
 
 import java.io.File
 import java.net.URL

@@ -1,12 +1,11 @@
 package analyses.D2_TPLMethodsRemover
 
 import analyses.SubAnalysis
-import com.typesafe.scalalogging.Logger
 import configs.{StaticAnalysisConfig, TPLMethodsRemoverConfig}
 import create.{FileIO, TPLMethodUsageAnalysis}
 import org.opalj.br.ClassFile
 import org.opalj.tac.cg.{CFA_1_1_CallGraphKey, CHACallGraphKey, CTACallGraphKey, RTACallGraphKey, XTACallGraphKey}
-import org.slf4j.MarkerFactory
+import org.slf4j.{Logger, LoggerFactory, MarkerFactory}
 import util.{ProjectInitializer, Utils}
 
 import java.io.{File, FileNotFoundException}
@@ -20,7 +19,7 @@ import scala.util.Random
 class TPLMethodsRemover(override val shouldExecute: Boolean) extends SubAnalysis {
 
   /** Logger used inside this sub-analysis */
-  override val logger: Logger = Logger("TPLMethodsRemover")
+  override val logger: Logger = LoggerFactory.getLogger("TPLMethodsRemover")
   /** The name of the sub-analysis */
   override val analysisName: String = "Unused TPL methods remover"
   /** The number of the sub-analysis */

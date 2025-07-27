@@ -1,12 +1,12 @@
 import analyses.D1_CriticalMethodsRemover.CriticalMethodsRemover
 import analyses.D1_CriticalMethodsRemover.modify.FileIO
-import com.typesafe.scalalogging.Logger
 import data.{IgnoredCall, SelectedMethodsOfClass}
 import org.opalj.br.analyses.Project
 import org.opalj.br.instructions.Instruction
 import org.opalj.br.{ClassFile, ObjectType}
 import org.opalj.log.{DevNullLogger, GlobalLogContext, OPALLogger}
 import org.scalatest.funsuite.AnyFunSuite
+import org.slf4j.{Logger, LoggerFactory}
 import play.api.libs.json.Json
 import util.JsonIO
 
@@ -17,7 +17,7 @@ import java.nio.file.{FileVisitResult, Files, Path, SimpleFileVisitor}
 class TestCriticalMethodsRemover extends AnyFunSuite {
   /* Initializations */
   private val jsonIO = new JsonIO()
-  private val logger: Logger = Logger("TestCriticalMethodsRemover")
+  private val logger: Logger = LoggerFactory.getLogger("TestCriticalMethodsRemover")
   private val baseOutputPath = "src/test/analysis_4.1"
   private def outputPath(testNumber: Int): String = s"$baseOutputPath.$testNumber"
 

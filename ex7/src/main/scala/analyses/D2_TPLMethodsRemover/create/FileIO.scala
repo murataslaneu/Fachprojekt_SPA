@@ -1,11 +1,9 @@
 package analyses.D2_TPLMethodsRemover.create
 
-import com.typesafe.scalalogging.Logger
 import configs.StaticAnalysisConfig
 import org.opalj.ba.toDA
 import org.opalj.bc.Assembler
 import org.opalj.br.ClassFile
-import org.slf4j.MarkerFactory
 import play.api.libs.json.Json
 
 import java.io.{File, PrintWriter}

@@ -18,7 +18,6 @@
     <orderEntry type="library" name="sbt: org.scala-lang:scala-library:2.13.16:jar" level="project" />
     <orderEntry type="library" name="sbt: de.opal-project:framework_2.13:5.0.0:jar" level="project" />
     <orderEntry type="library" name="sbt: com.typesafe.play:play-json_2.13:2.10.7:jar" level="project" />
-    <orderEntry type="library" name="sbt: com.typesafe.scala-logging:scala-logging_2.13:3.9.5:jar" level="project" />
     <orderEntry type="library" name="sbt: ch.qos.logback:logback-classic:1.5.18:jar" level="project" />
     <orderEntry type="library" name="sbt: org.knowm.xchart:xchart:3.8.8:jar" level="project" />
     <orderEntry type="library" name="sbt: de.opal-project:bytecode-assembler_2.13:5.0.0:jar" level="project" />
@@ -31,8 +30,8 @@
     <orderEntry type="library" name="sbt: com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.14.3:jar" level="project" />
     <orderEntry type="library" name="sbt: com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.14.3:jar" level="project" />
     <orderEntry type="library" name="sbt: com.fasterxml.jackson.core:jackson-databind:2.14.3:jar" level="project" />
-    <orderEntry type="library" name="sbt: org.slf4j:slf4j-api:2.0.17:jar" level="project" />
     <orderEntry type="library" name="sbt: ch.qos.logback:logback-core:1.5.18:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.slf4j:slf4j-api:2.0.17:jar" level="project" />
     <orderEntry type="library" name="sbt: de.opal-project:bytecode-creator_2.13:5.0.0:jar" level="project" />
     <orderEntry type="library" name="sbt: de.opal-project:abstract-interpretation-framework_2.13:5.0.0:jar" level="project" />
     <orderEntry type="library" name="sbt: de.opal-project:dependencies-extraction-library_2.13:5.0.0:jar" level="project" />

@@ -1,12 +1,12 @@
 import analyses.E_DeadCodeDetector.helpers.DeadCodeAnalysis
-import com.typesafe.scalalogging.Logger
 import org.scalatest.funsuite.AnyFunSuite
+import org.slf4j.{Logger, LoggerFactory}
 import play.api.libs.json.Json
 import util.{JsonIO, ProjectInitializer}
 
 class TestDeadCodeAnalysis extends AnyFunSuite {
 
-  private val logger: Logger = Logger("TestDeadCodeAnalysis")
+  private val logger: Logger = LoggerFactory.getLogger("TestDeadCodeAnalysis")
 
   private val jsonIO = new JsonIO()
 

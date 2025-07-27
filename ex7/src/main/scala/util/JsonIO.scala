@@ -2,9 +2,9 @@ package util
 
 import analyses.F_ArchitectureValidator.data.ArchitectureSpec.ruleFormat
 import analyses.F_ArchitectureValidator.data.Rule
-import com.typesafe.scalalogging.Logger
 import configs.{ArchitectureValidatorConfig, CriticalMethodsDetectorConfig, CriticalMethodsRemoverConfig, DeadCodeDetectorConfig, GodClassDetectorConfig, StaticAnalysisConfig, TPLMethodsRemoverConfig, TPLUsageAnalyzerConfig}
 import data.{IgnoredCall, SelectedMethodsOfClass, Summary}
+import org.slf4j.{Logger, LoggerFactory}
 import play.api.libs.json.{JsDefined, JsError, JsString, JsSuccess, JsUndefined, JsValue, Json, Reads}
 import util.JsonIO.DEFAULT_INPUT_JSON_PATH
 
@@ -104,7 +104,7 @@ class JsonIO {
    * Finalizes reading the json file, with logging of warnings and errors.
    */
   def readStaticAnalysisConfig(json: JsValue, outputPath: String): StaticAnalysisConfig = {
-    logger = Logger("config")
+    logger = LoggerFactory.getLogger("config")
 
     /* Reading base analysis config */
     val projectJarFiles = readProjectJarFiles(json)

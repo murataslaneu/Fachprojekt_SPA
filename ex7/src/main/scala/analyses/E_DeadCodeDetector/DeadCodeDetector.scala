@@ -2,10 +2,10 @@ package analyses.E_DeadCodeDetector
 
 import analyses.E_DeadCodeDetector.data.MultiDomainMethodWithDeadCode
 import analyses.SubAnalysis
-import com.typesafe.scalalogging.Logger
 import configs.StaticAnalysisConfig
 import helpers.{DeadCodeAnalysis, JsonIO}
 import org.opalj.ai.common.DomainRegistry
+import org.slf4j.{Logger, LoggerFactory}
 import util.ProjectInitializer
 
 import java.nio.file.{Files, Path}
@@ -18,7 +18,7 @@ import scala.util.Random
 class DeadCodeDetector(override val shouldExecute: Boolean) extends SubAnalysis {
 
   /** Logger used inside this sub-analysis */
-  override val logger: Logger = Logger("DeadCodeDetector")
+  override val logger: Logger = LoggerFactory.getLogger("DeadCodeDetector")
   /** The name of the sub-analysis */
   override val analysisName: String = "Dead Code Detector"
   /** The number of the sub-analysis */

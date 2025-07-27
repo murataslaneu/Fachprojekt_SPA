@@ -1,13 +1,13 @@
 package util
 
 import com.typesafe.config.{Config, ConfigFactory}
-import com.typesafe.scalalogging.Logger
 import data.SelectedMethodsOfClass
 import org.opalj.br.analyses.{Project, SomeProject}
 import org.opalj.br.{ClassFile, reader}
 import org.opalj.br.reader.Java9LibraryFramework
 import org.opalj.log.{GlobalLogContext, LogContext}
 import org.opalj.log.OPALLogger.{error, info}
+import org.slf4j.Logger
 
 import java.io.File
 import java.net.URL

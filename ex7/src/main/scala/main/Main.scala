@@ -8,10 +8,9 @@ import analyses.D2_TPLMethodsRemover.TPLMethodsRemover
 import analyses.E_DeadCodeDetector.DeadCodeDetector
 import analyses.F_ArchitectureValidator.ArchitectureValidator
 import analyses.SubAnalysis
-import com.typesafe.scalalogging.Logger
 import data.{SubAnalysisRun, Summary}
 import org.opalj.log.{ConsoleOPALLogger, GlobalLogContext, OPALLogger}
-import org.slf4j.MarkerFactory
+import org.slf4j.{LoggerFactory, MarkerFactory}
 import util.JsonIO.DEFAULT_INPUT_JSON_PATH
 import util.{JsonIO, ProjectInitializer, Utils}
 
@@ -126,7 +125,7 @@ object Main {
     }
 
     // Setup logger
-    val logger = Logger("main")
+    val logger = LoggerFactory.getLogger("main")
     logger.info(s"Writing log to console and in file $outputPath/analysis.log.")
     logger.info(s"Reading config from $inputJsonPath...")
 

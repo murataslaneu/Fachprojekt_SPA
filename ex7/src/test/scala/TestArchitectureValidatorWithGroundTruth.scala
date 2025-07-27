@@ -1,8 +1,8 @@
 import analyses.F_ArchitectureValidator.data.AccessType._
 import analyses.F_ArchitectureValidator.data.{ArchitectureSpec, Dependency, Rule}
 import analyses.F_ArchitectureValidator.helpers.ArchitectureValidation
-import com.typesafe.scalalogging.Logger
 import org.scalatest.funsuite.AnyFunSuite
+import org.slf4j.{Logger, LoggerFactory}
 import play.api.libs.json.Json
 import util.{JsonIO, ProjectInitializer}
 
@@ -12,7 +12,7 @@ import util.{JsonIO, ProjectInitializer}
  */
 class TestArchitectureValidatorWithGroundTruth extends AnyFunSuite {
 
-  private val logger = Logger("TestArchitectureValidatorWithGroundTruth")
+  private val logger: Logger = LoggerFactory.getLogger("TestArchitectureValidatorWithGroundTruth")
 
   private val jsonIO = new JsonIO()
 
