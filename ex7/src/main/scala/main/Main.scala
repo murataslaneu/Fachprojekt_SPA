@@ -74,8 +74,8 @@ object Main {
     if (args.contains("-initializeConfig")) {
       // Do not overwrite existing config to prevent mistakes
       if (new File(DEFAULT_INPUT_JSON_PATH).exists()) {
-        println(s"${Console.RED}ERROR: Json file already exists at $DEFAULT_INPUT_JSON_PATH." +
-          s"If you want to overwrite the file, you must delete the file before execution of this program. ${Console.RESET}")
+        println(s"${Console.RED}ERROR: Json file already exists at $DEFAULT_INPUT_JSON_PATH. " +
+          s"If you want to overwrite the file, you must delete it before the execution of this program. ${Console.RESET}")
         System.exit(1)
       }
       jsonIO.writeDefaultJson()

@@ -1,0 +1,115 @@
+{
+  "projectJars": [
+    "example/commons-lang3-3.18.1.jar"
+  ],
+  "libraryJars": [
+    "example/lib/apiguardian-api-1.1.2.jar",
+    "example/lib/asm-9.8.jar",
+    "example/lib/commons-lang3-3.17.0.jar",
+    "example/lib/commons-math3-3.6.1.jar",
+    "example/lib/commons-text-1.13.1.jar",
+    "example/lib/easymock-5.6.0.jar",
+    "example/lib/jmh-core-1.37.jar",
+    "example/lib/jmh-generator-annprocess-1.37.jar",
+    "example/lib/jopt-simple-5.0.4.jar",
+    "example/lib/jsr305-3.0.2.jar",
+    "example/lib/objenesis-3.4.jar",
+    "example/lib/opentest4j-1.3.0.jar"
+  ],
+  "resultsOutputPath": "src/test/analysis",
+  "godClassDetector": {
+    "execute": true,
+    "wmcThresh": 50,
+    "tccThresh": 0.5,
+    "atfdThresh": 20,
+    "nofThresh": 20
+  },
+  "criticalMethodsDetector": {
+    "execute": true,
+    "criticalMethods": [
+      {
+        "className": "java.lang.System",
+        "methods": [
+          "arraycopy"
+        ]
+      }
+    ],
+    "ignore": [
+      {
+        "callerClass": "org.openjdk.jmh.util.ClassUtils",
+        "callerMethod": "denseClassNames",
+        "targetClass": "java.lang.System",
+        "targetMethod": "arraycopy"
+      }
+    ],
+    "callGraphAlgorithmName": "XTA",
+    "entryPointsFinder": "applicationWithJre",
+    "customEntryPoints": [
+      {
+        "className": "org.apache.commons.lang3.ArrayUtils",
+        "methods": [
+          "add"
+        ]
+      }
+    ]
+  },
+  "tplUsageAnalyzer": {
+    "execute": true,
+    "countAllMethods": true,
+    "callGraphAlgorithmName": "CHA",
+    "entryPointsFinder": "library",
+    "customEntryPoints": []
+  },
+  "criticalMethodsRemover": {
+    "execute": true,
+    "criticalMethods": [
+      {
+        "className": "java.lang.System",
+        "methods": [
+          "getSecurityManager",
+          "setSecurityManager"
+        ]
+      }
+    ],
+    "ignore": [
+      {
+        "callerClass": "org.openjdk.jmh.util.ClassUtils",
+        "callerMethod": "denseClassNames",
+        "targetClass": "java.lang.System",
+        "targetMethod": "getSecurityManager"
+      }
+    ]
+  },
+  "tplMethodsRemover": {
+    "execute": true,
+    "tplJar": "example/lib/commons-math3-3.6.1.jar",
+    "includeNonPublicMethods": false,
+    "callGraphAlgorithmName": "RTA",
+    "entryPointsFinder": "custom",
+    "customEntryPoints": []
+  },
+  "deadCodeDetector": {
+    "execute": true,
+    "completelyLoadLibraries": false,
+    "domains": "ALL"
+  },
+  "architectureValidator": {
+    "execute": true,
+    "onlyMethodAndFieldAccesses": true,
+    "defaultRule": "FORBIDDEN",
+    "rules": [
+      {
+        "from": "commons-lang3-3.18.1.jar",
+        "to": "commons-lang3-3.18.1.jar",
+        "type": "ALLOWED",
+        "except": [
+          {
+            "from": "commons-lang3-3.18.1.jar",
+            "to": "commons-lang3-3.18.1.jar",
+            "type": "FORBIDDEN"
+          }
+        ]
+      }
+    ]
+  }
+}

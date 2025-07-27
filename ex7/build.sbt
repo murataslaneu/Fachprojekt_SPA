@@ -25,8 +25,4 @@ libraryDependencies ++= Seq(
   "org.knowm.xchart" % "xchart" % "3.8.8"
 )
 
-// Parallel execution is not possible as multiple tests are accessing the global variables
-// of ArchitectureValidator.
-// This structure gets forced by the AnalysisApplication of OPAL and as a result cannot be fixed easily.
-// Therefore, disable parallel execution entirely (tests get executed fast anyway...)
-Test / parallelExecution := false
+Test / parallelExecution := true

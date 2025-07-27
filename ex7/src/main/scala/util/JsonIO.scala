@@ -6,6 +6,7 @@ import com.typesafe.scalalogging.Logger
 import configs.{ArchitectureValidatorConfig, CriticalMethodsDetectorConfig, CriticalMethodsRemoverConfig, DeadCodeDetectorConfig, GodClassDetectorConfig, StaticAnalysisConfig, TPLMethodsRemoverConfig, TPLUsageAnalyzerConfig}
 import data.{IgnoredCall, SelectedMethodsOfClass, Summary}
 import play.api.libs.json.{JsDefined, JsError, JsString, JsSuccess, JsUndefined, JsValue, Json, Reads}
+import util.JsonIO.DEFAULT_INPUT_JSON_PATH
 
 import java.io.{File, PrintWriter}
 
@@ -17,7 +18,7 @@ class JsonIO {
    */
   private var logger: Logger = _
 
-  def writeDefaultJson(): Unit = {
+  def writeDefaultJson(path: String = DEFAULT_INPUT_JSON_PATH): Unit = {
     // Create default json
     val json: JsValue = Json.obj(
       "projectJars" -> Json.arr(), // TODO: Maybe add analysis application itself as default
@@ -72,7 +73,7 @@ class JsonIO {
     )
 
     // Write default json
-    val writer = new PrintWriter(new File(JsonIO.DEFAULT_INPUT_JSON_PATH))
+    val writer = new PrintWriter(new File(path))
     writer.write(Json.prettyPrint(json))
     writer.close()
   }
@@ -140,8 +141,6 @@ class JsonIO {
    * @return List of File objects, retrieved from the paths given inside the option.
    */
   private def readProjectJarFiles(json: JsValue): Array[File] = {
-    // projectJars: List[String]
-    // - Required, should contain valid paths!
     val projectJarPaths: Array[String] = {
       val result = json \ "projectJars"
       if (result.isEmpty) handleOptionNotFound(true, "projectJars")
@@ -193,11 +192,17 @@ class JsonIO {
   private def readGodClassDetectorConfig(json: JsValue): GodClassDetectorConfig = {
     val parentField = "godClassDetector"
     // Retrieve config for the god class detector
-    val subAnalysisJson: JsValue = {
-      val result = json \ parentField
-      if (result.isEmpty) handleOptionNotFound(true, parentField)
-      result.get
+    val maybeSubAnalysisJson = retrieveSubAnalysisConfig(json, parentField)
+    if (maybeSubAnalysisJson.isEmpty) {
+      return GodClassDetectorConfig(
+        execute = false,
+        GodClassDetectorConfig.DEFAULT_WMC_THRESH,
+        GodClassDetectorConfig.DEFAULT_TCC_THRESH,
+        GodClassDetectorConfig.DEFAULT_ATFD_THRESH,
+        GodClassDetectorConfig.DEFAULT_NOF_THRESH
+      )
     }
+    val subAnalysisJson = maybeSubAnalysisJson.get
 
     // Read config values
     val execute = readConfigValueWithoutDefault[Boolean](
@@ -248,11 +253,18 @@ class JsonIO {
    */
   private def readCriticalMethodsDetectorConfig(json: JsValue): CriticalMethodsDetectorConfig = {
     val parentField = "criticalMethodsDetector"
-    val subAnalysisJson: JsValue = {
-      val result = json \ parentField
-      if (result.isEmpty) handleOptionNotFound(true, parentField)
-      result.get
+    val maybeSubAnalysisJson = retrieveSubAnalysisConfig(json, parentField)
+    if (maybeSubAnalysisJson.isEmpty) {
+      return CriticalMethodsDetectorConfig(
+        execute = false,
+        criticalMethods = CriticalMethodsDetectorConfig.DEFAULT_CRITICAL_METHODS,
+        ignore = CriticalMethodsDetectorConfig.DEFAULT_IGNORE,
+        callGraphAlgorithmName = CriticalMethodsDetectorConfig.DEFAULT_CALL_GRAPH_ALGORITHM_NAME,
+        entryPointsFinder = CriticalMethodsDetectorConfig.DEFAULT_ENTRY_POINTS_FINDER,
+        customEntryPoints = CriticalMethodsDetectorConfig.DEFAULT_CUSTOM_ENTRY_POINTS
+      )
     }
+    val subAnalysisJson = maybeSubAnalysisJson.get
 
     // Read config values
     val execute = readConfigValueWithoutDefault[Boolean](
@@ -307,11 +319,17 @@ class JsonIO {
    */
   private def readTPLUsageAnalyzerConfig(json: JsValue, criticalMethodsDetectorConfig: CriticalMethodsDetectorConfig): TPLUsageAnalyzerConfig = {
     val parentField = "tplUsageAnalyzer"
-    val subAnalysisJson: JsValue = {
-      val result = json \ parentField
-      if (result.isEmpty) handleOptionNotFound(true, parentField)
-      result.get
+    val maybeSubAnalysisJson = retrieveSubAnalysisConfig(json, parentField)
+    if (maybeSubAnalysisJson.isEmpty) {
+      return TPLUsageAnalyzerConfig(
+        execute = false,
+        countAllMethods = TPLUsageAnalyzerConfig.DEFAULT_COUNT_ALL_METHODS,
+        callGraphAlgorithmName = criticalMethodsDetectorConfig.callGraphAlgorithmName,
+        entryPointsFinder = criticalMethodsDetectorConfig.entryPointsFinder,
+        customEntryPoints = criticalMethodsDetectorConfig.customEntryPoints
+      )
     }
+    val subAnalysisJson = maybeSubAnalysisJson.get
 
     // Read config values
     val execute = readConfigValueWithoutDefault[Boolean](
@@ -358,11 +376,15 @@ class JsonIO {
    */
   private def readCriticalMethodsRemoverConfig(json: JsValue, criticalMethodsDetectorConfig: CriticalMethodsDetectorConfig): CriticalMethodsRemoverConfig = {
     val parentField = "criticalMethodsRemover"
-    val subAnalysisJson: JsValue = {
-      val result = json \ parentField
-      if (result.isEmpty) handleOptionNotFound(true, parentField)
-      result.get
+    val maybeSubAnalysisJson = retrieveSubAnalysisConfig(json, parentField)
+    if (maybeSubAnalysisJson.isEmpty) {
+      return CriticalMethodsRemoverConfig(
+        execute = false,
+        criticalMethods = criticalMethodsDetectorConfig.criticalMethods,
+        ignore = criticalMethodsDetectorConfig.ignore
+      )
     }
+    val subAnalysisJson = maybeSubAnalysisJson.get
 
     // Read config values
     val execute = readConfigValueWithoutDefault[Boolean](
@@ -397,11 +419,18 @@ class JsonIO {
    */
   private def readTPLMethodsRemoverConfig(json: JsValue, tplUsageAnalyzerConfig: TPLUsageAnalyzerConfig): TPLMethodsRemoverConfig = {
     val parentField = "tplMethodsRemover"
-    val subAnalysisJson: JsValue = {
-      val result = json \ parentField
-      if (result.isEmpty) handleOptionNotFound(true, parentField)
-      result.get
+    val maybeSubAnalysisJson = retrieveSubAnalysisConfig(json, parentField)
+    if (maybeSubAnalysisJson.isEmpty) {
+      return TPLMethodsRemoverConfig(
+        execute = false,
+        tplJar = "DEFAULT",
+        includeNonPublicMethods = TPLMethodsRemoverConfig.DEFAULT_INCLUDE_PUBLIC_METHODS,
+        callGraphAlgorithmName = tplUsageAnalyzerConfig.callGraphAlgorithmName,
+        entryPointsFinder = tplUsageAnalyzerConfig.entryPointsFinder,
+        customEntryPoints = tplUsageAnalyzerConfig.customEntryPoints
+      )
     }
+    val subAnalysisJson = maybeSubAnalysisJson.get
 
     // Read config values
     val execute = readConfigValueWithoutDefault[Boolean](
@@ -458,11 +487,15 @@ class JsonIO {
    */
   private def readDeadCodeDetectorConfig(json: JsValue): DeadCodeDetectorConfig = {
     val parentField = "deadCodeDetector"
-    val subAnalysisJson: JsValue = {
-      val result = json \ parentField
-      if (result.isEmpty) handleOptionNotFound(true, parentField)
-      result.get
+    val maybeSubAnalysisJson = retrieveSubAnalysisConfig(json, parentField)
+    if (maybeSubAnalysisJson.isEmpty) {
+      return DeadCodeDetectorConfig(
+        execute = false,
+        completelyLoadLibraries = DeadCodeDetectorConfig.DEFAULT_COMPLETELY_LOAD_LIBRARIES,
+        domains = DeadCodeDetectorConfig.DEFAULT_DOMAINS
+      )
     }
+    val subAnalysisJson = maybeSubAnalysisJson.get
 
     // Read config values
     val execute = readConfigValueWithoutDefault[Boolean](
@@ -509,11 +542,16 @@ class JsonIO {
 
   private def readArchitectureValidatorConfig(json: JsValue): ArchitectureValidatorConfig = {
     val parentField = "architectureValidator"
-    val subAnalysisJson: JsValue = {
-      val result = json \ parentField
-      if (result.isEmpty) handleOptionNotFound(true, parentField)
-      result.get
+    val maybeSubAnalysisJson = retrieveSubAnalysisConfig(json, parentField)
+    if (maybeSubAnalysisJson.isEmpty) {
+      return ArchitectureValidatorConfig(
+        execute = false,
+        onlyMethodAndFieldAccesses = ArchitectureValidatorConfig.DEFAULT_ONLY_METHOD_AND_FIELD_ACCESSES,
+        defaultRule = ArchitectureValidatorConfig.DEFAULT_DEFAULT_RULE,
+        rules = ArchitectureValidatorConfig.DEFAULT_RULES
+      )
     }
+    val subAnalysisJson = maybeSubAnalysisJson.get
 
     // Read config values
     val execute = readConfigValueWithoutDefault[Boolean](
@@ -815,6 +853,22 @@ class JsonIO {
     val writer = new PrintWriter(new File(path))
     writer.write(Json.prettyPrint(json))
     writer.close()
+  }
+
+  /**
+   * Simple helper function retrieving the sub-analysis json.
+   *
+   * @param json The complete json config to retrieve the sub-analysis json from.
+   * @param field The name of the sub-analysis field to retrieve.
+   * @return If not defined, returns None. Else, the sub-analysis config is returned as a JsValue.
+   */
+  private def retrieveSubAnalysisConfig(json: JsValue, field: String): Option[JsValue] = {
+    val result = json \ field
+    if (result.isEmpty) {
+      logger.warn(s"Sub-analysis config $field could not be found in the json config, not executing sub-analysis.")
+      None
+    }
+    else Some(result.get)
   }
 }
 

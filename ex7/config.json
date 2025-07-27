@@ -39,7 +39,7 @@
     "entryPointsFinder": "DEFAULT",
     "customEntryPoints": [
       {
-        "className": "org.apache.commons.lang3.ArrayUtils.java",
+        "className": "org.apache.commons.lang3.ArrayUtils",
         "methods": [
           "add"
         ]
