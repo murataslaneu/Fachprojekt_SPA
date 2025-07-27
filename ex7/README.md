@@ -49,7 +49,7 @@ und nacheinander automatisiert ausgeführt werden können.
 3. Starte das Programm über `java -jar ./ex7-assembly-0.1.0.jar` (Name evtl. abweichend, falls dieser geändert wurde).
 
 > Argumente an die Analyse-Applikation werden nach dem Pfad zur jar-Datei geschrieben,
-> z.B. `java -jar ./ex7-assembly-0.1.0.jar -configconfig.json`.
+> z.B. `java -jar ./ex7-assembly-0.1.0.jar -config=config.json`.
 
 > Argumente an die JWM werden nach dem "java" übergeben, z.B. `java -Xms512m -Xmx2g -jar ./ex7-assembly-0.1.0.jar`
-> (-Xms setzt die *minimale* Heap-Größe (hier 512 MB), -Xmx die maximale Heap-Größe (hier 2 GB)).
+> (-Xms setzt die *minimale* Heap-Größe (hier 512 MB), -Xmx die *maximale* Heap-Größe (hier 2 GB)).
