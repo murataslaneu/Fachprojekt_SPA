@@ -8,7 +8,7 @@ und nacheinander automatisiert ausgeführt werden können.
 
 - [Ausführung](#ausführung)
   - [Direkt über sbt](#direkt-über-sbt)
-  - Kompilieren und Ausführen über `java -jar`
+  - [Kompilieren und Ausführen über `java -jar`](#kompilieren-und-ausführen-über-java--jar)
 - CLI-Parameter (Starten über Konsole)
 - JSON-Config + Ausgabe für die Analysen
   - Grundoptionen
@@ -33,9 +33,23 @@ und nacheinander automatisiert ausgeführt werden können.
    der in der Config-Json spezifiziert wird, standardmäßig der Ordner *analysis* im aktuellen Verzeichnis.
 
 > JVM-Optionen wie z.B. der zugewiesene RAM können über die *.jvmopts*-Datei angepasst werden.
+> Das kann eventuell notwendig sein, wenn ein größeres Projekt analysiert wird.
 
 ### Kompilieren und Ausführen über `java -jar`
 
 #### Kompilieren
 1. Öffne das Terminal und stelle sicher, im richtigen Verzeichnis zu sein (`TUDO-FP-VulnSPA-25-3/ex7`).
-2. 
+2. Kompiliere das Projekt mittels `sbt clean assembly`.
+3. Der Pfad zu erzeugten jar-Datei wird in der Konsole ausgegeben
+   (sollte `target/scala.2.13/ex7-assembly-0.1.0.jar` sein).
+
+#### Ausführen der jar-Datei
+1. Öffne das Terminal im Ordner, wo sich die jar-Datei befindet.
+2. (Erstelle oder passe ggf. eine Json-Config an.)
+3. Starte das Programm über `java -jar ./ex7-assembly-0.1.0.jar` (Name evtl. abweichend, falls dieser geändert wurde).
+
+> Argumente an die Analyse-Applikation werden nach dem Pfad zur jar-Datei geschrieben,
+> z.B. `java -jar ./ex7-assembly-0.1.0.jar -configconfig.json`.
+
+> Argumente an die JWM werden nach dem "java" übergeben, z.B. `java -Xms512m -Xmx2g -jar ./ex7-assembly-0.1.0.jar`
+> (-Xms setzt die *minimale* Heap-Größe (hier 512 MB), -Xmx die maximale Heap-Größe (hier 2 GB)).
