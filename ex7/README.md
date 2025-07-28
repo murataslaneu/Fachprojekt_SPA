@@ -4,6 +4,8 @@ Dieses Projekt fasst alle bisherigen Analysen als eine große Analyse-Applikatio
 sodass alle Analysen über ein einziges Programm und einer einzigen Json-Config konfiguriert
 und nacheinander automatisiert ausgeführt werden können.
 
+
+
 ## Inhalt
 
 - [Ausführung](#ausführung)
@@ -22,6 +24,8 @@ und nacheinander automatisiert ausgeführt werden können.
   7. ArchitectureValidator (ex6)
   - [Konfiguration Call-Graphen](#konfiguration-call-graphen)
 - Tests
+
+
 
 ## Ausführung
 
@@ -55,6 +59,8 @@ und nacheinander automatisiert ausgeführt werden können.
 > Argumente an die JVM werden nach dem "java" übergeben, z.B. `java -Xms512m -Xmx2g -jar ./ex7-assembly-0.1.0.jar`
 > (-Xms setzt die *minimale* Heap-Größe (hier 512 MB), -Xmx die *maximale* Heap-Größe (hier 2 GB)).
 
+
+
 ## CLI-Parameter (Starten über Terminal)
 
 Es ist immer nur die Übergabe eines einzelnen Parameters möglich, sie schließen sich also gegenseitig aus.
@@ -75,15 +81,17 @@ Hat man das Programm als jar-Datei kompiliert, kann man auch der JVM Parameter �
 > Das ist allerdings nicht empfehlenswert, da man keinen Konsolen-Log erhält und kein Feedback bekommt,
 > wann die Analyse abgeschlossen wird.
 
+
+
 ## JSON-Config + Ausgabe für die Analysen
 
 Das Programm wird über eine einzelne JSON-Datei als Config gesteuert. In dieser kann man festlegen, welche jar-Dateien
 geladen werden sollen, wo das Ergebnis ausgegeben werden soll, welche Analysen ausgeführt werden sollen
 und die Analysen konfigurieren.
 
-Die allermeisten Optionen haben einen Default-Wert vorgegeben. Wird für die jeweilige Option `"DEFAULT"` eingegeben,
+**Die allermeisten Optionen haben einen Default-Wert vorgegeben. Wird für die jeweilige Option `"DEFAULT"` eingegeben,
 dann wird der Standardwert für diese Option verwendet. Ausgenommen davon sind `"projectJars"`, `"libraryJars"`, `"resultsOutputPath"`
-und die jeweiligen `"execute"`-Optionen für einzelnen Analysen.
+und die jeweiligen `"execute"`-Optionen für einzelnen Analysen.**
 
 Die Default-Config für das Programm sieht folgendermaßen aus und bietet die folgenden Optionen:
 
@@ -141,6 +149,8 @@ Die Default-Config für das Programm sieht folgendermaßen aus und bietet die fo
 }
 ```
 
+
+
 ### Grundoptionen
 
 Die Grundoptionen werden für alle Analysen benötigt.
@@ -153,6 +163,8 @@ Die Grundoptionen werden für alle Analysen benötigt.
 
 Die restlichen Optionen beziehen sich immer auf eine spezifische Analyse. Jede Analyse hat also eine eigene "Sub-Config".
 Für jede Analyse ist außerdem immer eine Option `"execute"` vorhanden, die bestimmt, ob die Analyse ausgeführt werden soll oder nicht.
+
+
 
 ### Struktur der Analyse-Ausgabe
 
@@ -173,6 +185,8 @@ Im Ordner werden folgende Dateien abgelegt.
 > Dateien und Ordner können innerhalb des Ordners ungefragt gelöscht/überschrieben werden.
 > Die Chance auf Datenverlust ist also hoch!
 
+
+
 ### Analyse 1: GodClassDetector (ex1)
 
 Der GodClassDetector sucht mithilfe von Schwellenwerten für bestimmte Code-Parameter nach "God Classes"
@@ -182,12 +196,12 @@ Die Analyse für den GodClassDetector wird über `godClassDetector` in der Json-
 konfiguriert.
 
 ```json
-  "godClassDetector" : {
-    "execute" : false,
-    "wmcThresh" : "DEFAULT",
-    "tccThresh" : "DEFAULT",
-    "atfdThresh" : "DEFAULT",
-    "nofThresh" : "DEFAULT"
+"godClassDetector" : {
+  "execute" : false,
+  "wmcThresh" : "DEFAULT",
+  "tccThresh" : "DEFAULT",
+  "atfdThresh" : "DEFAULT",
+  "nofThresh" : "DEFAULT"
 }
 ```
 
@@ -199,6 +213,8 @@ konfiguriert.
 | `"atfdThresh"` | Integer ≥ 0                        | 8            | Grenzwert für ATFD ("Access to Foreign Data", höhere Werte sind schlechter. Klassen sollten *kleiner gleich* dem Grenzwert sein.  |
 | `"nofThresh"`  | Integer ≥ 0                        | 30           | Grenzwert für NOF ("Number of Fields"), höhere Werte sind schlechter. Klassen sollten *kleiner* sein als der Grenzwert.           |
 
+
+
 ### Analyse 2: CriticalMethodsDetector (ex2)
 
 Der CriticalMethodsDetector sucht nach kritischen Methodenaufrufen
@@ -209,40 +225,120 @@ konfiguriert.
 
 ```json
 "criticalMethodsDetector" : {
-    "execute" : false,
-    "criticalMethods" : "DEFAULT",
-    "ignore" : "DEFAULT",
-    "callGraphAlgorithmName" : "DEFAULT",
-    "entryPointsFinder" : "DEFAULT",
-    "customEntryPoints" : "DEFAULT"
+  "execute" : false,
+  "criticalMethods" : "DEFAULT",
+  "ignore" : "DEFAULT",
+  "callGraphAlgorithmName" : "DEFAULT",
+  "entryPointsFinder" : "DEFAULT",
+  "customEntryPoints" : "DEFAULT"
 }
 ```
 
+| Option                     | Erwarteter Wert                                                                                                    | Default-Wert                                                                                    | Weitere Informationen                                                                                                                                                                                                                                                                                                                                             |
+|----------------------------|--------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `"execute"`                | Boolean (`true` oder `false`)                                                                                      | -                                                                                               | Bestimmt, ob der CriticalMethodsDetector ausgeführt werden soll oder nicht.                                                                                                                                                                                                                                                                                       |
+| `"criticalMethods"`        | Liste von `{"className": <String>, "methods": <Liste von Strings> }`                                               | `[{"className": "java.lang.System", "methods": ["getSecurityManager", "setSecurityManager"] }]` | Gibt die kritischen Methoden an, gruppiert nach Klasse. Bei den Klassennamen ist der Fully Qualified Name notwendig, bei den Methoden nur der Methodenname (spezifizieren von z.B. Parameterliste leider nicht möglich).                                                                                                                                          |
+| `"ignore"`                 | Liste von `{"callerClass": <String>, "callerMethod": <String>, "targetClass": <String>, "targetMethod": <String>}` | Leere Liste                                                                                     | Liste von Methoden, wo der Aufruf einer kritischen Methode gestattet wird. `"callerClass"` und `"callerMethod"` beziehen sich auf die aufrufende Klasse (Fully Qualified Name) und Methodenname, wo ein kritischer Aufruf erlaubt werden soll, und `"targetClass"` und `"targetMethod"` auf die kritische Methode der jeweiligen Klasse, die erlaubt werden soll. |
+| `"callGraphAlgorithmName"` | String (`"CHA"`, `"RTA"`, `"XTA"`, `"CTA"` oder `"1-1-CFA"`)                                                       | `"RTA"`                                                                                         | Name des Call-Graph-Algorithmen, der für diese Analyse verwendet werden soll. Mehr Informationen siehe beim Abschnitt [Call-Graphen](#konfiguration-call-graphen).                                                                                                                                                                                                |
+| `"entryPointsFinder"`      | String (`"custom"`,`"application"`,`"applicationWithJre"` oder `"library"`)                                        | `"application"`                                                                                 | Name des Entry Point Finders von OPAL, der für die Call-Graphen verwendet werden soll. Mehr Informationen siehe beim Abschnitt [Call-Graphen](#konfiguration-call-graphen).                                                                                                                                                                                       |
+| `"customEntryPoints"`      | Liste von `{"className": <String>, "methods": <Liste von Strings> }`                                               | Leere Liste                                                                                     | Liste von Methoden, die als (zusätzliche) Einstiegspunkte für den Call-Graphen verwendet werden sollen. Mehr Informationen siehe beim Abschnitt [Call-Graphen](#konfiguration-call-graphen).                                                                                                                                                                      |
 
-| Option          | Erwarteter Wert                | Default-Wert | Weitere Informationen                                                       |
-|-----------------|--------------------------------|--------------|-----------------------------------------------------------------------------|
-| `"execute"`     | Boolean (`true` oder `false`)  | -            | Bestimmt, ob der CriticalMethodsDetector ausgeführt werden soll oder nicht. |
-| `""`            |                                |              |                                                                             |
-| `""`            |                                |              |                                                                             |
-| `""`            |                                |              |                                                                             |
-| `""`            |                                |              |                                                                             |
+
 
 ### Analyse 3: TPLUsageAnalyzer (ex3)
 
+Der TPLUsageAnalyzer ermittelt für jede gegebene library jar, wie hoch der Anteil genutzter Methoden ("Usage Ratio")
+im Projekt ist. Für die Analyse wird ein [Call-Graph](#konfiguration-call-graphen) verwendet.
+
+Die Analyse für den TPLUsageAnalyzer wird über `tplUsageAnalyzer` in der Json-Config
+konfiguriert.
+
+```json
+"tplUsageAnalyzer" : {
+  "execute" : false,
+  "countAllMethods" : "DEFAULT",
+  "callGraphAlgorithmName" : "DEFAULT",
+  "entryPointsFinder" : "DEFAULT",
+  "customEntryPoints" : "DEFAULT"
+}
+```
+| Option                     | Erwarteter Wert                                                             | Default-Wert                                          | Weitere Informationen                                                                                                                                                                        |
+|----------------------------|-----------------------------------------------------------------------------|-------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `"execute"`                | Boolean (`true` oder `false`)                                               | -                                                     | Bestimmt, ob der TPLUsageAnalyzer ausgeführt werden soll oder nicht.                                                                                                                         |
+| `"countAllMethods"`        | Boolean (`true` oder `false`)                                               | `false`                                               | Flag, der angibt, ob sämtliche Methoden gezählt werden sollen (auch private Methoden, die evtl. indirekt aufgerufen wurden) (`true`), oder nur öffentliche Methoden (`false`).               |
+| `"callGraphAlgorithmName"` | String (`"CHA"`, `"RTA"`, `"XTA"`, `"CTA"` oder `"1-1-CFA"`)                | Wert, der in CriticalMethodsDetector eingegeben wurde | Name des Call-Graph-Algorithmen, der für diese Analyse verwendet werden soll. Mehr Informationen siehe beim Abschnitt [Call-Graphen](#konfiguration-call-graphen).                           |
+| `"entryPointsFinder"`      | String (`"custom"`,`"application"`,`"applicationWithJre"` oder `"library"`) | Wert, der in CriticalMethodsDetector eingegeben wurde | Name des Entry Point Finders von OPAL, der für die Call-Graphen verwendet werden soll. Mehr Informationen siehe beim Abschnitt [Call-Graphen](#konfiguration-call-graphen).                  |
+| `"customEntryPoints"`      | Liste von `{"className": <String>, "methods": <Liste von Strings> }`        | Wert, der in CriticalMethodsDetector eingegeben wurde | Liste von Methoden, die als (zusätzliche) Einstiegspunkte für den Call-Graphen verwendet werden sollen. Mehr Informationen siehe beim Abschnitt [Call-Graphen](#konfiguration-call-graphen). |
+
+
+
 ### Analyse 4a: CriticalMethodsRemover (ex4.1)
 
+Der CriticalMethodsRemover sucht (ähnlich wie der CriticalMethodsDetector) nach kritischen Methodenaufrufen.
+Bei dieser Analyse wird aber auch der Bytecode modifiziert, sodass die Aufrufe der kritischen Methoden aus dem Bytecode
+entfernt werden (Invoke-Instruktionen werden durch NOP ersetzt).
+Die modifizieren .class-Dateien werden mit ausgegeben, unmodifizierte nicht.
+
+Die Analyse für den CriticalMethodsRemover wird über `"criticalMethodsRemover"` in der Json-Config
+konfiguriert.
+
+```json
+"criticalMethodsRemover" : {
+  "execute" : false,
+  "criticalMethods" : "DEFAULT",
+  "ignore" : "DEFAULT"
+}
+```
+
+| Option                  | Erwarteter Wert                                                                                                    | Default-Wert                                                                                    | Weitere Informationen                                                                                                                                                                                                                                                                                                                                                                                                        |
+|-------------------------|--------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `"execute"`             | Boolean (`true` oder `false`)                                                                                      | -                                                                                               | Bestimmt, ob der CriticalMethodsRemover ausgeführt werden soll oder nicht.                                                                                                                                                                                                                                                                                                                                                   |
+| `"criticalMethods"`     | Liste von `{"className": <String>, "methods": <Liste von Strings> }`                                               | `[{"className": "java.lang.System", "methods": ["getSecurityManager", "setSecurityManager"] }]` | Gibt die kritischen Methoden an, gruppiert nach Klasse. Bei den Klassennamen ist der Fully Qualified Name notwendig, bei den Methoden nur der Methodenname (spezifizieren von z.B. Parameterliste leider nicht möglich).                                                                                                                                                                                                     |
+| `"ignore"`              | Liste von `{"callerClass": <String>, "callerMethod": <String>, "targetClass": <String>, "targetMethod": <String>}` | Leere Liste                                                                                     | Liste von Methoden, wo der Aufruf einer kritischen Methode gestattet wird. `"callerClass"` und `"callerMethod"` beziehen sich auf die aufrufende Klasse (Fully Qualified Name) und Methodenname, wo ein kritischer Aufruf erlaubt werden soll, und `"targetClass"` und `"targetMethod"` auf die kritische Methode der jeweiligen Klasse, die erlaubt werden soll. Erlaubte/Ignorierte Methodenaufrufe werden nicht entfernt. |
+
+
+
 ### Analyse 4b: TPLMethodsRemover (ex4.2)
+
+Der TPLMethodsRemover erstellt von einer library jar ein Dummy, der nur die vom Projekt genutzten Methoden enthält.
+Die Methodenkörper der genutzten Methoden werden aber ebenfalls entfernt.
+Für die Analyse wird ein [Call-Graph](#konfiguration-call-graphen) verwendet.
+
+Die Analyse für den TPLMethodsRemover wird über `tplMethodsRemover` in der Json-Config
+konfiguriert.
+
+```json
+"tplMethodsRemover" : {
+  "execute" : false,
+  "tplJar" : "DEFAULT",
+  "includeNonPublicMethods" : "DEFAULT",
+  "callGraphAlgorithmName" : "DEFAULT",
+  "entryPointsFinder" : "DEFAULT",
+  "customEntryPoints" : "DEFAULT"
+}
+```
+
+| Option                      | Erwarteter Wert                                                                                | Default-Wert                                   | Weitere Informationen                                                                                                                                                                        |
+|-----------------------------|------------------------------------------------------------------------------------------------|------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `"execute"`                 | Boolean (`true` oder `false`)                                                                  | -                                              | Bestimmt, ob der TPLMethodsRemover ausgeführt werden soll oder nicht.                                                                                                                        |
+| `"tplJar"`                  | String (Kopie eines Pfades zu einer jar-Datei, die in `"libraryJars"` bereits angegeben wurde) | Zufällig ausgewählt aus `"libraryJars"`        | Third Party Library Jar, von der der Dummy generiert werden soll.                                                                                                                            |
+| `"includeNonPublicMethods"` | Boolean (`true` oder `false`)                                                                  | `true`                                         | Wenn `true` werden sämtliche erreichbare Methoden im Dummy hinzugefügt, bei `false` nur die öffentlichen Methoden.                                                                           |
+| `"callGraphAlgorithmName"`  | String (`"CHA"`, `"RTA"`, `"XTA"`, `"CTA"` oder `"1-1-CFA"`)                                   | Wert, der in TPLUsageAnalyzer eingegeben wurde | Name des Call-Graph-Algorithmen, der für diese Analyse verwendet werden soll. Mehr Informationen siehe beim Abschnitt [Call-Graphen](#konfiguration-call-graphen).                           |
+| `"entryPointsFinder"`       | String (`"custom"`,`"application"`,`"applicationWithJre"` oder `"library"`)                    | Wert, der in TPLUsageAnalyzer eingegeben wurde | Name des Entry Point Finders von OPAL, der für die Call-Graphen verwendet werden soll. Mehr Informationen siehe beim Abschnitt [Call-Graphen](#konfiguration-call-graphen).                  |
+| `"customEntryPoints"`       | Liste von `{"className": <String>, "methods": <Liste von Strings> }`                           | Wert, der in TPLUsageAnalyzer eingegeben wurde | Liste von Methoden, die als (zusätzliche) Einstiegspunkte für den Call-Graphen verwendet werden sollen. Mehr Informationen siehe beim Abschnitt [Call-Graphen](#konfiguration-call-graphen). |
+
+
 
 ### Analyse 5: DeadCodeDetector (ex5)
 Der DeadCodeDetector analysiert den Bytecode eines Projekts und erkennt Instruktionen, die nie erreicht oder ausgeführt werden, also sogenannten „Dead Code“. Die Analyse basiert auf abstrakter Interpretation. Dabei kann interaktiv oder automatisch entschieden werden, welche Domain für die Analyse verwendet wird.
 
-Die Analyse für den DeadCodeDetector wird über deadCodeDetector in der `Json-Config` konfiguriert.
+Die Analyse für den DeadCodeDetector wird über `"deadCodeDetector"` in der Json-Config konfiguriert.
 
 ```json
 "deadCodeDetector": {
-"execute": false,
-"completelyLoadLibraries": "DEFAULT",
-"domains": "DEFAULT"
+  "execute": false,
+  "completelyLoadLibraries": "DEFAULT",
+  "domains": "DEFAULT"
 }
 ```
 
@@ -258,6 +354,8 @@ Die `domains`-Option erlaubt die Angabe, welche abstrakten Domains verwendet wer
 
 Die Ergebnisse der Analyse werden in einer JSON-Datei abgelegt. Die Datei enthält eine Auflistung der Methoden mit toten Instruktionen sowie eine graphische Zusammenfassung.
 
+
+
 ### Analyse 6: ArchitectureValidator (ex6)
 Der ArchitectureValidator überprüft, ob ein Projekt eine zuvor definierte Architektur-Spezifikation einhält.
 Dabei wird unter anderem analysiert, ob gewisse Klassen, Packages oder Jars auf andere zugreifen dürfen oder nicht.
@@ -267,10 +365,10 @@ Neben Methodenaufrufen und Feldzugriffen können auch andere Abhängigkeiten wie
 Die Analyse für den ArchitectureValidator wird über architectureValidator in der Json-Config konfiguriert.
 ```json
 "architectureValidator" : {
-"execute" : false,
-"onlyMethodAndFieldAccesses" : "DEFAULT",
-"defaultRule" : "DEFAULT",
-"rules" : "DEFAULT"
+  "execute" : false,
+  "onlyMethodAndFieldAccesses" : "DEFAULT",
+  "defaultRule" : "DEFAULT",
+  "rules" : "DEFAULT"
 }
 ```
 
@@ -306,6 +404,8 @@ Beispielhafte Regel in der `spec.json` Datei:
 
 Diese Regel verbietet grundsätzlich den Zugriff von `main.jar` auf `helper.jar`, erlaubt jedoch eine Ausnahme zwischen `MainClass` und `HelperClass`.
 
+
+
 ### Konfiguration Call-Graphen
 
 Für Analysen, die einen Call-Graphen verwenden, werden immer dieselben 3 Optionen zur Verfügung gestellt.
@@ -339,13 +439,3 @@ Die Optionen sind:
   Über diese Option kann man eigene weitere Einstiegspunkte für das Projekt definieren. Das empfiehlt sich
   insbesondere, wenn man bei `entryPointsFinder` den Wert `"custom"` eingegeben hat. Man kann jedoch auch für jeden
   anderen Entry Points Finder weitere Einstiegspunkte definieren.
-
-
-
-| Option          | Erwarteter Wert                | Default-Wert | Weitere Informationen |
-|-----------------|--------------------------------|--------------|-----------------------|
-| `"execute"`     | Boolean (`true` oder `false`)  | -            |                       |
-| `""`            |                                |              |                       |
-| `""`            |                                |              |                       |
-| `""`            |                                |              |                       |
-| `""`            |                                |              |                       |
