@@ -37,7 +37,7 @@ jobs:
         run: sbt clean assembly
       # This step packages the entire project into a single JAR file including all dependencies.
 
-      - name: [DEBUG] List generated JAR files
+      - name: List generated JAR files
         working-directory: ex7
         run: ls target/scala-2.13/*.jar
 
