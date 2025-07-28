@@ -37,6 +37,10 @@ jobs:
         run: sbt clean assembly
       # This step packages the entire project into a single JAR file including all dependencies.
 
+      - name: List generated JAR files
+        working-directory: ex7
+        run: ls target/scala-2.13/*.jar
+
       - name: Run self-analysis
-        run: java -jar target/scala-2.13/ex7.jar --config config.json
+        run: java -jar target/scala-2.13/ex7.jar -config=config.json
       # Runs the generated analysis tool on itself using a specified config file.
