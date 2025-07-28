@@ -12,14 +12,15 @@ und nacheinander automatisiert ausgeführt werden können.
 - [CLI-Parameter (Starten über Terminal)](#cli-parameter-starten-über-terminal)
 - [JSON-Config + Ausgabe für die Analysen](#json-config--ausgabe-für-die-analysen)
   -[Grundoptionen](#grundoptionen)
-  - [Struktur der Analyse-Ausgabe]()
-  1. GodClassDetector (ex1)
-  2. CriticalMethodsDetector (ex2)
+  - [Struktur der Analyse-Ausgabe](#struktur-der-analyse-ausgabe)
+  1. [GodClassDetector (ex1)](#analyse-1-godclassdetector-ex1)
+  2. [CriticalMethodsDetector (ex2)](#analyse-2-criticalmethodsdetector-ex2)
   3. TPLUsageAnalyzer (ex3)
   4. CriticalMethodsRemover (ex4.1)
   5. TPLMethodsRemover (ex4.2)
   6. DeadCodeDetector (ex5)
   7. ArchitectureValidator (ex6)
+  - [Konfiguration Call-Graphen](#konfiguration-call-graphen)
 - Tests
 
 ## Ausführung
@@ -190,23 +191,72 @@ konfiguriert.
   }
 ```
 
-| Option         | Erwarteter Wert                  | Default-Wert | Weitere Informationen                                                                                                             |
-|----------------|----------------------------------|--------------|-----------------------------------------------------------------------------------------------------------------------------------|
-| `"execute"`    | Boolean (`true` oder `false`)    | -            | Bestimmt, ob der GodClassDetector ausgeführt werden soll oder nicht.                                                              |
-| `"wmcThresh"`  | Integer >= 0                     | 100          | Grenzwert für WMC ("Weighted Methods per Class"), höhere Werte sind schlechter. Klassen sollten *kleiner* sein als der Grenzwert. |
-| `"tccThresh"`  | Dezimalzahl zwischen 0.0 und 1.0 | 0.33         | Grenzwert für TCC ("Tight Class Cohesion"), niedrigere Werte sind schlechter. Klassen sollten *größer gleich* dem Grenzwert sein. |
-| `"atfdThresh"` | Integer >= 0                     | 8            | Grenzwert für ATFD ("Access to Foreign Data", höhere Werte sind schlechter. Klassen sollten *kleiner gleich* dem Grenzwert sein.  |
-| `"nofThresh"`  | Integer >= 0                     | 30           | Grenzwert für NOF ("Number of Fields"), höhere Werte sind schlechter. Klassen sollten *kleiner* sein als der Grenzwert.           |
+| Option         | Erwarteter Wert                    | Default-Wert | Weitere Informationen                                                                                                             |
+|----------------|------------------------------------|--------------|-----------------------------------------------------------------------------------------------------------------------------------|
+| `"execute"`    | Boolean (`true` oder `false`)      | -            | Bestimmt, ob der GodClassDetector ausgeführt werden soll oder nicht.                                                              |
+| `"wmcThresh"`  | Integer ≥ 0                        | 100          | Grenzwert für WMC ("Weighted Methods per Class"), höhere Werte sind schlechter. Klassen sollten *kleiner* sein als der Grenzwert. |
+| `"tccThresh"`  | Dezimalzahl zwischen 0.0 und 1.0   | 0.33         | Grenzwert für TCC ("Tight Class Cohesion"), niedrigere Werte sind schlechter. Klassen sollten *größer gleich* dem Grenzwert sein. |
+| `"atfdThresh"` | Integer ≥ 0                        | 8            | Grenzwert für ATFD ("Access to Foreign Data", höhere Werte sind schlechter. Klassen sollten *kleiner gleich* dem Grenzwert sein.  |
+| `"nofThresh"`  | Integer ≥ 0                        | 30           | Grenzwert für NOF ("Number of Fields"), höhere Werte sind schlechter. Klassen sollten *kleiner* sein als der Grenzwert.           |
 
 ### Analyse 2: CriticalMethodsDetector (ex2)
 
+Der CriticalMethodsDetector sucht nach kritischen Methodenaufrufen
+(also Aufrufe auf Methoden, die z.B. eventuell sicherheitsrelevant sein könnten). Für die Analyse wird ein [Call-Graph](#konfiguration-call-graphen) verwendet.
+
+Die Analyse für den GodClassDetector wird über `godClassDetector` in der Json-Config
+konfiguriert.
+
+
+| Option          | Erwarteter Wert                | Default-Wert | Weitere Informationen                                                       |
+|-----------------|--------------------------------|--------------|-----------------------------------------------------------------------------|
+| `"execute"`     | Boolean (`true` oder `false`)  | -            | Bestimmt, ob der CriticalMethodsDetector ausgeführt werden soll oder nicht. |
+| `""`            |                                |              |                                                                             |
+| `""`            |                                |              |                                                                             |
+| `""`            |                                |              |                                                                             |
+| `""`            |                                |              |                                                                             |
+
+
+### Konfiguration Call-Graphen
+
+Für Analysen, die einen Call-Graphen verwenden, werden immer dieselben 3 Optionen zur Verfügung gestellt.
+Call-Graphen werden dafür verwendet, um erreichbare Methoden von Einstiegspunkten des Programms zu erkennen.
+
+> Möchte man eine Analyse mit Call-Graphen verwenden, empfiehlt es sich insbesondere für größere Projekte, den RAM,
+> der für die JVM zur Verfügung gestellt wird, zu erhöhen.
+
+Die Optionen sind:
+- `"callGraphAlgorithmName"`: Name des Call-Graph-Algorithmen der verwendet wird. Zur Verfügung stehen
+  (aufsteigend sortiert nach Präzision): `"CHA"`, `"RTA"`, `"XTA"`, `"CTA"`, `"1-1-CFA"`. Je präziser der 
+  Call-Graph-Algorithmus, desto weniger False-Positives liefert der Algorithmus (es werden also weniger Methoden falsch als erreichbar erkannt).
+  - CHA ist im Allgemeinen nicht empfehlenswert, da dieser viel RAM benötigen kann und sehr ungenau ist. Meistens sogar langsamer als RTA.
+  - RTA ist als Standardwahl gut geeignet, da dieser Algorithmus häufig am Schnellsten ist und die niedrigsten
+    Leistungsanforderungen an den Computer hat.
+  - 1-1-CFA ist der genauste Algorithmus, benötigt aber sehr viel Leistung und RAM. Außerdem kann es notwendig sein, die
+    Java-Standardbibliothek (`rt.jar`) in den libraryJars der Config hinzuzufügen, damit bei der Generierung des Call-Graphen keine Fehler
+    geworfen werden. Die Standardbibliothek kann man mit folgendem Tool aus seiner eigenen Java-Umgebung extrahiert werden: https://github.com/Storyyeller/jrt-extractor.
+    (Hinweis: In Windows ist der Befehl `javac .\JRTExtractor.java ; java -ea JRTExtractor`)
+- `entryPointsFinder`: Auswahl des Entry Point Finders von OPAL, der nach den Einstiegspunkten des Projekts sucht.
+  Es sind 4 verschiedene Optionen verfügbar:
+  - `"custom"`: Standardmäßig wird nichts als Einstiegspunkt betrachtet.
+    Es sollten eigene Einstiegspunkte über `"customEntryPoints"` definiert werden!
+  - `"application"`: Sucht nach main-Methoden im Projekt, über die das Projekt gestartet werden könnte.
+  - `"applicationWithJre"`: Schließt zusätzlich zu `"application"` auch die Einstiegspunkte von der JRE
+    (Java Runtime Environment) mit ein, sofern diese in der Jar enthalten ist.
+  - `"library"`: Betrachtet das Projekt als Bibliothek. Es werden also (unter anderem) alle öffentlichen Methoden
+    als Einstiegspunkte für den Call-Graphen betrachtet.
+- `customEntryPoints`: Immer eine Liste von `{"className": <String>, "methods": <Liste von Strings>}`.
+  Man gibt also eine Liste von Klassen ein, von denen mindestens eine Methode als Einstiegspunkt betrachtet werden soll.
+  Über diese Option kann man eigene weitere Einstiegspunkte für das Projekt definieren. Das empfiehlt sich
+  insbesondere, wenn man bei `entryPointsFinder` den Wert `"custom"` eingegeben hat. Man kann jedoch auch für jeden
+  anderen Entry Points Finder weitere Einstiegspunkte definieren.
 
 
 
-| Option | Erwarteter Wert | Default-Wert | Weitere Informationen |
-|--------|-----------------|--------------|-----------------------|
-| `""`   |                 |              |                       |
-| `""`   |                 |              |                       |
-| `""`   |                 |              |                       |
-| `""`   |                 |              |                       |
-| `""`   |                 |              |                       |
+| Option          | Erwarteter Wert                | Default-Wert | Weitere Informationen |
+|-----------------|--------------------------------|--------------|-----------------------|
+| `"execute"`     | Boolean (`true` oder `false`)  | -            |                       |
+| `""`            |                                |              |                       |
+| `""`            |                                |              |                       |
+| `""`            |                                |              |                       |
+| `""`            |                                |              |                       |
