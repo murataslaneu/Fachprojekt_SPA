@@ -1,0 +1,42 @@
+name: Workflow Pipeline
+
+on:
+  push:
+    branches:
+      - main  # This workflow is triggered on every push to the 'main' branch.
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest  # The job runs on the latest Ubuntu-based GitHub-hosted runner.
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        # Retrieves the repository content so the project can be built and tested.
+
+      - name: Set up Java 11
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '11'
+        # Installs JDK 11, which is required for running Scala and SBT.
+
+      - name: Set up SBT
+        uses: coursier/setup-action@v1
+        with:
+          apps: sbt
+        # Installs the Scala Build Tool (SBT) for compiling and testing the project.
+
+      - name: Run tests
+        run: sbt test
+        # Executes all unit tests defined in the project.
+
+      - name: Build fat JAR
+        run: sbt clean assembly
+      #   # This step packages the entire project into a single JAR file including all dependencies.
+      #   # It is currently commented out and can be enabled once 'sbt assembly' is confirmed to work.
+
+      - name: Run self-analysis
+        run: java -jar target/scala-2.13/ex7.jar --config config.json
+      #   # Runs the generated analysis tool on itself using a specified config file.
+      #   # This step is optional and can be used for integration testing or demonstration.
