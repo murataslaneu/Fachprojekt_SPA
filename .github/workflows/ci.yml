@@ -41,6 +41,11 @@ jobs:
         working-directory: ex7
         run: ls target/scala-2.13/*.jar
 
+      - name: Verify config file exists
+        working-directory: ex7
+        run: ls -la config.json
+      # Verifies that the configuration file exists before running the analysis.
+
       - name: Run example-analysis
         working-directory: ex7
         run: java -jar target/scala-2.13/ex7-assembly-0.1.0.jar -config=config.json
