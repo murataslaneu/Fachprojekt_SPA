@@ -13,7 +13,7 @@ und nacheinander automatisiert ausgeführt werden können.
   - [Kompilieren und Ausführen über `java -jar`](#kompilieren-und-ausführen-über-java--jar)
 - [CLI-Parameter (Starten über Terminal)](#cli-parameter-starten-über-terminal)
 - [JSON-Config + Ausgabe für die Analysen](#json-config--ausgabe-für-die-analysen)
-  -[Grundoptionen](#grundoptionen)
+  - [Grundoptionen](#grundoptionen)
   - [Struktur der Analyse-Ausgabe](#struktur-der-analyse-ausgabe)
   1. [GodClassDetector (ex1)](#analyse-1-godclassdetector-ex1)
   2. [CriticalMethodsDetector (ex2)](#analyse-2-criticalmethodsdetector-ex2)
