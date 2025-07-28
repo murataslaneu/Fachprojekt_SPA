@@ -44,7 +44,7 @@ jobs:
       - name: Verify config file exists
         working-directory: ex7
         run: ls -la config.json
-      # Verifies that the configuration file exists before running the analysis.
+      # Verifies that the configuration file exists before running the analysis
 
       - name: Run example-analysis
         working-directory: ex7
