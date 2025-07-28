@@ -33,10 +33,8 @@ jobs:
 
       - name: Build fat JAR
         run: sbt clean assembly
-      #   # This step packages the entire project into a single JAR file including all dependencies.
-      #   # It is currently commented out and can be enabled once 'sbt assembly' is confirmed to work.
+      # This step packages the entire project into a single JAR file including all dependencies.
 
       - name: Run self-analysis
         run: java -jar target/scala-2.13/ex7.jar --config config.json
-      #   # Runs the generated analysis tool on itself using a specified config file.
-      #   # This step is optional and can be used for integration testing or demonstration.
+      # Runs the generated analysis tool on itself using a specified config file.
