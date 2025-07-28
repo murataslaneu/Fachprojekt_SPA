@@ -234,8 +234,77 @@ konfiguriert.
 ### Analyse 4b: TPLMethodsRemover (ex4.2)
 
 ### Analyse 5: DeadCodeDetector (ex5)
+Der DeadCodeDetector analysiert den Bytecode eines Projekts und erkennt Instruktionen, die nie erreicht oder ausgeführt werden, also sogenannten „Dead Code“. Die Analyse basiert auf abstrakter Interpretation. Dabei kann interaktiv oder automatisch entschieden werden, welche Domain für die Analyse verwendet wird.
+
+Die Analyse für den DeadCodeDetector wird über deadCodeDetector in der `Json-Config` konfiguriert.
+
+```json
+"deadCodeDetector": {
+"execute": false,
+"completelyLoadLibraries": "DEFAULT",
+"domains": "DEFAULT"
+}
+```
+
+| Option                      | Erwarteter Wert               | Default-Wert            | Weitere Informationen                                                             |
+|-----------------------------|-------------------------------|-------------------------|-----------------------------------------------------------------------------------|
+| `"execute"`                 | Boolean (`true` oder `false`) | -                       | Gibt an, ob die Dead-Code-Analyse ausgeführt werden soll.                         |
+| `"completelyLoadLibraries"` | Boolean (`true` oder `false`) | `false`                 | Wenn `true`, werden Bibliotheken vollständig geladen, nicht nur als Interfaces.   |
+| `"domains"`                 | Liste von Strings             | Zahlen von 1-13 außer 9 | Auswahl der abstrakten Interpretations-Domains (z.B. „TypeDomain“, „ValueDomain“) |
+
+Die `domains`-Option erlaubt die Angabe, welche abstrakten Domains verwendet werden sollen. Alternativ kann die Auswahl der Domain auch interaktiv über die GUI erfolgen (empfohlen). Wird keine Domain angegeben, verwendet die Analyse automatisch die erste verfügbare.
+
+> ⚠️ Hinweis: Auch diese Analyse kann über eine GUI bedient werden. Dort lassen sich Konfigurationen laden, Ergebnisse grafisch auswerten und verschiedene Domains vergleichen.
+
+Die Ergebnisse der Analyse werden in einer JSON-Datei abgelegt. Die Datei enthält eine Auflistung der Methoden mit toten Instruktionen sowie eine graphische Zusammenfassung.
 
 ### Analyse 6: ArchitectureValidator (ex6)
+Der ArchitectureValidator überprüft, ob ein Projekt eine zuvor definierte Architektur-Spezifikation einhält.
+Dabei wird unter anderem analysiert, ob gewisse Klassen, Packages oder Jars auf andere zugreifen dürfen oder nicht.
+
+Neben Methodenaufrufen und Feldzugriffen können auch andere Abhängigkeiten wie Vererbung, Interface-Implementierung oder Typverwendungen berücksichtigt werden (standardmäßig aktiviert).
+
+Die Analyse für den ArchitectureValidator wird über architectureValidator in der Json-Config konfiguriert.
+```json
+"architectureValidator" : {
+"execute" : false,
+"onlyMethodAndFieldAccesses" : "DEFAULT",
+"defaultRule" : "DEFAULT",
+"rules" : "DEFAULT"
+}
+```
+
+| Option                      | Erwarteter Wert                                  | Default-Wert | Weitere Informationen                                                            |
+|-----------------------------|--------------------------------------------------|--------------|----------------------------------------------------------------------------------|
+| `"execute"`                 | Boolean (`true` oder `false`)                    | -            | Bestimmt ob die Architekturvalidierung ausgeführt werden soll.                   |
+| `"onlyMethodFieldAccesses"` | Boolean  (`true` oder `false`)                   | `false`      | Wenn `true`, werden nur Methodenaufrufe und Feldzugriffe analysiert.             |
+| `"defaultRule"`             | `FORBIDDEN` oder `ALLOWED`                       | `FORBIDDEN`  | Legt fest, ob Zugriffe ohne spezifische Regel erlaubt oder verboten sein sollen. |
+| `"rules"`                   | Liste von Regeln(`from`, `to`, `type`, `except`) | -            | Definiert erlaubte oder verbotene Zugriffe, ggf. mit rekursiven Ausnahmen.       |
+
+Die Architektur-Spezifikation erfolgt über eine zusätzliche JSON-Datei (`specificationsFile`), deren Struktur der Aufgabenstellung aus Analyseaufgabe 6 entspricht.
+Diese Datei wird automatisch berücksichtigt, wenn `"execute": true` gesetzt ist und `"defaultRule"` sowie `"rules"` definiert wurden.
+
+> ⚠️ Hinweis: Der `resultsOutputPath`-Ordner wird auch hier verwendet, um den Analysebericht
+> abzulegen. Der Bericht wird als `architecture-report.json` gespeichert. 
+
+Beispielhafte Regel in der `spec.json` Datei:
+
+```json
+{
+  "from": "main.jar",
+  "to": "helper.jar",
+  "type": "FORBIDDEN",
+  "except": [
+    {
+      "from": "main.jar::MainClass",
+      "to": "helper.jar::HelperClass",
+      "type": "ALLOWED"
+    }
+  ]
+}
+```
+
+Diese Regel verbietet grundsätzlich den Zugriff von `main.jar` auf `helper.jar`, erlaubt jedoch eine Ausnahme zwischen `MainClass` und `HelperClass`.
 
 ### Konfiguration Call-Graphen
 
