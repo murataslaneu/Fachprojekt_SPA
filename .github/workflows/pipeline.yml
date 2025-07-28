@@ -32,10 +32,6 @@ jobs:
         run: sbt test
         # Executes all unit tests defined in the project.
 
-      - name: List all JAR files before generating
-        working-directory: ex7
-        run: ls target/scala-2.13/*.jar
-
       - name: Build fat JAR
         working-directory: ex7
         run: sbt clean assembly
