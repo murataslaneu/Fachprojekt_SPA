@@ -28,10 +28,12 @@ jobs:
         # Installs the Scala Build Tool (SBT) for compiling and testing the project.
 
       - name: Run tests
+        working-directory: ./ex7
         run: sbt test
         # Executes all unit tests defined in the project.
 
       - name: Build fat JAR
+        working-directory: ./ex7
         run: sbt clean assembly
       # This step packages the entire project into a single JAR file including all dependencies.
 
