@@ -17,13 +17,13 @@ und nacheinander automatisiert ausgeführt werden können.
   - [Struktur der Analyse-Ausgabe](#struktur-der-analyse-ausgabe)
   1. [GodClassDetector (ex1)](#analyse-1-godclassdetector-ex1)
   2. [CriticalMethodsDetector (ex2)](#analyse-2-criticalmethodsdetector-ex2)
-  3. TPLUsageAnalyzer (ex3)
-  4. CriticalMethodsRemover (ex4.1)
-  5. TPLMethodsRemover (ex4.2)
-  6. DeadCodeDetector (ex5)
-  7. ArchitectureValidator (ex6)
+  3. [TPLUsageAnalyzer (ex3)](#analyse-3-tplusageanalyzer-ex3)
+  4. [CriticalMethodsRemover (ex4.1)](#analyse-4a-criticalmethodsremover-ex41)
+  5. [TPLMethodsRemover (ex4.2)](#analyse-4b-tplmethodsremover-ex42)
+  6. [DeadCodeDetector (ex5)](#analyse-5-deadcodedetector-ex5)
+  7. [ArchitectureValidator (ex6)](#analyse-6-architecturevalidator-ex6)
   - [Konfiguration Call-Graphen](#konfiguration-call-graphen)
-- Tests
+- [Tests](#tests)
 
 
 
@@ -439,3 +439,29 @@ Die Optionen sind:
   Über diese Option kann man eigene weitere Einstiegspunkte für das Projekt definieren. Das empfiehlt sich
   insbesondere, wenn man bei `entryPointsFinder` den Wert `"custom"` eingegeben hat. Man kann jedoch auch für jeden
   anderen Entry Points Finder weitere Einstiegspunkte definieren.
+
+## Tests
+
+Dieses Projekt wird ebenfalls mit ScalaTest getestet und die Test Coverage mithilfe von sbt-scoverage gemessen.
+Die Tests aus den vorherigen Analysen, die noch nutzbar waren, wurden modifiziert, sodass diese auf der geänderten
+Struktur dieses Projekts funktionieren. Außerdem sind die Tests und nun in der Lage, auch parallel ausgeführt werden
+(was vorher nicht möglich war wegen geteiltem Zustand bei den Analyse-Objekten).
+
+**Ausführung der Tests:**
+```
+sbt test
+```
+**Ausführung der Tests mit Messung der Test Coverage:**
+```
+sbt clean coverage test coverageReport
+```
+
+Der Coverage-Report wird (unter anderem) im HTML-Format ausgegeben. Dieser kann sich dann beim
+Öffnen der jeweiligen Datei im Browser graphisch angeschaut werden.
+
+Alternativ können auch über IntelliJ die Tests gestartet werden oder die Test Coverage gemessen werden.
+
+> Messung der Test Coverage über IntelliJ: Bei den Projekt-Ordnern, mache Rechtsklick auf den Ordner
+> `src/test` (oder einen beliebigen Unterordner), gehe zum Punkt `More Run/Debug`, und klicke dann auf
+> `Run ScalaTests in 'test'...' with Coverage`.
+> Die Tests mit Messung der Test Coverage sollten dann ausgeführt werden.
