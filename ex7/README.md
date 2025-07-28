@@ -224,7 +224,7 @@ konfiguriert.
 #### Ausgabe
 Die Analyse gibt in `1_GodClassDetector` eine json-Datei `results.json` aus, die die Ergebnisse der Analyse enthält.
 
-Die json-Datei enthält zum Einen die verwendete Config, und darunter alle im Projekt gefundenen God Classes.
+Die json-Datei enthält die verwendete Config, und darunter alle im Projekt gefundenen God Classes.
 - Bei jedem Eintrag ist der Fully Qualified Name der Klasse enthalten, aus welcher jar-Datei sie stammt, und welchen
   Wert die jeweiligen Code-Parameter haben.
 
@@ -267,6 +267,8 @@ Die json-Datei enthält zum Einen die verwendete Config, und darunter alle im Pr
 inklusive der Gesamtzahl gefundener kritischer Methodenaufrufe.
 - Bei jedem ist erkennbar, von wo die kritische Methode aufgerufen wurde und wie häufig ein Aufruf dieser
   Methode im Code enthalten ist.
+
+
 ---
 
 ### Analyse 3: TPLUsageAnalyzer (ex3)
@@ -286,13 +288,13 @@ konfiguriert.
   "customEntryPoints" : "DEFAULT"
 }
 ```
-| Option                     | Erwarteter Wert                                                             | Default-Wert                                          | Weitere Informationen                                                                                                                                                                        |
-|----------------------------|-----------------------------------------------------------------------------|-------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `"execute"`                | Boolean (`true` oder `false`)                                               | -                                                     | Bestimmt, ob der TPLUsageAnalyzer ausgeführt werden soll oder nicht.                                                                                                                         |
-| `"countAllMethods"`        | Boolean (`true` oder `false`)                                               | `false`                                               | Flag, der angibt, ob sämtliche Methoden gezählt werden sollen (auch private Methoden, die evtl. indirekt aufgerufen wurden) (`true`), oder nur öffentliche Methoden (`false`).               |
-| `"callGraphAlgorithmName"` | String (`"CHA"`, `"RTA"`, `"XTA"`, `"CTA"` oder `"1-1-CFA"`)                | Wert, der in CriticalMethodsDetector eingegeben wurde | Name des Call-Graph-Algorithmen, der für diese Analyse verwendet werden soll. Mehr Informationen siehe beim Abschnitt [Call-Graphen](#konfiguration-call-graphen).                           |
-| `"entryPointsFinder"`      | String (`"custom"`,`"application"`,`"applicationWithJre"` oder `"library"`) | Wert, der in CriticalMethodsDetector eingegeben wurde | Name des Entry Point Finders von OPAL, der für die Call-Graphen verwendet werden soll. Mehr Informationen siehe beim Abschnitt [Call-Graphen](#konfiguration-call-graphen).                  |
-| `"customEntryPoints"`      | Liste von `{"className": <String>, "methods": <Liste von Strings> }`        | Wert, der in CriticalMethodsDetector eingegeben wurde | Liste von Methoden, die als (zusätzliche) Einstiegspunkte für den Call-Graphen verwendet werden sollen. Mehr Informationen siehe beim Abschnitt [Call-Graphen](#konfiguration-call-graphen). |
+| Option                     | Erwarteter Wert                                                             | Default-Wert                                                     | Weitere Informationen                                                                                                                                                                        |
+|----------------------------|-----------------------------------------------------------------------------|------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `"execute"`                | Boolean (`true` oder `false`)                                               | -                                                                | Bestimmt, ob der TPLUsageAnalyzer ausgeführt werden soll oder nicht.                                                                                                                         |
+| `"countAllMethods"`        | Boolean (`true` oder `false`)                                               | `false`                                                          | Flag, der angibt, ob sämtliche Methoden gezählt werden sollen (auch private Methoden, die evtl. indirekt aufgerufen wurden) (`true`), oder nur öffentliche Methoden (`false`).               |
+| `"callGraphAlgorithmName"` | String (`"CHA"`, `"RTA"`, `"XTA"`, `"CTA"` oder `"1-1-CFA"`)                | Wert, der in criticalMethodsDetector eingegeben/eingesetzt wurde | Name des Call-Graph-Algorithmen, der für diese Analyse verwendet werden soll. Mehr Informationen siehe beim Abschnitt [Call-Graphen](#konfiguration-call-graphen).                           |
+| `"entryPointsFinder"`      | String (`"custom"`,`"application"`,`"applicationWithJre"` oder `"library"`) | Wert, der in criticalMethodsDetector eingegeben/eingesetzt wurde | Name des Entry Point Finders von OPAL, der für die Call-Graphen verwendet werden soll. Mehr Informationen siehe beim Abschnitt [Call-Graphen](#konfiguration-call-graphen).                  |
+| `"customEntryPoints"`      | Liste von `{"className": <String>, "methods": <Liste von Strings> }`        | Wert, der in criticalMethodsDetector eingegeben/eingesetzt wurde | Liste von Methoden, die als (zusätzliche) Einstiegspunkte für den Call-Graphen verwendet werden sollen. Mehr Informationen siehe beim Abschnitt [Call-Graphen](#konfiguration-call-graphen). |
 
 #### Ausgabe
 Es werden zwei Dateien im Ordner `3_TPLUsageAnalyzer` ausgegeben.
@@ -301,6 +303,7 @@ Es werden zwei Dateien im Ordner `3_TPLUsageAnalyzer` ausgegeben.
     Call-Graph-Algorithmus verwendet wurde und die Laufzeiten für die einzelnen Analyseschritte.
 - Eine Grafik `chart.png`, die den Nutzungsgrad jeder geladenen library jar noch einmal graphisch darstellt.
 
+
 ---
 
 ### Analyse 4a: CriticalMethodsRemover (ex4.1)
@@ -308,7 +311,7 @@ Es werden zwei Dateien im Ordner `3_TPLUsageAnalyzer` ausgegeben.
 Der CriticalMethodsRemover sucht (ähnlich wie der CriticalMethodsDetector) nach kritischen Methodenaufrufen.
 Bei dieser Analyse wird aber auch der Bytecode modifiziert, sodass die Aufrufe der kritischen Methoden aus dem Bytecode
 entfernt werden (Invoke-Instruktionen werden durch NOP ersetzt).
-Die modifizieren .class-Dateien werden mit ausgegeben, unmodifizierte nicht.
+Die kopierten, modifizieren .class-Dateien werden mit ausgegeben, unmodifizierte nicht.
 
 Die Analyse für den CriticalMethodsRemover wird über `"criticalMethodsRemover"` in der Json-Config
 konfiguriert.
@@ -321,11 +324,28 @@ konfiguriert.
 }
 ```
 
-| Option                  | Erwarteter Wert                                                                                                    | Default-Wert                                                                                    | Weitere Informationen                                                                                                                                                                                                                                                                                                                                                                                                        |
-|-------------------------|--------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `"execute"`             | Boolean (`true` oder `false`)                                                                                      | -                                                                                               | Bestimmt, ob der CriticalMethodsRemover ausgeführt werden soll oder nicht.                                                                                                                                                                                                                                                                                                                                                   |
-| `"criticalMethods"`     | Liste von `{"className": <String>, "methods": <Liste von Strings> }`                                               | `[{"className": "java.lang.System", "methods": ["getSecurityManager", "setSecurityManager"] }]` | Gibt die kritischen Methoden an, gruppiert nach Klasse. Bei den Klassennamen ist der Fully Qualified Name notwendig, bei den Methoden nur der Methodenname (spezifizieren von z.B. Parameterliste leider nicht möglich).                                                                                                                                                                                                     |
-| `"ignore"`              | Liste von `{"callerClass": <String>, "callerMethod": <String>, "targetClass": <String>, "targetMethod": <String>}` | Leere Liste                                                                                     | Liste von Methoden, wo der Aufruf einer kritischen Methode gestattet wird. `"callerClass"` und `"callerMethod"` beziehen sich auf die aufrufende Klasse (Fully Qualified Name) und Methodenname, wo ein kritischer Aufruf erlaubt werden soll, und `"targetClass"` und `"targetMethod"` auf die kritische Methode der jeweiligen Klasse, die erlaubt werden soll. Erlaubte/Ignorierte Methodenaufrufe werden nicht entfernt. |
+| Option                  | Erwarteter Wert                                                                                                    | Default-Wert                                                     | Weitere Informationen                                                                                                                                                                                                                                                                                                                                                                                                        |
+|-------------------------|--------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `"execute"`             | Boolean (`true` oder `false`)                                                                                      | -                                                                | Bestimmt, ob der CriticalMethodsRemover ausgeführt werden soll oder nicht.                                                                                                                                                                                                                                                                                                                                                   |
+| `"criticalMethods"`     | Liste von `{"className": <String>, "methods": <Liste von Strings> }`                                               | Wert, der in criticalMethodsDetector eingegeben/eingesetzt wurde | Gibt die kritischen Methoden an, gruppiert nach Klasse. Bei den Klassennamen ist der Fully Qualified Name notwendig, bei den Methoden nur der Methodenname (spezifizieren von z.B. Parameterliste leider nicht möglich).                                                                                                                                                                                                     |
+| `"ignore"`              | Liste von `{"callerClass": <String>, "callerMethod": <String>, "targetClass": <String>, "targetMethod": <String>}` | Wert, der in criticalMethodsDetector eingegeben/eingesetzt wurde | Liste von Methoden, wo der Aufruf einer kritischen Methode gestattet wird. `"callerClass"` und `"callerMethod"` beziehen sich auf die aufrufende Klasse (Fully Qualified Name) und Methodenname, wo ein kritischer Aufruf erlaubt werden soll, und `"targetClass"` und `"targetMethod"` auf die kritische Methode der jeweiligen Klasse, die erlaubt werden soll. Erlaubte/Ignorierte Methodenaufrufe werden nicht entfernt. |
+
+#### Ausgabe
+Ausgegeben wird in `4a_CriticalMethodsRemover`:
+- Json-Report `results.json`, der alle modifizierten Methoden enthält mit:
+  - Fully Qualified Name der Klasse
+  - jar-Datei, woher die Klasse stammt
+  - Entfernte Methodenaufrufe
+  - Pfad zur .class-Datei
+  - Ob die Methode ignoriert wurde (sollte in der Datei immer false sein)
+  - Ob der Bytecode gültig ist (also von OPAL verifiziert)
+  - Welche Instruktionen bei welchem PC (Program Counter) durch NOP ersetzt wurden.
+- Textdatei `originalBytecode.txt`, der den ursprünglichen Bytecode jeder modifizierten Klasse enthält
+  - Für jeden angegebenen Bytecode wird mit angegeben, von welcher Klasse und Methode dieser stammt,
+  - und mithilfe von Kommentaren `// Replaced with NOP` gekennzeichnet, welche Instruktionen ersetzt wurden
+- Ordner modifiedClasses, der die modifizierten .class-Dateien enthält
+  - Ordnerstruktur wie in ursprünglichem Projekt
+  - Nicht modifizierte Dateien sind nicht enthalten
 
 
 ---
@@ -350,20 +370,31 @@ konfiguriert.
 }
 ```
 
-| Option                      | Erwarteter Wert                                                                                | Default-Wert                                   | Weitere Informationen                                                                                                                                                                        |
-|-----------------------------|------------------------------------------------------------------------------------------------|------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `"execute"`                 | Boolean (`true` oder `false`)                                                                  | -                                              | Bestimmt, ob der TPLMethodsRemover ausgeführt werden soll oder nicht.                                                                                                                        |
-| `"tplJar"`                  | String (Kopie eines Pfades zu einer jar-Datei, die in `"libraryJars"` bereits angegeben wurde) | Zufällig ausgewählt aus `"libraryJars"`        | Third Party Library Jar, von der der Dummy generiert werden soll.                                                                                                                            |
-| `"includeNonPublicMethods"` | Boolean (`true` oder `false`)                                                                  | `true`                                         | Wenn `true` werden sämtliche erreichbare Methoden im Dummy hinzugefügt, bei `false` nur die öffentlichen Methoden.                                                                           |
-| `"callGraphAlgorithmName"`  | String (`"CHA"`, `"RTA"`, `"XTA"`, `"CTA"` oder `"1-1-CFA"`)                                   | Wert, der in TPLUsageAnalyzer eingegeben wurde | Name des Call-Graph-Algorithmen, der für diese Analyse verwendet werden soll. Mehr Informationen siehe beim Abschnitt [Call-Graphen](#konfiguration-call-graphen).                           |
-| `"entryPointsFinder"`       | String (`"custom"`,`"application"`,`"applicationWithJre"` oder `"library"`)                    | Wert, der in TPLUsageAnalyzer eingegeben wurde | Name des Entry Point Finders von OPAL, der für die Call-Graphen verwendet werden soll. Mehr Informationen siehe beim Abschnitt [Call-Graphen](#konfiguration-call-graphen).                  |
-| `"customEntryPoints"`       | Liste von `{"className": <String>, "methods": <Liste von Strings> }`                           | Wert, der in TPLUsageAnalyzer eingegeben wurde | Liste von Methoden, die als (zusätzliche) Einstiegspunkte für den Call-Graphen verwendet werden sollen. Mehr Informationen siehe beim Abschnitt [Call-Graphen](#konfiguration-call-graphen). |
+| Option                      | Erwarteter Wert                                                                                | Default-Wert                                              | Weitere Informationen                                                                                                                                                                        |
+|-----------------------------|------------------------------------------------------------------------------------------------|-----------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `"execute"`                 | Boolean (`true` oder `false`)                                                                  | -                                                         | Bestimmt, ob der TPLMethodsRemover ausgeführt werden soll oder nicht.                                                                                                                        |
+| `"tplJar"`                  | String (Kopie eines Pfades zu einer jar-Datei, die in `"libraryJars"` bereits angegeben wurde) | Zufällig ausgewählt aus `"libraryJars"`                   | Third Party Library Jar, von der der Dummy generiert werden soll.                                                                                                                            |
+| `"includeNonPublicMethods"` | Boolean (`true` oder `false`)                                                                  | `true`                                                    | Wenn `true` werden sämtliche erreichbare Methoden im Dummy hinzugefügt, bei `false` nur die öffentlichen Methoden.                                                                           |
+| `"callGraphAlgorithmName"`  | String (`"CHA"`, `"RTA"`, `"XTA"`, `"CTA"` oder `"1-1-CFA"`)                                   | Wert, der in tplUsageAnalyzer eingegeben/eingesetzt wurde | Name des Call-Graph-Algorithmen, der für diese Analyse verwendet werden soll. Mehr Informationen siehe beim Abschnitt [Call-Graphen](#konfiguration-call-graphen).                           |
+| `"entryPointsFinder"`       | String (`"custom"`,`"application"`,`"applicationWithJre"` oder `"library"`)                    | Wert, der in tplUsageAnalyzer eingegeben/eingesetzt wurde | Name des Entry Point Finders von OPAL, der für die Call-Graphen verwendet werden soll. Mehr Informationen siehe beim Abschnitt [Call-Graphen](#konfiguration-call-graphen).                  |
+| `"customEntryPoints"`       | Liste von `{"className": <String>, "methods": <Liste von Strings> }`                           | Wert, der in tplUsageAnalyzer eingegeben/eingesetzt wurde | Liste von Methoden, die als (zusätzliche) Einstiegspunkte für den Call-Graphen verwendet werden sollen. Mehr Informationen siehe beim Abschnitt [Call-Graphen](#konfiguration-call-graphen). |
+
+#### Ausgabe
+Ausgegeben wird in `4b_TPLMethodsRemover`:
+- Json-Report `results.json`, der die verwendete Config und geschriebenen .class-Dateien enthält
+  - Bei jeder geschriebenen .class Datei wird mit angegeben, wie viele Methoden von dieser Klasse verwendet wurden.
+- Dummy der Third Party Library (angegeben bei `"tplJar"`) in `tplDummy`
+  - Ordnerstruktur wie in ursprünglicher jar-Datei
+  - Enthält nur die Klassen, von der mindestens eine Methode verwendet wird
+  - Jede Klasse enthält nur die Methoden, die verwendet wurden
+  - Der Methodenkörper für jede Methode wurde allerdings entfernt
 
 
 ---
 
 ### Analyse 5: DeadCodeDetector (ex5)
-Der DeadCodeDetector analysiert den Bytecode eines Projekts und erkennt Instruktionen, die nie erreicht oder ausgeführt werden, also sogenannten „Dead Code“. Die Analyse basiert auf abstrakter Interpretation. Dabei kann interaktiv oder automatisch entschieden werden, welche Domain für die Analyse verwendet wird.
+Der DeadCodeDetector analysiert den Bytecode eines Projekts und erkennt Instruktionen, die nie erreicht oder ausgeführt werden, also sogenannten „Dead Code“.
+Die Analyse basiert auf abstrakter Interpretation.
 
 Die Analyse für den DeadCodeDetector wird über `"deadCodeDetector"` in der Json-Config konfiguriert.
 
@@ -375,28 +406,59 @@ Die Analyse für den DeadCodeDetector wird über `"deadCodeDetector"` in der Jso
 }
 ```
 
-| Option                      | Erwarteter Wert               | Default-Wert            | Weitere Informationen                                                             |
-|-----------------------------|-------------------------------|-------------------------|-----------------------------------------------------------------------------------|
-| `"execute"`                 | Boolean (`true` oder `false`) | -                       | Gibt an, ob die Dead-Code-Analyse ausgeführt werden soll.                         |
-| `"completelyLoadLibraries"` | Boolean (`true` oder `false`) | `false`                 | Wenn `true`, werden Bibliotheken vollständig geladen, nicht nur als Interfaces.   |
-| `"domains"`                 | Liste von Strings             | Zahlen von 1-13 außer 9 | Auswahl der abstrakten Interpretations-Domains (z.B. „TypeDomain“, „ValueDomain“) |
+| Option                      | Erwarteter Wert                                   | Default-Wert                  | Weitere Informationen                                                                    |
+|-----------------------------|---------------------------------------------------|-------------------------------|------------------------------------------------------------------------------------------|
+| `"execute"`                 | Boolean (`true` oder `false`)                     | -                             | Bestimmt, ob der DeadCodeDetector ausgeführt werden soll oder nicht.                     |
+| `"completelyLoadLibraries"` | Boolean (`true` oder `false`)                     | `true`                        | Wenn `true`, werden Bibliotheken vollständig geladen, bei `false` nur als Interfaces.    |
+| `"domains"`                 | Liste von Integern (zwischen 1 und 13, inklusive) | Alle Zahlen von 1-13, außer 9 | Auswahl der abstrakten Interpretations-Domains. Mehr Infos dazu bei [Domains](#domains). |
 
-Die `domains`-Option erlaubt die Angabe, welche abstrakten Domains verwendet werden sollen. Alternativ kann die Auswahl der Domain auch interaktiv über die GUI erfolgen (empfohlen). Wird keine Domain angegeben, verwendet die Analyse automatisch die erste verfügbare.
+#### Domains
 
-> ⚠️ Hinweis: Auch diese Analyse kann über eine GUI bedient werden. Dort lassen sich Konfigurationen laden, Ergebnisse grafisch auswerten und verschiedene Domains vergleichen.
+Jede Nummer, die bei `"domains"` angegeben wird, steht für eine jeweilige Domain, die von OPAL zur Verfügung gestellt wird:
+1.  `org.opalj.ai.domain.l0.BaseDomain`
+2.  `org.opalj.ai.domain.l0.PrimitiveTACAIDomain`
+3.  `org.opalj.ai.domain.l1.DefaultDomain`
+4.  `org.opalj.ai.domain.l1.DefaultDomainWithCFGAndDefUse`
+5.  `org.opalj.ai.domain.l1.DefaultIntervalValuesDomain`
+6.  `org.opalj.ai.domain.l1.DefaultReferenceValuesDomain`
+7.  `org.opalj.ai.domain.l1.DefaultReferenceValuesDomainWithCFGAndDefUse`
+8.  `org.opalj.ai.domain.l1.DefaultSetValuesDomain`
+9.  `org.opalj.ai.domain.l2.DefaultDomain`
+10. `org.opalj.ai.domain.l2.DefaultPerformInvocationsDomain`
+11. `org.opalj.ai.domain.l2.DefaultPerformInvocationsDomainWithCFGAndDefUse`
+12. `org.opalj.ai.fpcf.domain.L1DefaultDomainWithCFGAndDefUseAndSignatureRefinement`
+13. `org.opalj.ai.fpcf.domain.PrimitiveTACAIDomainWithSignatureRefinement`
 
-Die Ergebnisse der Analyse werden in einer JSON-Datei abgelegt. Die Datei enthält eine Auflistung der Methoden mit toten Instruktionen sowie eine graphische Zusammenfassung.
+> Es ist auch erlaubt, bei `"domains"` den String `"ALL"` einzugeben. Dann werden alle Domains verwendet, ohne dass man
+> selbst alle Domain-Nummern aufzählen muss.
+
+> Bei `"DEFAULT"` werden alle Domains außer die Nummer 9 verwendet. Das liegt daran, dass diese besonders lange in der
+> Ausführung braucht und ressourcenintensiv ist.
+
+#### Ausgabe
+Die Ausgaben der Analyse werden in `5_DeadCodeDetector` gespeichert.
+
+Für jede einzelne ausgeführte Domain wird ein Report ausgegeben:
+- Diese enthalten ein paar wenige Daten zur Config, wann die Analyse fertiggestellt wurde und wie lange die Analyse
+  für die Berechnung brauchte.
+- Außerdem sind alle Dead Instructions enthalten, gruppiert nach Methode.
+
+Außerdem wird ein Report `multiDomainResult.json` ausgegeben, der die Ergebnisse der einzelnen
+Analysen noch einmal zusammenfasst.
+- Hier sind alle Dead Instructions zusammengefasst
+- Bei jeder Dead Instruction wird auch dazu gespeichert, von welchen Domains diese jeweils gefunden wurde.
 
 
 ---
 
 ### Analyse 6: ArchitectureValidator (ex6)
+
 Der ArchitectureValidator überprüft, ob ein Projekt eine zuvor definierte Architektur-Spezifikation einhält.
 Dabei wird unter anderem analysiert, ob gewisse Klassen, Packages oder Jars auf andere zugreifen dürfen oder nicht.
 
 Neben Methodenaufrufen und Feldzugriffen können auch andere Abhängigkeiten wie Vererbung, Interface-Implementierung oder Typverwendungen berücksichtigt werden (standardmäßig aktiviert).
 
-Die Analyse für den ArchitectureValidator wird über architectureValidator in der Json-Config konfiguriert.
+Die Analyse für den ArchitectureValidator wird über `"architectureValidator"` in der Json-Config konfiguriert.
 ```json
 "architectureValidator" : {
   "execute" : false,
@@ -406,21 +468,24 @@ Die Analyse für den ArchitectureValidator wird über architectureValidator in d
 }
 ```
 
-| Option                      | Erwarteter Wert                                  | Default-Wert | Weitere Informationen                                                            |
-|-----------------------------|--------------------------------------------------|--------------|----------------------------------------------------------------------------------|
-| `"execute"`                 | Boolean (`true` oder `false`)                    | -            | Bestimmt ob die Architekturvalidierung ausgeführt werden soll.                   |
-| `"onlyMethodFieldAccesses"` | Boolean  (`true` oder `false`)                   | `false`      | Wenn `true`, werden nur Methodenaufrufe und Feldzugriffe analysiert.             |
-| `"defaultRule"`             | `FORBIDDEN` oder `ALLOWED`                       | `FORBIDDEN`  | Legt fest, ob Zugriffe ohne spezifische Regel erlaubt oder verboten sein sollen. |
-| `"rules"`                   | Liste von Regeln(`from`, `to`, `type`, `except`) | -            | Definiert erlaubte oder verbotene Zugriffe, ggf. mit rekursiven Ausnahmen.       |
+| Option                      | Erwarteter Wert                                                                                                                  | Default-Wert | Weitere Informationen                                                                                                                                                 |
+|-----------------------------|----------------------------------------------------------------------------------------------------------------------------------|--------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `"execute"`                 | Boolean (`true` oder `false`)                                                                                                    | -            | Bestimmt, ob der ArchitectureValidator ausgeführt werden soll oder nicht.                                                                                             |
+| `"onlyMethodFieldAccesses"` | Boolean (`true` oder `false`)                                                                                                    | `false`      | Wenn `true`, werden nur Methodenaufrufe und Feldzugriffe analysiert. Bei `false` werden auch weitere Abhängigkeiten betrachtet, z.B. Vererbung oder Nutzung des Typs. |
+| `"defaultRule"`             | `"FORBIDDEN"` oder `"ALLOWED"`                                                                                                   | `ALLOWED`    | Legt fest, ob Zugriffe ohne spezifische Regel erlaubt oder verboten sein sollen.                                                                                      |
+| `"rules"`                   | Liste von Regeln `{"from": <String>, "to": <String>, "type": <String>, "except": <Liste von Regeln (also rekursiv aufgebaut)> }` | Leere Liste  | Definiert weitere spezifische erlaubte oder verbotene Zugriffe, ggf. mit rekursiven Ausnahmen. Mehr Infos bei [Regeln](#regeln)                                       |
 
-Die Architektur-Spezifikation erfolgt über eine zusätzliche JSON-Datei (`specificationsFile`), deren Struktur der Aufgabenstellung aus Analyseaufgabe 6 entspricht.
-Diese Datei wird automatisch berücksichtigt, wenn `"execute": true` gesetzt ist und `"defaultRule"` sowie `"rules"` definiert wurden.
+#### Regeln
 
-> ⚠️ Hinweis: Der `resultsOutputPath`-Ordner wird auch hier verwendet, um den Analysebericht
-> abzulegen. Der Bericht wird als `architecture-report.json` gespeichert. 
+Die Regeln sind rekursiv aufgebaut, es ist also möglich, Ausnahmen für Regeln beliebig tief zu verschachteln.
 
-Beispielhafte Regel in der `spec.json` Datei:
+- Bei `"from"` und `"to"` kann jeweils eine Klasse, ein Package oder eine jar-Datei angegeben werden, wo dann eine Rege
+der Nutzung von `"to"` in `"from"` festgelegt wird.
+- Bei `"type"` kann man festlegen, ob eine Regel erlaubt `"ALLOWED"` oder verboten `"FORBIDDEN"` sein soll.
+- Bei `"except"` kann wieder eine Liste von Regeln mit derselben Struktur angegeben werden, die Ausnahmen für diese
+  Regel bilden sollen. **Diese Option hier ist optional und muss nicht unbedingt jedes Mal angegeben werden.**
 
+**Beispiel-Regel:**
 ```json
 {
   "from": "main.jar",
@@ -428,15 +493,22 @@ Beispielhafte Regel in der `spec.json` Datei:
   "type": "FORBIDDEN",
   "except": [
     {
-      "from": "main.jar::MainClass",
-      "to": "helper.jar::HelperClass",
+      "from": "com.example.main.SomeClass",
+      "to": "helper.jar",
       "type": "ALLOWED"
     }
   ]
 }
 ```
+Diese Regel verbietet grundsätzlich den Zugriff von `main.jar` in `helper.jar`, erlaubt jedoch eine Ausnahme für `com.example.main.SomeClass`, dass `helper.jar` genutzt werden darf.
 
-Diese Regel verbietet grundsätzlich den Zugriff von `main.jar` auf `helper.jar`, erlaubt jedoch eine Ausnahme zwischen `MainClass` und `HelperClass`.
+#### Ausgabe
+Es wird in `6_ArchitectureValidator` ein Json-Report `architecture_report.json` gespeichert.
+- In diesem Report sind einige Grundinformationen enthalten (z.B. welche Dateien analysiert wurden, wie lange die Berechnung gedauert hat, usw.)
+- Anschließend folgen die gefundenen Violations ("Verstöße"): Für jede Violation wird angegeben, welche Klasse/Package/Jar auf welche andere
+  Klasse/Package/Jar zugegriffen wurde und wie zugegriffen wurde.
+- Am Ende der Datei werden noch die erzeugten Warnungen gespeichert: Diese weisen darauf hin, wenn etwas
+  in der Config potenziell nicht stimmt bzw. in dieser Art nicht sinnvoll ist so zu definieren.
 
 
 ---
