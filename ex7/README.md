@@ -188,7 +188,7 @@ konfiguriert.
     "tccThresh" : "DEFAULT",
     "atfdThresh" : "DEFAULT",
     "nofThresh" : "DEFAULT"
-  }
+}
 ```
 
 | Option         | Erwarteter Wert                    | Default-Wert | Weitere Informationen                                                                                                             |
@@ -204,8 +204,19 @@ konfiguriert.
 Der CriticalMethodsDetector sucht nach kritischen Methodenaufrufen
 (also Aufrufe auf Methoden, die z.B. eventuell sicherheitsrelevant sein könnten). Für die Analyse wird ein [Call-Graph](#konfiguration-call-graphen) verwendet.
 
-Die Analyse für den GodClassDetector wird über `godClassDetector` in der Json-Config
+Die Analyse für den CriticalMethodsDetector wird über `criticalMethodsDetector` in der Json-Config
 konfiguriert.
+
+```json
+"criticalMethodsDetector" : {
+    "execute" : false,
+    "criticalMethods" : "DEFAULT",
+    "ignore" : "DEFAULT",
+    "callGraphAlgorithmName" : "DEFAULT",
+    "entryPointsFinder" : "DEFAULT",
+    "customEntryPoints" : "DEFAULT"
+}
+```
 
 
 | Option          | Erwarteter Wert                | Default-Wert | Weitere Informationen                                                       |
