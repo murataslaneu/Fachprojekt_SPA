@@ -22,7 +22,7 @@ object Main {
 
   private val HELP_TEXT =
     s"""==================== STATIC PROGRAM ANALYSIS SUITE ====================
-       |-help:            Show this message and exit the program.
+       |-help             Show this message and exit the program.
        |-config=<path>    Path to the config json for this program.
        |                  Default: $DEFAULT_INPUT_JSON_PATH in the current directory.
        |-initializeConfig Create a default json config $DEFAULT_INPUT_JSON_PATH
