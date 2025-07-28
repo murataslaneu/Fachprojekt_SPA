@@ -44,4 +44,4 @@ jobs:
       - name: Run example-analysis
         working-directory: ex7
         run: java -jar target/scala-2.13/ex7-assembly-0.1.0.jar -config=config.json
-      # Runs the generated analysis tool on itself using a specified config file.
+      # Runs the generated analysis tool on itself using a specified config file
