@@ -227,6 +227,15 @@ konfiguriert.
 | `""`            |                                |              |                                                                             |
 | `""`            |                                |              |                                                                             |
 
+### Analyse 3: TPLUsageAnalyzer (ex3)
+
+### Analyse 4a: CriticalMethodsRemover (ex4.1)
+
+### Analyse 4b: TPLMethodsRemover (ex4.2)
+
+### Analyse 5: DeadCodeDetector (ex5)
+
+### Analyse 6: ArchitectureValidator (ex6)
 
 ### Konfiguration Call-Graphen
 
