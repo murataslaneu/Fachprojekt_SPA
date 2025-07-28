@@ -21,8 +21,8 @@ class JsonIO {
   def writeDefaultJson(path: String = DEFAULT_INPUT_JSON_PATH): Unit = {
     // Create default json
     val json: JsValue = Json.obj(
-      "projectJars" -> Json.arr(), // TODO: Maybe add analysis application itself as default
-      "libraryJars" -> Json.arr(), // TODO: Maybe add dependencies of analysis application itself as default
+      "projectJars" -> Json.arr(),
+      "libraryJars" -> Json.arr(),
       "resultsOutputPath" -> JsonIO.DEFAULT_OUTPUT_DIRECTORY,
       "godClassDetector" -> Json.obj(
         "execute" -> false,

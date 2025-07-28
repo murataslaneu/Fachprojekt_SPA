@@ -63,7 +63,8 @@ und nacheinander automatisiert ausgeführt werden können.
 
 ## CLI-Parameter (Starten über Terminal)
 
-Es ist immer nur die Übergabe eines einzelnen Parameters möglich, sie schließen sich also gegenseitig aus.
+Es ist immer nur die Übergabe eines einzelnen Parameters möglich. Die Parameter schließen sich von der Funktionsweise
+her gegenseitig aus.
 
 | Parameter            | Parameter-Wert                        | Anmerkungen                                                                                                                            |
 |----------------------|---------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------|
@@ -79,7 +80,7 @@ Hat man das Programm als jar-Datei kompiliert, kann man auch der JVM Parameter �
 
 > Es ist daher auch möglich, das Programm direkt per Doppelklick im File Explorer zu starten.
 > Das ist allerdings nicht empfehlenswert, da man keinen Konsolen-Log erhält und kein Feedback bekommt,
-> wann die Analyse abgeschlossen wird.
+> wann die Analyse abgeschlossen wird bzw. was das Programm gemacht hat.
 
 
 
@@ -149,22 +150,27 @@ Die Default-Config für das Programm sieht folgendermaßen aus und bietet die fo
 }
 ```
 
+> Es ist empfohlen, dass sich alle diese Optionen immer in der Config-Datei befinden, auch wenn man z.B. eine Analyse
+> nicht ausführen möchte. Dafür sollten die `"execute"`-Flags verwendet werden.
 
+
+---
 
 ### Grundoptionen
 
 Die Grundoptionen werden für alle Analysen benötigt.
 
-| Option                | Erwarteter Wert                                                               | Default-Wert | Weitere Informationen                                                                 |
-|-----------------------|-------------------------------------------------------------------------------|--------------|---------------------------------------------------------------------------------------|
-| `"projectJars"`       | Liste von Strings (Dateipfade zu jar-Dateien)                                 | -            | jar-Dateien vom Projekt, das analysiert werden soll                                   |
-| `"libraryJars"`       | Liste von Strings (Dateipfade zu jar-Dateien)                                 | -            | jar-Dateien von den Bibliotheken, die das Projekt nutzt (für viele Analysen optional) |
-| `"resultsOutputPath"` | String (Pfad zu Ordner, wo Ausgaben der Analyse hingeschrieben werden sollen) | -            | -                                                                                     |
+| Option                | Erwarteter Wert                                                               | Default-Wert | Weitere Informationen                                                                                                                      |
+|-----------------------|-------------------------------------------------------------------------------|--------------|--------------------------------------------------------------------------------------------------------------------------------------------|
+| `"projectJars"`       | Liste von Strings (Dateipfade zu jar-Dateien)                                 | -            | jar-Dateien vom Projekt, das analysiert werden soll                                                                                        |
+| `"libraryJars"`       | Liste von Strings (Dateipfade zu jar-Dateien)                                 | -            | jar-Dateien von den Bibliotheken, die das Projekt nutzt (für manche Analysen optional oder nicht benötigt, für andere wiederum notwendig.) |
+| `"resultsOutputPath"` | String (Pfad zu Ordner, wo Ausgaben der Analyse hingeschrieben werden sollen) | -            | -                                                                                                                                          |
 
 Die restlichen Optionen beziehen sich immer auf eine spezifische Analyse. Jede Analyse hat also eine eigene "Sub-Config".
 Für jede Analyse ist außerdem immer eine Option `"execute"` vorhanden, die bestimmt, ob die Analyse ausgeführt werden soll oder nicht.
 
 
+---
 
 ### Struktur der Analyse-Ausgabe
 
@@ -186,11 +192,13 @@ Im Ordner werden folgende Dateien abgelegt.
 > Die Chance auf Datenverlust ist also hoch!
 
 
+---
 
 ### Analyse 1: GodClassDetector (ex1)
 
 Der GodClassDetector sucht mithilfe von Schwellenwerten für bestimmte Code-Parameter nach "God Classes"
-(also Klassen, die viel Verantwortung übernehmen und damit schlecht zu warten sind).
+(also Klassen, die viel Verantwortung übernehmen und damit schlecht zu warten sind). Beim Überschreiten von 3 der 4
+Schwellenwerte wird eine Klasse als God Class betitelt.
 
 Die Analyse für den GodClassDetector wird über `godClassDetector` in der Json-Config
 konfiguriert.
@@ -210,15 +218,24 @@ konfiguriert.
 | `"execute"`    | Boolean (`true` oder `false`)      | -            | Bestimmt, ob der GodClassDetector ausgeführt werden soll oder nicht.                                                              |
 | `"wmcThresh"`  | Integer ≥ 0                        | 100          | Grenzwert für WMC ("Weighted Methods per Class"), höhere Werte sind schlechter. Klassen sollten *kleiner* sein als der Grenzwert. |
 | `"tccThresh"`  | Dezimalzahl zwischen 0.0 und 1.0   | 0.33         | Grenzwert für TCC ("Tight Class Cohesion"), niedrigere Werte sind schlechter. Klassen sollten *größer gleich* dem Grenzwert sein. |
-| `"atfdThresh"` | Integer ≥ 0                        | 8            | Grenzwert für ATFD ("Access to Foreign Data", höhere Werte sind schlechter. Klassen sollten *kleiner gleich* dem Grenzwert sein.  |
+| `"atfdThresh"` | Integer ≥ 0                        | 8            | Grenzwert für ATFD ("Access to Foreign Data"), höhere Werte sind schlechter. Klassen sollten *kleiner gleich* dem Grenzwert sein. |
 | `"nofThresh"`  | Integer ≥ 0                        | 30           | Grenzwert für NOF ("Number of Fields"), höhere Werte sind schlechter. Klassen sollten *kleiner* sein als der Grenzwert.           |
 
+#### Ausgabe
+Die Analyse gibt in `1_GodClassDetector` eine json-Datei `results.json` aus, die die Ergebnisse der Analyse enthält.
 
+Die json-Datei enthält zum Einen die verwendete Config, und darunter alle im Projekt gefundenen God Classes.
+- Bei jedem Eintrag ist der Fully Qualified Name der Klasse enthalten, aus welcher jar-Datei sie stammt, und welchen
+  Wert die jeweiligen Code-Parameter haben.
+
+
+---
 
 ### Analyse 2: CriticalMethodsDetector (ex2)
 
 Der CriticalMethodsDetector sucht nach kritischen Methodenaufrufen
-(also Aufrufe auf Methoden, die z.B. eventuell sicherheitsrelevant sein könnten). Für die Analyse wird ein [Call-Graph](#konfiguration-call-graphen) verwendet.
+(also Aufrufe auf Methoden, die z.B. eventuell sicherheitsrelevant sein könnten).
+Für die Analyse wird ein [Call-Graph](#konfiguration-call-graphen) verwendet.
 
 Die Analyse für den CriticalMethodsDetector wird über `criticalMethodsDetector` in der Json-Config
 konfiguriert.
@@ -243,7 +260,14 @@ konfiguriert.
 | `"entryPointsFinder"`      | String (`"custom"`,`"application"`,`"applicationWithJre"` oder `"library"`)                                        | `"application"`                                                                                 | Name des Entry Point Finders von OPAL, der für die Call-Graphen verwendet werden soll. Mehr Informationen siehe beim Abschnitt [Call-Graphen](#konfiguration-call-graphen).                                                                                                                                                                                       |
 | `"customEntryPoints"`      | Liste von `{"className": <String>, "methods": <Liste von Strings> }`                                               | Leere Liste                                                                                     | Liste von Methoden, die als (zusätzliche) Einstiegspunkte für den Call-Graphen verwendet werden sollen. Mehr Informationen siehe beim Abschnitt [Call-Graphen](#konfiguration-call-graphen).                                                                                                                                                                      |
 
+#### Ausgabe
+Die Analyse gibt in `2_CriticalMethodsDetector` eine json-Datei `results.json` aus, die die Ergebnisse der Analyse enthält.
 
+Die json-Datei enthält zum Einen die verwendete Config, und darunter alle im Projekt gefundenen kritischen Methodenaufrufe
+inklusive der Gesamtzahl gefundener kritischer Methodenaufrufe.
+- Bei jedem ist erkennbar, von wo die kritische Methode aufgerufen wurde und wie häufig ein Aufruf dieser
+  Methode im Code enthalten ist.
+---
 
 ### Analyse 3: TPLUsageAnalyzer (ex3)
 
@@ -270,7 +294,14 @@ konfiguriert.
 | `"entryPointsFinder"`      | String (`"custom"`,`"application"`,`"applicationWithJre"` oder `"library"`) | Wert, der in CriticalMethodsDetector eingegeben wurde | Name des Entry Point Finders von OPAL, der für die Call-Graphen verwendet werden soll. Mehr Informationen siehe beim Abschnitt [Call-Graphen](#konfiguration-call-graphen).                  |
 | `"customEntryPoints"`      | Liste von `{"className": <String>, "methods": <Liste von Strings> }`        | Wert, der in CriticalMethodsDetector eingegeben wurde | Liste von Methoden, die als (zusätzliche) Einstiegspunkte für den Call-Graphen verwendet werden sollen. Mehr Informationen siehe beim Abschnitt [Call-Graphen](#konfiguration-call-graphen). |
 
+#### Ausgabe
+Es werden zwei Dateien im Ordner `3_TPLUsageAnalyzer` ausgegeben.
+- Ein json-Report `results.json`, der die Ergebnisse der Analyse zusammenfasst.
+  - Da drin ist enthalten, welches Projekt sich angeschaut wurde, den Nutzungsgrad aller geladenen library jars, welcher
+    Call-Graph-Algorithmus verwendet wurde und die Laufzeiten für die einzelnen Analyseschritte.
+- Eine Grafik `chart.png`, die den Nutzungsgrad jeder geladenen library jar noch einmal graphisch darstellt.
 
+---
 
 ### Analyse 4a: CriticalMethodsRemover (ex4.1)
 
@@ -297,6 +328,7 @@ konfiguriert.
 | `"ignore"`              | Liste von `{"callerClass": <String>, "callerMethod": <String>, "targetClass": <String>, "targetMethod": <String>}` | Leere Liste                                                                                     | Liste von Methoden, wo der Aufruf einer kritischen Methode gestattet wird. `"callerClass"` und `"callerMethod"` beziehen sich auf die aufrufende Klasse (Fully Qualified Name) und Methodenname, wo ein kritischer Aufruf erlaubt werden soll, und `"targetClass"` und `"targetMethod"` auf die kritische Methode der jeweiligen Klasse, die erlaubt werden soll. Erlaubte/Ignorierte Methodenaufrufe werden nicht entfernt. |
 
 
+---
 
 ### Analyse 4b: TPLMethodsRemover (ex4.2)
 
@@ -328,6 +360,7 @@ konfiguriert.
 | `"customEntryPoints"`       | Liste von `{"className": <String>, "methods": <Liste von Strings> }`                           | Wert, der in TPLUsageAnalyzer eingegeben wurde | Liste von Methoden, die als (zusätzliche) Einstiegspunkte für den Call-Graphen verwendet werden sollen. Mehr Informationen siehe beim Abschnitt [Call-Graphen](#konfiguration-call-graphen). |
 
 
+---
 
 ### Analyse 5: DeadCodeDetector (ex5)
 Der DeadCodeDetector analysiert den Bytecode eines Projekts und erkennt Instruktionen, die nie erreicht oder ausgeführt werden, also sogenannten „Dead Code“. Die Analyse basiert auf abstrakter Interpretation. Dabei kann interaktiv oder automatisch entschieden werden, welche Domain für die Analyse verwendet wird.
@@ -355,6 +388,7 @@ Die `domains`-Option erlaubt die Angabe, welche abstrakten Domains verwendet wer
 Die Ergebnisse der Analyse werden in einer JSON-Datei abgelegt. Die Datei enthält eine Auflistung der Methoden mit toten Instruktionen sowie eine graphische Zusammenfassung.
 
 
+---
 
 ### Analyse 6: ArchitectureValidator (ex6)
 Der ArchitectureValidator überprüft, ob ein Projekt eine zuvor definierte Architektur-Spezifikation einhält.
@@ -405,6 +439,7 @@ Beispielhafte Regel in der `spec.json` Datei:
 Diese Regel verbietet grundsätzlich den Zugriff von `main.jar` auf `helper.jar`, erlaubt jedoch eine Ausnahme zwischen `MainClass` und `HelperClass`.
 
 
+---
 
 ### Konfiguration Call-Graphen
 
@@ -439,6 +474,9 @@ Die Optionen sind:
   Über diese Option kann man eigene weitere Einstiegspunkte für das Projekt definieren. Das empfiehlt sich
   insbesondere, wenn man bei `entryPointsFinder` den Wert `"custom"` eingegeben hat. Man kann jedoch auch für jeden
   anderen Entry Points Finder weitere Einstiegspunkte definieren.
+
+
+---
 
 ## Tests
 
