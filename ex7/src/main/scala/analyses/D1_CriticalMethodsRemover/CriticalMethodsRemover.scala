@@ -133,9 +133,16 @@ class CriticalMethodsRemover(override val shouldExecute: Boolean) extends SubAna
             }
           }
           val classFilePath = Path.of(s"$classFilesOutputDir/$sanitizedClassFileName.class")
-          Files.createDirectories(classFilePath.getParent)
-          Files.write(classFilePath, newClassBytes)
-
+          try {
+            Files.createDirectories(classFilePath.getParent)
+            Files.write(classFilePath, newClassBytes)
+          }
+          catch {
+            case e: Exception =>
+              logger.error(s"An error occurred writing a class file: ${e.toString}")
+              logger.error("Skip writing this class file...")
+              errors.append(e.toString)
+          }
           // After class writing
           //logger.debug(s"Wrote modified class file to: $classFilePath.")
 

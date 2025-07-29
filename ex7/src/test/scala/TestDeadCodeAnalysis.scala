@@ -4,6 +4,8 @@ import org.slf4j.{Logger, LoggerFactory}
 import play.api.libs.json.Json
 import util.{JsonIO, ProjectInitializer}
 
+import scala.collection.mutable
+
 class TestDeadCodeAnalysis extends AnyFunSuite {
 
   private val logger: Logger = LoggerFactory.getLogger("TestDeadCodeAnalysis")
@@ -85,7 +87,7 @@ class TestDeadCodeAnalysis extends AnyFunSuite {
       libcpFiles = config.libraryJars
     )
 
-    val (multiDomainReport, _) = DeadCodeAnalysis.analyze(logger, project, config)
+    val (multiDomainReport, _) = DeadCodeAnalysis.analyze(logger, project, config, mutable.ListBuffer.empty[String])
     // Read contents and check if they match the expected result
     // Check report
     assert(multiDomainReport.projectJars.sameElements(Array("src/test/5_testFiles/MinimalExample.jar")))

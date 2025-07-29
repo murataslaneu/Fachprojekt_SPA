@@ -185,6 +185,7 @@ object Main {
           case e: Exception =>
             subAnalysis.logger.error(s"Analysis ${subAnalysis.analysisNumber} (${subAnalysis.analysisName}) terminated due to the following error:")
             subAnalysis.logger.error(s"--> ${e.toString}")
+            subAnalysis.errors.append(e.toString)
             val subAnalysisEndTime = System.currentTimeMillis()
             val runTime = (subAnalysisEndTime - subAnalysisStartTime) / 1000.0
             val duration = f"$runTime%.3f".replace(',', '.')
@@ -198,6 +199,10 @@ object Main {
             subAnalysis.logger.error(
               s"Analysis ${subAnalysis.analysisNumber} (${subAnalysis.analysisName}) ran for $duration seconds before termination."
             )
+        }
+        if (subAnalysis.errors.nonEmpty) {
+          subAnalysisSummaries.last.errors = Some(subAnalysis.errors.toList)
+          subAnalysisSummaries.last.successful = false
         }
       }
       else {

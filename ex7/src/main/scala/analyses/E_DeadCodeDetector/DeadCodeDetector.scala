@@ -51,7 +51,7 @@ class DeadCodeDetector(override val shouldExecute: Boolean) extends SubAnalysis 
     // Domain selection removed to avoid user input during analysis
     // Instead, run all domains
 
-    val (multiDomainReport, singleDomainReports) = DeadCodeAnalysis.analyze(logger, project, config)
+    val (multiDomainReport, singleDomainReports) = DeadCodeAnalysis.analyze(logger, project, config, errors)
     logger.info("Analysis finished. Writing reports...")
     val outputDir = s"${config.resultsOutputPath}/$outputFolderName"
     val multiDomainReportPath = s"$outputDir/multiDomainResult.json"

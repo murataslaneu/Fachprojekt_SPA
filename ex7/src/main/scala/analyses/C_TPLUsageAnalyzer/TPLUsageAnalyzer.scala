@@ -115,9 +115,9 @@ class TPLUsageAnalyzer(override val shouldExecute: Boolean) extends SubAnalysis 
     logger.info(s"Wrote results to $outputDirectory.")
     logger.info(
       s"""Run times:
-         |  - Computing call graph: $callGraphTime seconds
-         |  - Analysis on call graph: $analysisTime seconds
-         |  - Entire sub-analysis: $subAnalysisTime seconds""".stripMargin
+         |  - Computing call graph: ${callGraphTime.toString.replace(',', '.')} seconds
+         |  - Analysis on call graph: ${analysisTime.toString.replace(',', '.')} seconds
+         |  - Entire sub-analysis: ${subAnalysisTime.toString.replace(',', '.')} seconds""".stripMargin
     )
     if (!analysisConfig.countAllMethods) logger.info("Total number and number of used methods only contain public methods. (default)")
     else logger.info("NOTE: Flag countAllMethods active. Counted every method, even those with non-public visibility.")
@@ -188,7 +188,7 @@ class TPLUsageAnalyzer(override val shouldExecute: Boolean) extends SubAnalysis 
       s"""  - $library:
          |    - Total methods: $totalMethods
          |    - Used methods:  $usedMethods
-         |    - Usage ratio:   $usageRatio""".stripMargin
+         |    - Usage ratio:   ${usageRatio.replace(',', '.')}""".stripMargin
     }.sorted.mkString("\n", "\n", "")
     val remainingLibraries = results.size - k
     val moreLibraries = if (remainingLibraries > 0) s"\n... and $remainingLibraries more library jar${if (remainingLibraries != 1) "s" else ""}"

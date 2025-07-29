@@ -4,10 +4,12 @@ import configs.StaticAnalysisConfig
 import org.opalj.ba.toDA
 import org.opalj.bc.Assembler
 import org.opalj.br.ClassFile
+import org.slf4j.Logger
 import play.api.libs.json.Json
 
 import java.io.{File, PrintWriter}
 import java.nio.file.{Files, Path}
+import scala.collection.mutable
 
 /**
  * Helper object for JSON input/output operations.
@@ -18,11 +20,12 @@ object FileIO {
   /**
    * Writes the created modified class files to the given output path.
    *
+   * @param logger Logger to print out possible errors
    * @param path               Path where to output the dummy (must be a folder!)
    * @param modifiedClassFiles The modified class files created by the analysis.
    * @return Whether at least one invalid character has been replaced by a similar-looking character
    */
-  def writeModifiedClassFiles(path: String, modifiedClassFiles: Iterable[ClassFile]): Boolean = {
+  def writeModifiedClassFiles(logger: Logger, path: String, modifiedClassFiles: Iterable[ClassFile], errorBuffer: mutable.ListBuffer[String]): Boolean = {
     val outputPath = Path.of(path)
     var replacedInvalidCharacter = false
 
@@ -49,8 +52,16 @@ object FileIO {
 
       val classFilePath = Path.of(s"$outputPath/$sanitizedClassFileName.class")
 
-      Files.createDirectories(classFilePath.getParent)
-      Files.write(classFilePath, newClassBytes)
+      try {
+        Files.createDirectories(classFilePath.getParent)
+        Files.write(classFilePath, newClassBytes)
+      }
+      catch {
+        case e: Exception =>
+          logger.error(s"An error occurred writing a class file: ${e.toString}")
+          logger.error("Skip writing this class file...")
+          errorBuffer.append(e.toString)
+      }
     }
 
     replacedInvalidCharacter
@@ -60,10 +71,10 @@ object FileIO {
    * Writes a JSON report for the TPLMethodsRemover analysis.
    *
    * @param writtenClassFiles The ClassFiles written
-   * @param config Config for this program
-   * @param tplJar Path to the jar from which the dummy has been created
-   * @param dummyPath Path where the TPL dummy has been written to
-   * @param outputPath Path where this report should be written to
+   * @param config            Config for this program
+   * @param tplJar            Path to the jar from which the dummy has been created
+   * @param dummyPath         Path where the TPL dummy has been written to
+   * @param outputPath        Path where this report should be written to
    */
   def writeJsonReport
   (

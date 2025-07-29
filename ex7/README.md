@@ -177,11 +177,11 @@ Für jede Analyse ist außerdem immer eine Option `"execute"` vorhanden, die bes
 Mittels `"resultsOutputPath"` in der Config-Json (siehe [Grundoptionen](#grundoptionen)) kann festgelegt werden,
 in welchem Ordner das Programm die Ergebnisse der ausgeführten Analysen ausgeben soll.
 Im Ordner werden folgende Dateien abgelegt.
-- `summary.json`: Gibt eine grobe Zusammenfassung darüber, welche Analysen wann ausgeführt wurden,
-  wie lange die Laufzeiten waren und ob in der Analyse Fehler aufgetreten sind. Falls Fehler aufgetreten sind, kann
-  in den Logs nachverfolgt werden, was schiefgegangen ist.
 - `analysis.log`: Datei, die die Logs enthält, die während der Analyse in die Konsole geschrieben wurden. Nachrichten
   von OPAL werden nicht geloggt.
+- `summary.json`: Gibt eine grobe Zusammenfassung darüber, welche Analysen wann ausgeführt wurden,
+    wie lange die Laufzeiten waren und ob in der Analyse Fehler aufgetreten sind. Falls Fehler aufgetreten sind,
+    werden diese in der Datei aufgelistet. In diesem Fall kann auch in den Logs nachverfolgt werden, was schiefgegangen ist.
 - Unterordner für die einzelnen Analysen: Jede Analyse erstellt nach Fertigstellung mindestens einen Json-Report,
   der die Ergebnisse der Analyse einmal zusammenfasst. Der Namen für die Ordner folgt dabei immer einer sehr ähnlichen
   Struktur: `1_GodClassDetector`, `2_CriticalMethodsDetector`, usw.

@@ -3,6 +3,8 @@ package analyses
 import configs.StaticAnalysisConfig
 import org.slf4j.Logger
 
+import scala.collection.mutable
+
 /**
  * A sub-analysis is a single analysis executed inside this analysis suite.
  */
@@ -16,6 +18,9 @@ trait SubAnalysis {
 
   /** The number of the sub-analysis */
   val analysisNumber: String
+
+  /** ListBuffer holding the errors created during the analysis */
+  val errors: mutable.ListBuffer[String] = mutable.ListBuffer.empty[String]
 
   /**
    * Name of the folder (inside the resultsOutputPath of [[StaticAnalysisConfig]])

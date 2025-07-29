@@ -12,7 +12,7 @@ import scala.collection.mutable
 
 object DeadCodeAnalysis {
 
-  def analyze(logger: Logger, project: Project[URL], config: StaticAnalysisConfig): (MultiDomainDeadCodeReport, List[(Int, DeadCodeReport)]) = {
+  def analyze(logger: Logger, project: Project[URL], config: StaticAnalysisConfig, errorBuffer: mutable.ListBuffer[String]): (MultiDomainDeadCodeReport, List[(Int, DeadCodeReport)]) = {
     // Retrieve all available domains, sorted by their name
     val domains = DomainRegistry
       .domainDescriptions()
@@ -42,8 +42,10 @@ object DeadCodeAnalysis {
         singleDomainReports.put(domainNumber, result)
       }
       catch { case e: Exception =>
-        logger.error(s"An error occurred during the execution of [$domainNumber] $domainName: ${e.toString}")
+        val errorString = s"An error occurred during the execution of [$domainNumber] $domainName: ${e.toString}"
+        logger.error(errorString)
         logger.error("Skipping domain...")
+        errorBuffer.append(errorString)
       }
     }
 

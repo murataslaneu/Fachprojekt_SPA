@@ -89,7 +89,7 @@ class TPLMethodsRemover(override val shouldExecute: Boolean) extends SubAnalysis
     val outputDir = s"${config.resultsOutputPath}/$outputFolderName"
     val classesOutputDir = s"$outputDir/tplDummy"
     logger.info(s"Writing created class files to path $classesOutputDir...")
-    val replacedInvalidCharacter = FileIO.writeModifiedClassFiles(classesOutputDir, modifiedClassFiles)
+    val replacedInvalidCharacter = FileIO.writeModifiedClassFiles(logger, classesOutputDir, modifiedClassFiles, errors)
     logger.info("Finished writing class files, TPL dummy created successfully.")
     if (replacedInvalidCharacter) {
       logger.info(
