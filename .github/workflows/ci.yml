@@ -57,6 +57,12 @@ jobs:
         run: java -Xms512m -Xmx4g -jar target/scala-2.13/ex7-assembly-0.1.0.jar "-config=selfAnalysisConfig.json"
       # Runs the generated analysis tool on itself using a specified config file
 
+      - name: Confirm analysis result folder (debug)
+        run: |
+          echo "Looking in: $(pwd)"
+          ls -lh
+          ls -lh analysis || echo "No output directory found"
+
       - name: Upload analysis results
         uses: actions/upload-artifact@v4
         with:
