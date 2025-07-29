@@ -23,6 +23,7 @@ und nacheinander automatisiert ausgeführt werden können.
   6. [DeadCodeDetector (ex5)](#analyse-5-deadcodedetector-ex5)
   7. [ArchitectureValidator (ex6)](#analyse-6-architecturevalidator-ex6)
   - [Konfiguration Call-Graphen](#konfiguration-call-graphen)
+- [Selbstanalyse](#selbstanalyse)
 - [Tests](#tests)
 
 
@@ -54,7 +55,7 @@ und nacheinander automatisiert ausgeführt werden können.
 3. Starte das Programm über `java -jar ./ex7-assembly-0.1.0.jar` (Name evtl. abweichend, falls dieser geändert wurde).
 
 > Argumente an die Analyse-Applikation werden nach dem Pfad zur jar-Datei geschrieben,
-> z.B. `java -jar ./ex7-assembly-0.1.0.jar -config=config.json`.
+> z.B. `java -jar ./ex7-assembly-0.1.0.jar "-config=config.json"`.
 
 > Argumente an die JVM werden nach dem "java" übergeben, z.B. `java -Xms512m -Xmx2g -jar ./ex7-assembly-0.1.0.jar`
 > (-Xms setzt die *minimale* Heap-Größe (hier 512 MB), -Xmx die *maximale* Heap-Größe (hier 2 GB)).
@@ -546,6 +547,20 @@ Die Optionen sind:
   Über diese Option kann man eigene weitere Einstiegspunkte für das Projekt definieren. Das empfiehlt sich
   insbesondere, wenn man bei `entryPointsFinder` den Wert `"custom"` eingegeben hat. Man kann jedoch auch für jeden
   anderen Entry Points Finder weitere Einstiegspunkte definieren.
+
+
+---
+
+## Selbstanalyse
+
+Es ist mit dieser Applikation möglich, dass diese sich selbst analysieren kann. Dies geschieht auch automatisch beim
+Pushen auf main in diesem Repository. Möchte man das lokal ausprobieren, ist das folgenderweise möglich:
+
+1. Führe `sbt clean` aus, um das Projekt zu säubern.
+2. Führe `sbt assembly` aus, um die Fat Jar dieses Projekts zu erstellen (welche mittels `java -jar`) ausgeführt werden kann.
+3. Führe `sbt package` aus, um die Thin Jar dieses Projekts zu erhalten (diese wird als Projekt-Jar in die Analyse geladen)
+4. Führe `sbt copyDependencies` aus, um die library jars im Ordner `lib` zu erhalten.
+5. Starte abschließend Analyse mittels `java -Xms512m -Xmx4g -jar target/scala-2.13/ex7-assembly-0.1.0.jar "-config=selfAnalysisConfig.json"`
 
 
 ---
