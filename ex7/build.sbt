@@ -9,6 +9,22 @@ lazy val root = (project in file("."))
     name := "ex7"
   )
 
+lazy val copyDependencies = taskKey[Unit]("Copy all runtime dependencies into ./lib")
+
+copyDependencies := {
+  val cp: Classpath = (sbt.Runtime / sbt.Keys.fullClasspath).value
+  val targetDir: File = sbt.Keys.baseDirectory.value / "lib"
+  sbt.IO.createDirectory(targetDir)
+  cp
+    .files
+    .filter(_.isFile)
+    .filter(_.getName.endsWith(".jar"))
+    .foreach { file =>
+    val targetFile = targetDir / file.getName
+    sbt.IO.copyFile(file, targetFile)
+  }
+}
+
 // OPAL depends on scala-xml version 1.3.0, while plugin sbt-scoverage depends on version 2.3.0
 // This forces the used version to be 1.3.0 to keep compatibility with OPAL
 dependencyOverrides ++= Seq(

@@ -1,0 +1,89 @@
+{
+  "projectJars" : [
+    "target/scala-2.13/ex7_2.13-0.1.0.jar"
+  ],
+  "libraryJars" : [
+    "lib/abstract-interpretation-framework_2.13-5.0.0.jar",
+    "lib/architecture-validation_2.13-5.0.0.jar",
+    "lib/bytecode-assembler_2.13-5.0.0.jar",
+    "lib/bytecode-creator_2.13-5.0.0.jar",
+    "lib/bytecode-disassembler_2.13-5.0.0.jar",
+    "lib/bytecode-infrastructure_2.13-5.0.0.jar",
+    "lib/bytecode-representation_2.13-5.0.0.jar",
+    "lib/common_2.13-5.0.0.jar",
+    "lib/commons-lang3-3.11.jar",
+    "lib/commons-text-1.9.jar",
+    "lib/config-1.3.4.jar",
+    "lib/dependencies-extraction-library_2.13-5.0.0.jar",
+    "lib/fastutil-8.5.4.jar",
+    "lib/fastutil-core-8.5.4.jar",
+    "lib/fastutil-extra-8.5.4.jar",
+    "lib/ficus_2.13-1.5.0.jar",
+    "lib/framework_2.13-5.0.0.jar",
+    "lib/jackson-annotations-2.14.3.jar",
+    "lib/jackson-core-2.14.3.jar",
+    "lib/jackson-databind-2.14.3.jar",
+    "lib/jackson-datatype-jdk8-2.14.3.jar",
+    "lib/jackson-datatype-jsr310-2.14.3.jar",
+    "lib/logback-classic-1.5.18.jar",
+    "lib/logback-core-1.5.18.jar",
+    "lib/play-functional_2.13-2.10.7.jar",
+    "lib/play-json_2.13-2.10.7.jar",
+    "lib/scala-library-2.13.16.jar",
+    "lib/scala-parallel-collections_2.13-1.0.4.jar",
+    "lib/scala-parser-combinators_2.13-1.1.2.jar",
+    "lib/scala-reflect-2.13.16.jar",
+    "lib/scala-xml_2.13-1.3.0.jar",
+    "lib/slf4j-api-2.0.17.jar",
+    "lib/static-analysis-infrastructure_2.13-5.0.0.jar",
+    "lib/three-address-code_2.13-5.0.0.jar",
+    "lib/xchart-3.8.8.jar"
+  ],
+  "resultsOutputPath" : "analysis",
+  "godClassDetector" : {
+    "execute" : true,
+    "wmcThresh" : "DEFAULT",
+    "tccThresh" : "DEFAULT",
+    "atfdThresh" : "DEFAULT",
+    "nofThresh" : "DEFAULT"
+  },
+  "criticalMethodsDetector" : {
+    "execute" : true,
+    "criticalMethods" : "DEFAULT",
+    "ignore" : "DEFAULT",
+    "callGraphAlgorithmName" : "DEFAULT",
+    "entryPointsFinder" : "DEFAULT",
+    "customEntryPoints" : "DEFAULT"
+  },
+  "tplUsageAnalyzer" : {
+    "execute" : true,
+    "countAllMethods" : "DEFAULT",
+    "callGraphAlgorithmName" : "DEFAULT",
+    "entryPointsFinder" : "DEFAULT",
+    "customEntryPoints" : "DEFAULT"
+  },
+  "criticalMethodsRemover" : {
+    "execute" : true,
+    "criticalMethods" : "DEFAULT",
+    "ignore" : "DEFAULT"
+  },
+  "tplMethodsRemover" : {
+    "execute" : true,
+    "tplJar" : "lib/bytecode-infrastructure_2.13-5.0.0.jar",
+    "includeNonPublicMethods" : "DEFAULT",
+    "callGraphAlgorithmName" : "DEFAULT",
+    "entryPointsFinder" : "DEFAULT",
+    "customEntryPoints" : "DEFAULT"
+  },
+  "deadCodeDetector" : {
+    "execute" : true,
+    "completelyLoadLibraries" : false,
+    "domains" : "DEFAULT"
+  },
+  "architectureValidator" : {
+    "execute" : true,
+    "onlyMethodAndFieldAccesses" : "DEFAULT",
+    "defaultRule" : "DEFAULT",
+    "rules" : "DEFAULT"
+  }
+}

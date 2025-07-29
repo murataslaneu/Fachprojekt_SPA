@@ -37,7 +37,14 @@ object DeadCodeAnalysis {
     config.deadCodeDetector.domains.distinct.foreach { domainNumber =>
       val (domainIdentifier, domainName) = domainsIndexed(domainNumber)
       logger.info(s"  - [$domainNumber]${if (domainNumber < 10) " " else ""} $domainName...")
-      singleDomainReports.put(domainNumber, analyzeForDomain(project, domainIdentifier, domainName, config))
+      try {
+        val result = analyzeForDomain(project, domainIdentifier, domainName, config)
+        singleDomainReports.put(domainNumber, result)
+      }
+      catch { case e: Exception =>
+        logger.error(s"An error occurred during the execution of [$domainNumber] $domainName: ${e.toString}")
+        logger.error("Skipping domain...")
+      }
     }
 
     logger.info("Finished abstract interpretation. Group results into a single report...")
